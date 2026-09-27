@@ -28,6 +28,7 @@ import type {
   CommonProvenanceWidgetProps,
   WidgetRegistration,
 } from "./provenance";
+import type { ScalabilityOptions } from "./scalability";
 
 export type ProvenanceComponent<P> = (
   props: P
@@ -302,6 +303,7 @@ export interface ChartProps {
   provenanceStrategy?: unknown;
   mode?: ProvenanceMode;
   temporalBrush?: boolean;
+  scalability?: ScalabilityOptions;
 }
 
 export interface TimelineVisProps<TValue = unknown> {

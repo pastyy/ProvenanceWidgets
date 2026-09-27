@@ -59,6 +59,7 @@ export type {
   WidgetRegistration,
 } from "./types/provenance";
 
+export type * from "./types/scalability";
 export type * from "./types/components";
 
 export const AggregateView =

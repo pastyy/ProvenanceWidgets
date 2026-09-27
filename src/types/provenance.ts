@@ -6,6 +6,8 @@ import type {
   WidgetRegistration as CoreWidgetRegistration,
 } from "@provenance-widgets/core";
 
+import type { ScalabilityOptions } from "./scalability";
+
 export type {
   LegacyProvenanceRecord,
   LegacySerializedProvenance,
@@ -38,6 +40,7 @@ export interface CommonProvenanceWidgetProps<V> {
   "data-label"?: string;
   temporalBrush?: boolean;
   enableTemporalBrush?: boolean;
+  scalability?: ScalabilityOptions;
 }
 
 export interface WidgetRegistration<V>
