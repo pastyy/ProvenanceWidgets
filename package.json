@@ -39,6 +39,8 @@
     "react-tooltip": "^5.30.0"
   },
   "scripts": {
+    "playground": "vite --config playground/vite.config.js",
+    "playground:build": "vite build --config playground/vite.config.js",
     "typecheck": "tsc --noEmit",
     "build": "npm run build:library && npm run build:web-components",
     "build:library": "tsup",
@@ -53,7 +55,9 @@
     "@types/node": "^20.19.43",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.1.1",
     "tsup": "^8.5.1",
-    "typescript": "5.6.2"
+    "typescript": "5.6.2",
+    "vite": "^8.3.1"
   }
 }

@@ -63,6 +63,14 @@ npm install provenance-widgets
 npm install
 ```
 
+Run the local component playground, which imports directly from `src/index.ts`:
+
+```bash
+npm run playground
+```
+
+Use `npm run playground:build` to verify its production bundle.
+
 ## Deployment
 
 ```bash
