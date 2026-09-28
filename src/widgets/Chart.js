@@ -49,12 +49,19 @@ const TemporalBrush = ({
     mode,
     onRangeChange,
     positions,
+    range,
     target,
     tooltipId,
     widgetType,
 }) => {
     const brushRef = useRef(null);
+    const brushInstanceRef = useRef(null);
     const entryCount = positions.length;
+    const positionsKey = positions.join(",");
+    const positionsRef = useRef(positions);
+    positionsRef.current = positions;
+    const rangeRef = useRef(range);
+    rangeRef.current = range;
 
     useEffect(() => {
         if (!interactive || !brushRef.current || entryCount <= 1) return undefined;
@@ -88,6 +95,8 @@ const TemporalBrush = ({
                 }
             });
 
+        brushInstanceRef.current = brush;
+
         const brushGroup = d3.select(brushRef.current).call(brush);
         brushGroup
             .selectAll(".overlay")
@@ -105,17 +114,45 @@ const TemporalBrush = ({
             .attr("fill-opacity", 0.8);
         return () => {
             d3.select(brushRef.current).on(".brush", null);
+            brushInstanceRef.current = null;
         };
     }, [
         entryCount,
         height,
         mode,
         onRangeChange,
-        positions,
+        positionsKey,
         target,
         widgetType,
         interactive,
     ]);
+
+    useEffect(() => {
+        if (!interactive || !brushRef.current || !brushInstanceRef.current) {
+            return;
+        }
+        const currentRange = rangeRef.current;
+        if (!Array.isArray(currentRange)) {
+            d3.select(brushRef.current).call(
+                brushInstanceRef.current.move,
+                null
+            );
+            return;
+        }
+
+        const start = Math.max(
+            0,
+            Math.min(positionsRef.current.length - 1, currentRange[0])
+        );
+        const end = Math.max(
+            start,
+            Math.min(positionsRef.current.length - 1, currentRange[1])
+        );
+        d3.select(brushRef.current).call(
+            brushInstanceRef.current.move,
+            [positionsRef.current[start], positionsRef.current[end]]
+        );
+    }, [interactive, positionsKey]);
 
     if (entryCount === 0) return null;
     const tickStride = Math.max(1, Math.ceil(entryCount / 8));
@@ -375,19 +412,43 @@ const Chart = ({
         () => resolveTemporalZoomIn(scalability),
         [scalability]
     );
+    const temporalZoomKey = [
+        temporalZoom.enabled,
+        temporalZoom.zoomBy.join(","),
+        temporalZoom.trigger.type ?? "",
+        temporalZoom.trigger.threshold ?? "",
+        temporalZoom.trigger.tool_visible_before_trigger ?? "",
+        temporalZoom.trigger.auto_zoom_on_trigger ?? "",
+        temporalZoom.trigger.suggestion_on ?? "",
+    ].join("|");
+    const previousTemporalEntryCountRef = useRef(0);
     const handleBrushRangeChange = useCallback(
-        range => setBrushRange(range),
+        range => setBrushRange(currentRange => (
+            Array.isArray(currentRange) &&
+            Array.isArray(range) &&
+            currentRange[0] === range[0] &&
+            currentRange[1] === range[1]
+                ? currentRange
+                : range
+        )),
         []
     );
     const handleValueBrushRangeChange = useCallback(
-        range => setValueBrushRange(range),
+        range => setValueBrushRange(currentRange => (
+            Array.isArray(currentRange) &&
+            Array.isArray(range) &&
+            currentRange[0] === range[0] &&
+            currentRange[1] === range[1]
+                ? currentRange
+                : range
+        )),
         []
     );
 
     useEffect(() => {
         setBrushRange(null);
         setValueBrushRange(null);
-    }, [target, temporalBrush, scalability]);
+    }, [target, temporalBrush, temporalZoomKey]);
 
     useEffect(() => {
         const element = valueBrushContainerRef.current;
@@ -788,6 +849,41 @@ const Chart = ({
         mode,
     ]);
 
+    useEffect(() => {
+        const isTemporalSlider = chartData?.isCheckboxGroup && (
+            chartData.isSingleSlider || chartData.isRangeSlider
+        );
+        const entryCount = isTemporalSlider
+            ? chartData.detailedDataEntries.length
+            : 0;
+        const previousEntryCount = previousTemporalEntryCountRef.current;
+
+        if (entryCount < previousEntryCount) {
+            setBrushRange(null);
+        } else if (entryCount > previousEntryCount) {
+            setBrushRange(currentRange => {
+                if (
+                    !Array.isArray(currentRange) ||
+                    currentRange.length !== 2 ||
+                    previousEntryCount <= 0
+                ) {
+                    return currentRange;
+                }
+
+                // Keep a window that was anchored at "now" anchored to the
+                // new latest interaction. A window ending earlier remains a
+                // fixed historical slice.
+                const wasAnchoredAtEnd =
+                    currentRange[1] >= previousEntryCount - 1;
+                return wasAnchoredAtEnd
+                    ? [currentRange[0], entryCount - 1]
+                    : currentRange;
+            });
+        }
+
+        previousTemporalEntryCountRef.current = entryCount;
+    }, [chartData]);
+
     if (!chartData) return null;
 
     if (chartData.isCheckboxGroup) {
@@ -1178,6 +1274,7 @@ const Chart = ({
                          mode={chartData.mode ?? mode}
                          onRangeChange={handleBrushRangeChange}
                          positions={brushYPositions}
+                         range={brushRange}
                          target={target}
                          tooltipId={tooltipId}
                          widgetType={
