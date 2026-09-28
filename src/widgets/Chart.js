@@ -27,7 +27,7 @@ import {
     brushSelectionToValueRange,
     isTemporalZoomToolVisible,
     resolveTemporalZoomIn,
-} from "../shared/logic/scalability.js";
+} from "../shared/logic/scalability/index.js";
 import {
     buildInputTextTemporalEntries,
     restoreInputTextTemporalValue,
