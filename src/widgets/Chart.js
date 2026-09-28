@@ -24,9 +24,18 @@ import {
     restoreTemporalPoint,
 } from '../shared/logic/sliderTemporal.js';
 import {
+    brushSelectionToValueRange,
+    isTemporalZoomToolVisible,
+    resolveTemporalZoomIn,
+} from "../shared/logic/scalability.js";
+import {
     buildInputTextTemporalEntries,
     restoreInputTextTemporalValue,
 } from '../shared/logic/inputTextValue.js';
+import {
+    buildSliderTicks,
+    getSliderPosition,
+} from '../shared/logic/sliderTicks.js';
 
 const TEMPORAL_BRUSH_HEIGHT = 240;
 // Keep the plot height stable as the interaction history grows.
@@ -36,6 +45,7 @@ const INPUT_TEXT_TEMPORAL_HEIGHT = 440;
 
 const TemporalBrush = ({
     height = TEMPORAL_BRUSH_HEIGHT,
+    interactive = true,
     mode,
     onRangeChange,
     positions,
@@ -47,7 +57,7 @@ const TemporalBrush = ({
     const entryCount = positions.length;
 
     useEffect(() => {
-        if (!brushRef.current || entryCount <= 1) return undefined;
+        if (!interactive || !brushRef.current || entryCount <= 1) return undefined;
 
         const brush = d3
             .brushY()
@@ -104,9 +114,10 @@ const TemporalBrush = ({
         positions,
         target,
         widgetType,
+        interactive,
     ]);
 
-    if (entryCount <= 1) return null;
+    if (entryCount === 0) return null;
     const tickStride = Math.max(1, Math.ceil(entryCount / 8));
     const ticks = positions
         .map((position, index) => ({ position, index }))
@@ -120,8 +131,9 @@ const TemporalBrush = ({
         ));
     const tooltipProps = getTooltipAnchorProps(
         tooltipId,
-        "Drag vertically to zoom the history range. " +
-        "Click outside the selection to show all history."
+        interactive
+            ? "Drag vertically to zoom the history range. Click outside the selection to show all history."
+            : "Complete interaction range"
     );
 
     return (
@@ -135,7 +147,9 @@ const TemporalBrush = ({
         >
             <svg
                 aria-label={
-                    `Drag vertically to zoom ${widgetType} history`
+                    interactive
+                        ? `Drag vertically to zoom ${widgetType} history`
+                        : `Complete ${widgetType} interaction range`
                 }
                 data-provenance-temporal-brush={target}
                 width="64"
@@ -143,7 +157,9 @@ const TemporalBrush = ({
                 style={{ display: "block", overflow: "visible" }}
             >
                 <title>
-                    Drag vertically to zoom; clear the selection to reset
+                    {interactive
+                        ? "Drag vertically to zoom; clear the selection to reset"
+                        : "Complete interaction range"}
                 </title>
                 <text
                     x="10"
@@ -195,6 +211,144 @@ const TemporalBrush = ({
     );
 };
 
+const TemporalValueBrush = ({
+    height = 64,
+    interactive = true,
+    max,
+    min,
+    step = 1,
+    tickStep,
+    ticksArray,
+    showTicks = false,
+    mode,
+    onRangeChange,
+    target,
+    tooltipId,
+    width,
+    widgetType,
+}) => {
+    const brushRef = useRef(null);
+    const ticks = showTicks
+        ? buildSliderTicks({
+            min,
+            max,
+            step: tickStep ?? step,
+            ticksArray,
+        })
+        : [];
+
+    useEffect(() => {
+        if (!interactive || !brushRef.current || !Number.isFinite(width) || width <= 0) {
+            return undefined;
+        }
+
+        const brush = d3
+            .brushX()
+            .extent([[0, 0], [width, Math.max(1, height - 8)]])
+            .on("end", event => {
+                onRangeChange(
+                    brushSelectionToValueRange(event.selection, width, min, max, step)
+                );
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent(
+                        "provenance-widgets",
+                        {
+                            detail: {
+                                id: target,
+                                widget: widgetType,
+                                mode,
+                                interaction: "value-brush-end",
+                                data: { selection: event.selection },
+                            },
+                        }
+                    ));
+                }
+            });
+
+        const brushGroup = d3.select(brushRef.current).call(brush);
+        brushGroup
+            .selectAll(".overlay")
+            .attr("fill", "rgba(113, 231, 251, 0.06)")
+            .style("cursor", "ew-resize");
+        brushGroup
+            .selectAll(".selection")
+            .attr("fill", "#71e7fb")
+            .attr("fill-opacity", 0.24)
+            .attr("stroke", "#17a2b8")
+            .attr("stroke-width", 1.5);
+        brushGroup
+            .selectAll(".handle")
+            .attr("fill", "#17a2b8")
+            .attr("fill-opacity", 0.8);
+
+        return () => {
+            d3.select(brushRef.current).on(".brush", null);
+        };
+    }, [height, interactive, max, min, mode, onRangeChange, step, target, widgetType, width]);
+
+    const tooltipProps = getTooltipAnchorProps(
+        tooltipId,
+        interactive
+            ? "Drag horizontally to zoom the slider value range. Click outside the selection to show all values."
+            : "Complete slider value range"
+    );
+
+    return (
+        <div
+            {...tooltipProps}
+            data-provenance-values-brush={target}
+            data-provenance-temporal-values-brush={target}
+            style={{
+                ...tooltipProps.style,
+                width: "100%",
+                height: `${height}px`,
+            }}
+        >
+            <svg
+                aria-label={
+                    interactive
+                        ? `Drag horizontally to zoom ${widgetType} values`
+                        : `Complete ${widgetType} value range`
+                }
+                width="100%"
+                height={height}
+                style={{ display: "block", overflow: "visible" }}
+            >
+                <title>
+                    {interactive
+                        ? "Drag horizontally to zoom values; clear the selection to reset"
+                        : "Complete slider value range"}
+                </title>
+                <line x1="0" x2="100%" y1="8" y2="8" stroke="#6c757d" />
+                <g ref={brushRef} transform="translate(0,8)" />
+                {ticks.map(value => {
+                    const position = getSliderPosition(value, min, max);
+                    return (
+                        <g key={`value-tick-${value}`}>
+                            <line
+                                x1={`${position}%`}
+                                x2={`${position}%`}
+                                y1="8"
+                                y2="16"
+                                stroke="#6c757d"
+                            />
+                            <text
+                                x={`${position}%`}
+                                y="29"
+                                fill="#6c757d"
+                                fontSize="10"
+                                textAnchor="middle"
+                            >
+                                {value}
+                            </text>
+                        </g>
+                    );
+                })}
+            </svg>
+        </div>
+    );
+};
+
 const Chart = ({
     target,
     part = "full",
@@ -203,20 +357,58 @@ const Chart = ({
     provenanceStrategy,
     mode = "interaction",
     temporalBrush = true,
+    scalability,
+    sliderStep = 1,
+    sliderShowTicks = false,
+    sliderTickStep,
+    sliderTicksArray,
 }) => {
     const chartRef = useRef(null);
     const [registeredComponents] = useProvenance();
     const { restoreWidgetValue } = useWidgetRegistry();
     const tooltipId = useProvenanceTooltip();
     const [brushRange, setBrushRange] = useState(null);
+    const [valueBrushRange, setValueBrushRange] = useState(null);
+    const [valueBrushWidth, setValueBrushWidth] = useState(0);
+    const valueBrushContainerRef = useRef(null);
+    const temporalZoom = useMemo(
+        () => resolveTemporalZoomIn(scalability),
+        [scalability]
+    );
     const handleBrushRangeChange = useCallback(
         range => setBrushRange(range),
+        []
+    );
+    const handleValueBrushRangeChange = useCallback(
+        range => setValueBrushRange(range),
         []
     );
 
     useEffect(() => {
         setBrushRange(null);
-    }, [target, temporalBrush]);
+        setValueBrushRange(null);
+    }, [target, temporalBrush, scalability]);
+
+    useEffect(() => {
+        const element = valueBrushContainerRef.current;
+        if (!element) return undefined;
+        const updateWidth = () => setValueBrushWidth(element.clientWidth);
+        updateWidth();
+        if (typeof ResizeObserver === "undefined") {
+            window.addEventListener("resize", updateWidth);
+            return () => window.removeEventListener("resize", updateWidth);
+        }
+        const observer = new ResizeObserver(updateWidth);
+        observer.observe(element);
+        return () => observer.disconnect();
+    }, [
+        provenance,
+        provenanceStrategy,
+        registeredComponents,
+        scalability,
+        target,
+        temporalBrush,
+    ]);
     
     const chartData = useMemo(() => {
         if (!target) return null;
@@ -607,7 +799,29 @@ const Chart = ({
         const brushEnabled =
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
             normalizeTemporalBrush(temporalBrush) &&
-            allSortedEntries.length > 1;
+            allSortedEntries.length > 1 &&
+            temporalZoom.enabled &&
+            temporalZoom.zoomBy.includes("interactions") &&
+            isTemporalZoomToolVisible({
+                entries: allSortedEntries,
+                trigger: temporalZoom.trigger,
+            });
+        const valueBrushEnabled =
+            (chartData.isSingleSlider || chartData.isRangeSlider) &&
+            normalizeTemporalBrush(temporalBrush) &&
+            temporalZoom.enabled &&
+            temporalZoom.zoomBy.includes("values") &&
+            isTemporalZoomToolVisible({
+                entries: allSortedEntries,
+                trigger: temporalZoom.trigger,
+            });
+        const showInteractionAxis =
+            (chartData.isSingleSlider || chartData.isRangeSlider) &&
+            normalizeTemporalBrush(temporalBrush) &&
+            allSortedEntries.length > 0;
+        const showValueAxis =
+            (chartData.isSingleSlider || chartData.isRangeSlider) &&
+            normalizeTemporalBrush(temporalBrush);
         const sortedEntries = brushEnabled
             ? filterTemporalEntries(allSortedEntries, brushRange)
             : allSortedEntries;
@@ -622,7 +836,7 @@ const Chart = ({
         const brushYPositions = getTemporalYPositions(
             allSortedEntries,
             chartData.mode ?? mode,
-            TEMPORAL_BRUSH_HEIGHT
+            temporalPlotHeight
         );
         const allInputTextEntries = chartData.inputTextEntries ?? [];
         const inputTextBrushEnabled =
@@ -676,6 +890,8 @@ const Chart = ({
         
         const domainMax = indexDomain ? indexDomain[1] : 0;
         const domainMin = indexDomain ? indexDomain[0] : 0;
+        const valueDomainMin = valueBrushRange?.[0] ?? domainMin;
+        const valueDomainMax = valueBrushRange?.[1] ?? domainMax;
         const usesContinuousDomain =
             chartData.isRangeSlider ||
             chartData.isSingleSlider ||
@@ -690,17 +906,17 @@ const Chart = ({
             ? baseMaxIndex
             : baseMaxIndex + 1;
         const minIndex = usesContinuousDomain ? domainMin : 0;
-        const rangeSpan = maxIndex - minIndex;
+        const rangeSpan = Math.max(valueDomainMax - valueDomainMin, 1e-9);
         const temporalSliderConnections = buildTemporalSliderConnections({
             entries: sortedEntries,
             yPositions: temporalYPositions,
-            domainMin: minIndex,
-            domainMax: maxIndex,
+            domainMin: valueDomainMin,
+            domainMax: valueDomainMax,
             range: chartData.isRangeSlider,
         });
         const indexOffset = usesContinuousDomain ? 0 : 1;
         const displayMaxIndex = Math.max(maxIndex - indexOffset, 1);
-        const displaySpan = displayMaxIndex - minIndex;
+        const displaySpan = Math.max(valueDomainMax - valueDomainMin, 1e-9);
 
         const isLight = theme === "light";
         const bgColor = isLight ? "#fff" : "#333";
@@ -712,19 +928,19 @@ const Chart = ({
         const renderHeader = () => {
             if (chartData.isInputText) return null;
             const hasLeftAxisLabel = chartData.isRangeSlider || chartData.isSingleSlider;
-            const brushWidth = brushEnabled ? 64 : 0;
+            const brushWidth = showInteractionAxis ? 64 : 0;
             const leftLabelWidth = hasLeftAxisLabel
-                ? brushEnabled ? brushWidth : 28
+                ? showInteractionAxis ? brushWidth : 28
                 : 0;
             // TemporalBrush already occupies the complete body gutter. The
             // compact vertical label is the only variant with an 8px gap.
-            const leftLabelGap = hasLeftAxisLabel && !brushEnabled ? 8 : 0;
+            const leftLabelGap = hasLeftAxisLabel && !showInteractionAxis ? 8 : 0;
             const plotInset = hasLeftAxisLabel ? 6 : 0;
             const totalLeftGutter = leftLabelWidth + leftLabelGap + plotInset;
             const totalRightInset = plotInset;
             const innerWidthCalc = `calc(100% - ${totalLeftGutter + totalRightInset}px)`;
             const innerMarginLeft = `${totalLeftGutter}px`;
-            
+            return (<div></div>)
             return (
                 <div
                     data-provenance-chart-target={target}
@@ -740,13 +956,13 @@ const Chart = ({
                                    chartData.isRangeSlider ||
                                    chartData.isSingleSlider
                                )
-                                   ? minIndex
+                                   ? valueDomainMin
                                    : "n=0"}
                         </span>
                         <span style={{ fontSize: '12px', color: labelColor, fontWeight: 'bold', transform: hasLeftAxisLabel ? 'translateX(50%)' : undefined }}>
                            {chartData.isRangeSlider ||
                            chartData.isSingleSlider
-                               ? maxIndex
+                               ? valueDomainMax
                                : "now"}
                         </span>
                     </div>
@@ -955,8 +1171,10 @@ const Chart = ({
                  data-provenance-chart-target={target}
                  style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}
              >
-                 {brushEnabled && (
+                 {showInteractionAxis && (
                      <TemporalBrush
+                         height={temporalPlotHeight}
+                         interactive={brushEnabled}
                          mode={chartData.mode ?? mode}
                          onRangeChange={handleBrushRangeChange}
                          positions={brushYPositions}
@@ -968,29 +1186,6 @@ const Chart = ({
                                  : "single-slider"
                          }
                      />
-                 )}
-                 {(
-                     (chartData.isRangeSlider ||
-                         chartData.isSingleSlider) &&
-                     !brushEnabled
-                 ) && (
-                     <div style={{ 
-                         writingMode: 'vertical-rl', 
-                         transform: 'rotate(180deg)',
-                         fontSize: '12px', 
-                         color: '#999', 
-                         fontWeight: 'bold', 
-                         textAlign: 'center', 
-                         marginRight: '8px',
-                         width: '28px',
-                         minWidth: '28px',
-                         whiteSpace: 'nowrap',
-                         alignSelf: 'center'
-                     }}>
-                         {(chartData.mode ?? mode) === "time"
-                             ? "time"
-                             : "Sequence of Interactions"}
-                     </div>
                  )}
                  <div style={{
                      display: 'flex',
@@ -1005,15 +1200,40 @@ const Chart = ({
                      flexGrow: 1,
                      position: 'relative',
                  }}>
+                 {showValueAxis && (
+                     <div ref={valueBrushContainerRef} style={{ width: "100%", order: 2 }}>
+                         <TemporalValueBrush
+                             interactive={valueBrushEnabled}
+                             max={domainMax}
+                             min={domainMin}
+                             step={sliderStep}
+                             showTicks={sliderShowTicks}
+                             tickStep={sliderTickStep}
+                             ticksArray={sliderTicksArray}
+                             mode={chartData.mode ?? mode}
+                             onRangeChange={handleValueBrushRangeChange}
+                             target={target}
+                             tooltipId={tooltipId}
+                             width={valueBrushWidth}
+                             widgetType={
+                                 chartData.isRangeSlider
+                                     ? "range-slider"
+                                     : "single-slider"
+                             }
+                         />
+                     </div>
+                 )}
                  
                  
                  {chartData.isRangeSlider || chartData.isSingleSlider ? (
-                    <div style={{
-                        position: 'relative',
-                        width: '100%',
-                        height: `${temporalPlotHeight}px`,
-                        minHeight: `${temporalPlotHeight}px`,
-                    }}>
+                      <div style={{
+                          position: 'relative',
+                          width: '100%',
+                          height: `${temporalPlotHeight}px`,
+                          minHeight: `${temporalPlotHeight}px`,
+                          overflow: valueBrushRange ? 'hidden' : 'visible',
+                          order: 1,
+                     }}>
                         <svg
                             height={temporalPlotHeight}
                             style={{ position: 'absolute', top: 0, left: '6px', width: 'calc(100% - 12px)', height: `${temporalPlotHeight}px`, overflow: 'visible', pointerEvents: 'none', zIndex: 0 }}
@@ -1058,8 +1278,8 @@ const Chart = ({
                                                const start = record.select.index;
                                                const end = record.unselect ? record.unselect.index : maxIndex;
                                                
-                                               const left = ((start - minIndex) / rangeSpan) * 100;
-                                               const right = ((end - minIndex) / rangeSpan) * 100;
+                                               const left = ((start - valueDomainMin) / rangeSpan) * 100;
+                                               const right = ((end - valueDomainMin) / rangeSpan) * 100;
                                                const lowValue = Array.isArray(record.value)
                                                    ? record.value[0]
                                                    : record.value ?? start;
@@ -1258,10 +1478,10 @@ const Chart = ({
                                            const start = (startRaw ?? 0) - indexOffset;
                                            const end = (endRaw ?? maxIndex) - indexOffset;
                                            
-                                           const left = ((start - minIndex) / (displaySpan || 1)) * 100;
+                                           const left = ((start - valueDomainMin) / (displaySpan || 1)) * 100;
                                            const width = Math.max(0, ((end - start) / (displaySpan || 1)) * 100);
                                            
-                                           const relativeTime = (start - minIndex) / (displaySpan || 1);
+                                           const relativeTime = (start - valueDomainMin) / (displaySpan || 1);
                                            const color = d3.interpolateOranges(0.3 + (relativeTime * 0.7));
                                            const tooltipProps = getTooltipAnchorProps(
                                                tooltipId,

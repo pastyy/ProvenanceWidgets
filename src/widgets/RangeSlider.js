@@ -449,6 +449,11 @@ const Rangeslider = (props) => {
                         provenance={serializedProvenance}
                         mode={provenanceMode}
                         temporalBrush={temporalBrush}
+                        scalability={props.scalability}
+                        sliderStep={step}
+                        sliderShowTicks={showTicks}
+                        sliderTickStep={tickStep}
+                        sliderTicksArray={ticksArray}
                     />
                 </div>
             )}
