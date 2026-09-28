@@ -5,7 +5,7 @@
 
         "temporal_view": {
 
-            "strategy": "zoom_in" | "clipping" | "smoothening",
+            "strategy": "zoom_in" | "clipping" | "smoothening", // default: zoom_in
 
             "zoom_in_options":{	// takes effect only when 'strategy' is 'zoom_in', if an attribute is not set explicitly by user, then there is a default value. 
 
