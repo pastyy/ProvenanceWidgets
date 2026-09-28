@@ -875,13 +875,20 @@ const Chart = ({
                 }
 
                 // Keep a window that was anchored at "now" anchored to the
-                // new latest interaction. A window ending earlier remains a
-                // fixed historical slice.
+                // new latest interaction without growing its interaction
+                // count. A window ending earlier remains a fixed historical
+                // slice.
                 const wasAnchoredAtEnd =
                     currentRange[1] >= previousEntryCount - 1;
-                return wasAnchoredAtEnd
-                    ? [currentRange[0], entryCount - 1]
-                    : currentRange;
+                if (!wasAnchoredAtEnd) return currentRange;
+
+                const windowSpan = Math.max(
+                    0,
+                    currentRange[1] - currentRange[0]
+                );
+                const nextEnd = entryCount - 1;
+                const nextStart = Math.max(0, nextEnd - windowSpan);
+                return [nextStart, nextEnd];
             });
             setBrushSyncRevision(revision => revision + 1);
         }
