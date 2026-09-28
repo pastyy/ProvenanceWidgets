@@ -50,6 +50,7 @@ const TemporalBrush = ({
     onRangeChange,
     positions,
     range,
+    syncRevision = 0,
     target,
     tooltipId,
     widgetType,
@@ -152,7 +153,7 @@ const TemporalBrush = ({
             brushInstanceRef.current.move,
             [positionsRef.current[start], positionsRef.current[end]]
         );
-    }, [interactive, positionsKey]);
+    }, [interactive, positionsKey, syncRevision]);
 
     if (entryCount === 0) return null;
     const tickStride = Math.max(1, Math.ceil(entryCount / 8));
@@ -405,6 +406,7 @@ const Chart = ({
     const { restoreWidgetValue } = useWidgetRegistry();
     const tooltipId = useProvenanceTooltip();
     const [brushRange, setBrushRange] = useState(null);
+    const [brushSyncRevision, setBrushSyncRevision] = useState(0);
     const [valueBrushRange, setValueBrushRange] = useState(null);
     const [valueBrushWidth, setValueBrushWidth] = useState(0);
     const valueBrushContainerRef = useRef(null);
@@ -448,6 +450,7 @@ const Chart = ({
     useEffect(() => {
         setBrushRange(null);
         setValueBrushRange(null);
+        setBrushSyncRevision(revision => revision + 1);
     }, [target, temporalBrush, temporalZoomKey]);
 
     useEffect(() => {
@@ -860,6 +863,7 @@ const Chart = ({
 
         if (entryCount < previousEntryCount) {
             setBrushRange(null);
+            setBrushSyncRevision(revision => revision + 1);
         } else if (entryCount > previousEntryCount) {
             setBrushRange(currentRange => {
                 if (
@@ -879,6 +883,7 @@ const Chart = ({
                     ? [currentRange[0], entryCount - 1]
                     : currentRange;
             });
+            setBrushSyncRevision(revision => revision + 1);
         }
 
         previousTemporalEntryCountRef.current = entryCount;
@@ -1275,6 +1280,7 @@ const Chart = ({
                          onRangeChange={handleBrushRangeChange}
                          positions={brushYPositions}
                          range={brushRange}
+                         syncRevision={brushSyncRevision}
                          target={target}
                          tooltipId={tooltipId}
                          widgetType={
