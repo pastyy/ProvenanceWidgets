@@ -25,8 +25,10 @@ import {
 } from '../shared/logic/sliderTemporal.js';
 import {
     brushSelectionToValueRange,
+    hasTemporalZoomTriggerCrossed,
     isTemporalZoomToolVisible,
     resolveTemporalZoomIn,
+    temporalTriggerMetric,
 } from "../shared/logic/scalability/index.js";
 import {
     buildInputTextTemporalEntries,
@@ -424,6 +426,8 @@ const Chart = ({
         temporalZoom.trigger.suggestion_on ?? "",
     ].join("|");
     const previousTemporalEntryCountRef = useRef(0);
+    const autoZoomTriggeredRef = useRef(false);
+    const lastTemporalMetricRef = useRef(null);
     const handleBrushRangeChange = useCallback(
         range => setBrushRange(currentRange => (
             Array.isArray(currentRange) &&
@@ -451,6 +455,9 @@ const Chart = ({
         setBrushRange(null);
         setValueBrushRange(null);
         setBrushSyncRevision(revision => revision + 1);
+        previousTemporalEntryCountRef.current = 0;
+        lastTemporalMetricRef.current = null;
+        autoZoomTriggeredRef.current = false;
     }, [target, temporalBrush, temporalZoomKey]);
 
     useEffect(() => {
@@ -860,12 +867,39 @@ const Chart = ({
             ? chartData.detailedDataEntries.length
             : 0;
         const previousEntryCount = previousTemporalEntryCountRef.current;
+        const entries = isTemporalSlider
+            ? chartData.detailedDataEntries
+            : [];
+        const currentMetric = temporalTriggerMetric(
+            entries,
+            temporalZoom.trigger.type
+        );
+        const shouldAutoZoom =
+            !autoZoomTriggeredRef.current &&
+            isTemporalSlider &&
+            normalizeTemporalBrush(temporalBrush) &&
+            temporalZoom.enabled &&
+            temporalZoom.zoomBy.includes("interactions") &&
+            entryCount > 1 &&
+            hasTemporalZoomTriggerCrossed({
+                previousMetric: lastTemporalMetricRef.current,
+                entries,
+                trigger: temporalZoom.trigger,
+            });
+
+        if (shouldAutoZoom) {
+            autoZoomTriggeredRef.current = true;
+            setBrushRange([0, entryCount - 1]);
+            setBrushSyncRevision(revision => revision + 1);
+        }
 
         if (entryCount < previousEntryCount) {
             setBrushRange(null);
             setBrushSyncRevision(revision => revision + 1);
+            autoZoomTriggeredRef.current = false;
+            lastTemporalMetricRef.current = null;
         } else if (entryCount > previousEntryCount) {
-            setBrushRange(currentRange => {
+            if (!shouldAutoZoom) setBrushRange(currentRange => {
                 if (
                     !Array.isArray(currentRange) ||
                     currentRange.length !== 2 ||
@@ -890,11 +924,14 @@ const Chart = ({
                 const nextStart = Math.max(0, nextEnd - windowSpan);
                 return [nextStart, nextEnd];
             });
-            setBrushSyncRevision(revision => revision + 1);
+            if (!shouldAutoZoom) {
+                setBrushSyncRevision(revision => revision + 1);
+            }
         }
 
         previousTemporalEntryCountRef.current = entryCount;
-    }, [chartData]);
+        lastTemporalMetricRef.current = currentMetric;
+    }, [chartData, temporalBrush, temporalZoom, temporalZoomKey]);
 
     if (!chartData) return null;
 
