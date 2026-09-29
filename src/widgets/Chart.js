@@ -25,6 +25,7 @@ import {
 } from '../shared/logic/sliderTemporal.js';
 import {
     brushSelectionToValueRange,
+    getTemporalAutoZoomRange,
     hasTemporalZoomTriggerCrossed,
     isTemporalZoomToolVisible,
     resolveTemporalZoomIn,
@@ -889,7 +890,7 @@ const Chart = ({
 
         if (shouldAutoZoom) {
             autoZoomTriggeredRef.current = true;
-            setBrushRange([0, entryCount - 1]);
+            setBrushRange(getTemporalAutoZoomRange(entries, temporalZoom.trigger));
             setBrushSyncRevision(revision => revision + 1);
         }
 

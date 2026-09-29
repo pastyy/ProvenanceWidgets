@@ -18,6 +18,33 @@ export const temporalTriggerMetric = (entries, triggerType) => {
     return (Math.max(...timestamps) - Math.min(...timestamps)) / 1000;
 };
 
+const getEntryTimestamp = entry => getRecordTime(entry?.[1]?.[0]);
+
+/** Return the trailing interaction range covered by an auto-zoom trigger. */
+export const getTemporalAutoZoomRange = (entries = [], trigger = {}) => {
+    if (!Array.isArray(entries) || entries.length === 0) return null;
+
+    const threshold = Number(trigger.threshold);
+    if (!Number.isFinite(threshold) || threshold <= 0) {
+        return [0, entries.length - 1];
+    }
+
+    if (trigger.type !== "on_time_over") {
+        const count = Math.max(1, Math.floor(threshold));
+        return [Math.max(0, entries.length - count), entries.length - 1];
+    }
+
+    const timestamps = entries.map(getEntryTimestamp);
+    const validTimestamps = timestamps.filter(value => value !== null);
+    if (validTimestamps.length === 0) return [0, entries.length - 1];
+
+    const latest = Math.max(...validTimestamps);
+    const earliest = latest - (threshold * 1000);
+    let start = timestamps.findIndex(value => value !== null && value >= earliest);
+    if (start < 0) start = entries.length - 1;
+    return [start, entries.length - 1];
+};
+
 /** Whether a temporal auto-zoom trigger was crossed by the latest entries. */
 export const hasTemporalZoomTriggerCrossed = ({
     previousEntries = [],

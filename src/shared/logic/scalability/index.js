@@ -3,6 +3,7 @@ export { resolveTemporalZoomIn } from "./core/normalizeConfig.js";
 export { isTemporalZoomToolVisible } from "./triggers/visibility.js";
 export {
     hasTemporalZoomTriggerCrossed,
+    getTemporalAutoZoomRange,
     temporalTriggerMetric,
 } from "./triggers/autoZoom.js";
 export {
