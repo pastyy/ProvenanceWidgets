@@ -52,8 +52,6 @@ export const hasTemporalZoomTriggerCrossed = ({
     entries = [],
     trigger = {},
 } = {}) => {
-    if (trigger.auto_zoom_on_trigger !== true) return false;
-
     const threshold = Number(trigger.threshold);
     if (!Number.isFinite(threshold) || threshold <= 0) return false;
 

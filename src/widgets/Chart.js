@@ -4,9 +4,11 @@ import {
     useRef,
     useMemo,
     useState,
+    useContext,
 } from "react";
 import * as d3 from "d3";
 import useProvenance from '../provenance/hooks/useProvenance.js';
+import ProvenanceContext from '../provenance/ProvenanceContext.js';
 import useProvenanceTooltip from '../provenance/hooks/useProvenanceTooltip.js';
 import useWidgetRegistry from '../provenance/hooks/useWidgetRegistry.js';
 import {
@@ -434,11 +436,15 @@ const Chart = ({
 }) => {
     const chartRef = useRef(null);
     const [registeredComponents] = useProvenance();
+    const session = useContext(ProvenanceContext).session;
+    const suggestionSessionKey = `temporal-zoom-in:${target}`;
     const { restoreWidgetValue } = useWidgetRegistry();
     const tooltipId = useProvenanceTooltip();
     const [brushRange, setBrushRange] = useState(null);
     const [brushSyncRevision, setBrushSyncRevision] = useState(0);
     const [valueBrushRange, setValueBrushRange] = useState(null);
+    const [zoomSuggestionVisible, setZoomSuggestionVisible] = useState(false);
+    const [zoomSuggestionAccepted, setZoomSuggestionAccepted] = useState(false);
     const [valueBrushWidth, setValueBrushWidth] = useState(0);
     const valueBrushContainerRef = useRef(null);
     const rectangleGeometryRef = useRef({
@@ -515,6 +521,7 @@ const Chart = ({
         previousTemporalEntryCountRef.current = 0;
         lastTemporalMetricRef.current = null;
         autoZoomTriggeredRef.current = false;
+        setZoomSuggestionVisible(false);
     }, [clearRectangleSelection, target, temporalBrush, temporalZoomKey]);
 
     useEffect(() => {
@@ -952,6 +959,9 @@ const Chart = ({
             temporalZoom.enabled &&
             temporalZoom.zoomBy.includes("interactions") &&
             entryCount > 1 &&
+            (temporalZoom.trigger.auto_zoom_on_trigger === true ||
+                zoomSuggestionAccepted ||
+                session.isAccepted(suggestionSessionKey)) &&
             hasTemporalZoomTriggerCrossed({
                 previousMetric: lastTemporalMetricRef.current,
                 entries,
@@ -962,6 +972,27 @@ const Chart = ({
             autoZoomTriggeredRef.current = true;
             setBrushRange(getTemporalAutoZoomRange(entries, temporalZoom.trigger));
             setBrushSyncRevision(revision => revision + 1);
+        }
+
+        const shouldSuggest =
+            !shouldAutoZoom &&
+            !session.has(suggestionSessionKey) &&
+            !zoomSuggestionVisible &&
+            !zoomSuggestionAccepted &&
+            isTemporalSlider &&
+            normalizeTemporalBrush(temporalBrush) &&
+            temporalZoom.enabled &&
+            temporalZoom.zoomBy.includes("interactions") &&
+            temporalZoom.trigger.auto_zoom_on_trigger !== true &&
+            temporalZoom.trigger.suggestion_on === true &&
+            hasTemporalZoomTriggerCrossed({
+                previousMetric: lastTemporalMetricRef.current,
+                entries,
+                trigger: temporalZoom.trigger,
+            });
+        if (shouldSuggest) {
+            session.register(suggestionSessionKey);
+            setZoomSuggestionVisible(true);
         }
 
         if (entryCount < previousEntryCount) {
@@ -1010,6 +1041,10 @@ const Chart = ({
         temporalBrush,
         temporalZoom,
         temporalZoomKey,
+        zoomSuggestionAccepted,
+        zoomSuggestionVisible,
+        session,
+        suggestionSessionKey,
     ]);
 
     if (!chartData) return null;
@@ -1527,6 +1562,53 @@ const Chart = ({
                        }
                        onMouseDown={handleRectangleMouseDown}
                        >
+                        {zoomSuggestionVisible && (
+                            <div
+                                role="dialog"
+                                aria-label="Zoom suggestion"
+                                style={{
+                                    position: "absolute",
+                                    top: 4,
+                                    left: 4,
+                                    zIndex: 4,
+                                    padding: "7px 9px",
+                                    background: theme === "light" ? "#fff" : "#343a40",
+                                    color: textColor,
+                                    border: `1px solid ${axisColor}`,
+                                    borderRadius: "4px",
+                                    boxShadow: "0 2px 6px rgba(0,0,0,.18)",
+                                    fontSize: "12px",
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                <span>Zoom in to recent interactions?</span>{" "}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        session.accept(suggestionSessionKey);
+                                        setZoomSuggestionAccepted(true);
+                                        setZoomSuggestionVisible(false);
+                                        setBrushRange(getTemporalAutoZoomRange(
+                                            allSortedEntries,
+                                            temporalZoom.trigger
+                                        ));
+                                        setBrushSyncRevision(revision => revision + 1);
+                                    }}
+                                    style={{ marginLeft: 6 }}
+                                >
+                                    Yes
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setZoomSuggestionVisible(false);
+                                    }}
+                                    style={{ marginLeft: 4 }}
+                                >
+                                    Dismiss
+                                </button>
+                            </div>
+                        )}
                         <svg
                             height={temporalPlotHeight}
                             style={{ position: 'absolute', top: 0, left: '6px', width: 'calc(100% - 12px)', height: `${temporalPlotHeight}px`, overflow: 'visible', pointerEvents: 'none', zIndex: 0 }}
