@@ -165,7 +165,6 @@ const TemporalBrush = ({
         );
     }, [interactive, positionsKey, syncRevision]);
 
-    if (entryCount === 0) return null;
     const tickStride = Math.max(1, Math.ceil(entryCount / 8));
     const ticks = positions
         .map((position, index) => ({ position, index }))
@@ -219,9 +218,7 @@ const TemporalBrush = ({
                         `rotate(-90 10 ${height / 2})`
                     }
                 >
-                    {mode === "time"
-                        ? "time · drag to zoom"
-                        : "interaction · drag to zoom"}
+                    {`interaction${interactive ? " · drag to zoom" : ""}`}
                 </text>
                 <line
                     x1="58"
@@ -382,6 +379,15 @@ const TemporalValueBrush = ({
                         : "Complete slider value range"}
                 </title>
                 <line x1="0" x2="100%" y1="8" y2="8" stroke="#6c757d" />
+                <text
+                    x="50%"
+                    y={height - 4}
+                    fill="#6c757d"
+                    fontSize="11"
+                    textAnchor="middle"
+                >
+                    {`values${interactive ? " · drag to zoom" : ""}`}
+                </text>
                 <g ref={brushRef} transform="translate(0,8)" />
                 {ticks.map(value => {
                     const position = getSliderPosition(value, min, max);
@@ -1043,8 +1049,7 @@ const Chart = ({
             });
         const showInteractionAxis =
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
-            normalizeTemporalBrush(temporalBrush) &&
-            allSortedEntries.length > 0;
+            normalizeTemporalBrush(temporalBrush);
         const showValueAxis =
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
             normalizeTemporalBrush(temporalBrush);
