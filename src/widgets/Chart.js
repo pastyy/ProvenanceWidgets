@@ -39,6 +39,10 @@ import {
     buildSliderTicks,
     getSliderPosition,
 } from '../shared/logic/sliderTicks.js';
+import {
+    RectangleDerivedChart,
+    useRectangle2D,
+} from './Rectangle2D.js';
 
 const TEMPORAL_BRUSH_HEIGHT = 240;
 // Keep the plot height stable as the interaction history grows.
@@ -50,6 +54,7 @@ const TemporalBrush = ({
     height = TEMPORAL_BRUSH_HEIGHT,
     interactive = true,
     mode,
+    onInteractionStart,
     onRangeChange,
     positions,
     range,
@@ -74,6 +79,7 @@ const TemporalBrush = ({
             .brushY()
             // Attach the brush to the y-axis and extend its hit area left.
             .extent([[-42, 0], [0, height]])
+            .on("start", () => onInteractionStart?.())
             .on("end", event => {
                 const range = brushSelectionToPositionRange(
                     event.selection,
@@ -125,6 +131,7 @@ const TemporalBrush = ({
         height,
         mode,
         onRangeChange,
+        onInteractionStart,
         positionsKey,
         target,
         widgetType,
@@ -262,6 +269,7 @@ const TemporalValueBrush = ({
     ticksArray,
     showTicks = false,
     mode,
+    onInteractionStart,
     onRangeChange,
     target,
     tooltipId,
@@ -286,6 +294,7 @@ const TemporalValueBrush = ({
         const brush = d3
             .brushX()
             .extent([[0, 0], [width, Math.max(1, height - 8)]])
+            .on("start", () => onInteractionStart?.())
             .on("end", event => {
                 onRangeChange(
                     brushSelectionToValueRange(event.selection, width, min, max, step)
@@ -325,7 +334,19 @@ const TemporalValueBrush = ({
         return () => {
             d3.select(brushRef.current).on(".brush", null);
         };
-    }, [height, interactive, max, min, mode, onRangeChange, step, target, widgetType, width]);
+    }, [
+        height,
+        interactive,
+        max,
+        min,
+        mode,
+        onInteractionStart,
+        onRangeChange,
+        step,
+        target,
+        widgetType,
+        width,
+    ]);
 
     const tooltipProps = getTooltipAnchorProps(
         tooltipId,
@@ -390,6 +411,7 @@ const TemporalValueBrush = ({
     );
 };
 
+
 const Chart = ({
     target,
     part = "full",
@@ -413,6 +435,14 @@ const Chart = ({
     const [valueBrushRange, setValueBrushRange] = useState(null);
     const [valueBrushWidth, setValueBrushWidth] = useState(0);
     const valueBrushContainerRef = useRef(null);
+    const rectangleGeometryRef = useRef({
+        width: 0,
+        height: 0,
+        points: [],
+        domainMin: 0,
+        domainMax: 1,
+    });
+    const rectangleLogTargetRef = useRef(null);
     const temporalZoom = useMemo(
         () => resolveTemporalZoomIn(scalability),
         [scalability]
@@ -426,40 +456,60 @@ const Chart = ({
         temporalZoom.trigger.auto_zoom_on_trigger ?? "",
         temporalZoom.trigger.suggestion_on ?? "",
     ].join("|");
+    const rectangleConfigured =
+        temporalZoom.enabled &&
+        temporalZoom.zoomBy.includes("rectangle-2d");
+    const {
+        clear: clearRectangleSelection,
+        handleMouseDown: handleRectangleMouseDown,
+        points: rectanglePoints,
+        selection: rectangleSelection,
+        valueDomain: rectangleValueDomain,
+    } = useRectangle2D({
+        enabled: rectangleConfigured,
+        geometryRef: rectangleGeometryRef,
+    });
     const previousTemporalEntryCountRef = useRef(0);
     const autoZoomTriggeredRef = useRef(false);
     const lastTemporalMetricRef = useRef(null);
     const handleBrushRangeChange = useCallback(
-        range => setBrushRange(currentRange => (
-            Array.isArray(currentRange) &&
-            Array.isArray(range) &&
-            currentRange[0] === range[0] &&
-            currentRange[1] === range[1]
-                ? currentRange
-                : range
-        )),
-        []
+        range => {
+            clearRectangleSelection();
+            setBrushRange(currentRange => (
+                Array.isArray(currentRange) &&
+                Array.isArray(range) &&
+                currentRange[0] === range[0] &&
+                currentRange[1] === range[1]
+                    ? currentRange
+                    : range
+            ));
+        },
+        [clearRectangleSelection]
     );
     const handleValueBrushRangeChange = useCallback(
-        range => setValueBrushRange(currentRange => (
-            Array.isArray(currentRange) &&
-            Array.isArray(range) &&
-            currentRange[0] === range[0] &&
-            currentRange[1] === range[1]
-                ? currentRange
-                : range
-        )),
-        []
+        range => {
+            clearRectangleSelection();
+            setValueBrushRange(currentRange => (
+                Array.isArray(currentRange) &&
+                Array.isArray(range) &&
+                currentRange[0] === range[0] &&
+                currentRange[1] === range[1]
+                    ? currentRange
+                    : range
+            ));
+        },
+        [clearRectangleSelection]
     );
 
     useEffect(() => {
         setBrushRange(null);
         setValueBrushRange(null);
+        clearRectangleSelection();
         setBrushSyncRevision(revision => revision + 1);
         previousTemporalEntryCountRef.current = 0;
         lastTemporalMetricRef.current = null;
         autoZoomTriggeredRef.current = false;
-    }, [target, temporalBrush, temporalZoomKey]);
+    }, [clearRectangleSelection, target, temporalBrush, temporalZoomKey]);
 
     useEffect(() => {
         const element = valueBrushContainerRef.current;
@@ -861,6 +911,20 @@ const Chart = ({
     ]);
 
     useEffect(() => {
+        const isTemporalSlider = chartData?.isSingleSlider || chartData?.isRangeSlider;
+        if (
+            !rectangleConfigured ||
+            !isTemporalSlider ||
+            part === "header" ||
+            rectangleLogTargetRef.current === target
+        ) {
+            return;
+        }
+        rectangleLogTargetRef.current = target;
+        console.log("rectangle-2d enabled");
+    }, [chartData, part, rectangleConfigured, target]);
+
+    useEffect(() => {
         const isTemporalSlider = chartData?.isCheckboxGroup && (
             chartData.isSingleSlider || chartData.isRangeSlider
         );
@@ -897,9 +961,11 @@ const Chart = ({
         if (entryCount < previousEntryCount) {
             setBrushRange(null);
             setBrushSyncRevision(revision => revision + 1);
+            clearRectangleSelection();
             autoZoomTriggeredRef.current = false;
             lastTemporalMetricRef.current = null;
         } else if (entryCount > previousEntryCount) {
+            clearRectangleSelection();
             if (!shouldAutoZoom) setBrushRange(currentRange => {
                 if (
                     !Array.isArray(currentRange) ||
@@ -932,7 +998,13 @@ const Chart = ({
 
         previousTemporalEntryCountRef.current = entryCount;
         lastTemporalMetricRef.current = currentMetric;
-    }, [chartData, temporalBrush, temporalZoom, temporalZoomKey]);
+    }, [
+        chartData,
+        clearRectangleSelection,
+        temporalBrush,
+        temporalZoom,
+        temporalZoomKey,
+    ]);
 
     if (!chartData) return null;
 
@@ -957,6 +1029,14 @@ const Chart = ({
             normalizeTemporalBrush(temporalBrush) &&
             temporalZoom.enabled &&
             temporalZoom.zoomBy.includes("values") &&
+            isTemporalZoomToolVisible({
+                entries: allSortedEntries,
+                trigger: temporalZoom.trigger,
+            });
+        const rectangleToolEnabled =
+            rectangleConfigured &&
+            normalizeTemporalBrush(temporalBrush) &&
+            (chartData.isSingleSlider || chartData.isRangeSlider) &&
             isTemporalZoomToolVisible({
                 entries: allSortedEntries,
                 trigger: temporalZoom.trigger,
@@ -1064,6 +1144,56 @@ const Chart = ({
         const displayMaxIndex = Math.max(maxIndex - indexOffset, 1);
         const displaySpan = Math.max(valueDomainMax - valueDomainMin, 1e-9);
 
+        const rectanglePointData = [];
+        if (chartData.isRangeSlider || chartData.isSingleSlider) {
+            sortedEntries.forEach(([label, records], entryIndex) => {
+                records.forEach(record => {
+                    if (!record?.select) return;
+                    const addPoint = (endpoint, value) => {
+                        if (!Number.isFinite(Number(value))) return;
+                        const x = 6 + (
+                            ((Number(value) - valueDomainMin) / rangeSpan) *
+                            Math.max(valueBrushWidth - 12, 1)
+                        );
+                        rectanglePointData.push({
+                            entryIndex,
+                            endpoint,
+                            label,
+                            record,
+                            value: Number(value),
+                            x,
+                            y: temporalYPositions[entryIndex],
+                        });
+                    };
+                    if (chartData.isRangeSlider) {
+                        const lowValue = Array.isArray(record.value)
+                            ? record.value[0]
+                            : record.select.index;
+                        const highValue = Array.isArray(record.value)
+                            ? record.value[1]
+                            : record.unselect?.index ?? maxIndex;
+                        addPoint("low", lowValue);
+                        addPoint("high", highValue);
+                    } else {
+                        addPoint(
+                            "low",
+                            Array.isArray(record.value)
+                                ? record.value[0]
+                                : record.value ?? record.select.index
+                        );
+                    }
+                });
+            });
+        }
+
+        rectangleGeometryRef.current = {
+            width: valueBrushWidth,
+            height: temporalPlotHeight,
+            points: rectanglePointData,
+            domainMin: valueDomainMin,
+            domainMax: valueDomainMax,
+        };
+
         const isLight = theme === "light";
         const bgColor = isLight ? "#fff" : "#333";
         const textColor = isLight ? "#000" : "#eee"; // Or white
@@ -1130,6 +1260,7 @@ const Chart = ({
                     <TemporalBrush
                         height={inputTextPlotHeight}
                         mode={mode}
+                        onInteractionStart={clearRectangleSelection}
                         onRangeChange={handleBrushRangeChange}
                         positions={inputTextBrushYPositions}
                         target={target}
@@ -1313,6 +1444,7 @@ const Chart = ({
         const renderBody = () => chartData.isInputText
             ? renderInputTextBody()
             : (
+             <>
              <div
                  data-provenance-chart-target={target}
                  style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}
@@ -1322,6 +1454,7 @@ const Chart = ({
                          height={temporalPlotHeight}
                          interactive={brushEnabled}
                          mode={chartData.mode ?? mode}
+                         onInteractionStart={clearRectangleSelection}
                          onRangeChange={handleBrushRangeChange}
                          positions={brushYPositions}
                          range={brushRange}
@@ -1359,6 +1492,7 @@ const Chart = ({
                              tickStep={sliderTickStep}
                              ticksArray={sliderTicksArray}
                              mode={chartData.mode ?? mode}
+                              onInteractionStart={clearRectangleSelection}
                              onRangeChange={handleValueBrushRangeChange}
                              target={target}
                              tooltipId={tooltipId}
@@ -1373,15 +1507,21 @@ const Chart = ({
                  )}
                  
                  
-                 {chartData.isRangeSlider || chartData.isSingleSlider ? (
-                      <div style={{
-                          position: 'relative',
-                          width: '100%',
-                          height: `${temporalPlotHeight}px`,
-                          minHeight: `${temporalPlotHeight}px`,
-                          overflow: valueBrushRange ? 'hidden' : 'visible',
-                          order: 1,
-                     }}>
+                  {chartData.isRangeSlider || chartData.isSingleSlider ? (
+                       <div style={{
+                           position: 'relative',
+                           width: '100%',
+                           height: `${temporalPlotHeight}px`,
+                           minHeight: `${temporalPlotHeight}px`,
+                           overflow: valueBrushRange ? 'hidden' : 'visible',
+                           order: 1,
+                           cursor: rectangleToolEnabled ? 'crosshair' : undefined,
+                       }}
+                       data-provenance-rectangle-plot={
+                           rectangleToolEnabled ? "true" : undefined
+                       }
+                       onMouseDown={handleRectangleMouseDown}
+                       >
                         <svg
                             height={temporalPlotHeight}
                             style={{ position: 'absolute', top: 0, left: '6px', width: 'calc(100% - 12px)', height: `${temporalPlotHeight}px`, overflow: 'visible', pointerEvents: 'none', zIndex: 0 }}
@@ -1400,9 +1540,9 @@ const Chart = ({
                             ))}
                          </svg>
 
-                         <div style={{
-                             position: 'relative',
-                             height: `${temporalPlotHeight}px`,
+                          <div style={{
+                              position: 'relative',
+                              height: `${temporalPlotHeight}px`,
                          }}>
                               {sortedEntries.map(([label, records], index) => {
                                   const totalRows = sortedEntries.length;
@@ -1612,9 +1752,27 @@ const Chart = ({
                                       </div>
                                   </div>
                               )})}
-                         </div>
-                     </div>
-                  ) : (
+                          </div>
+                          {rectangleToolEnabled && rectangleSelection && (
+                              <div
+                                  data-provenance-rectangle-selection="true"
+                                  aria-hidden="true"
+                                  style={{
+                                      position: "absolute",
+                                      left: `${rectangleSelection.left}px`,
+                                      top: `${rectangleSelection.top}px`,
+                                      width: `${rectangleSelection.width}px`,
+                                      height: `${rectangleSelection.height}px`,
+                                      boxSizing: "border-box",
+                                      border: "2px solid #17a2b8",
+                                      backgroundColor: "rgba(113, 231, 251, 0.12)",
+                                      pointerEvents: "none",
+                                      zIndex: 4,
+                                  }}
+                              />
+                          )}
+                      </div>
+                   ) : (
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto', flexGrow: 1 }}>
                          {sortedEntries.map(([label, records]) => (
                               <div key={label} style={{ display: 'flex', alignItems: 'center', height: '24px', position: 'relative' }}>
@@ -1727,10 +1885,31 @@ const Chart = ({
                               </div>
                          ))}
                       </div>
-                   )}
-              </div>
-          </div>
-        );
+                    )}
+               </div>
+           </div>
+           {rectangleToolEnabled && rectanglePoints.length > 0 && (
+               <RectangleDerivedChart
+                   height={temporalPlotHeight}
+                   mode={chartData.mode ?? mode}
+                   placement="full"
+                   points={rectanglePoints}
+                   range={chartData.isRangeSlider}
+                   theme={theme}
+                   tooltipId={tooltipId}
+                   tooltipLabel={chartData.tooltipLabel}
+                   tooltipKind={chartData.tooltipKind}
+                   width={valueBrushWidth}
+                   domainMin={
+                       rectangleValueDomain?.[0] ?? valueDomainMin
+                   }
+                   domainMax={
+                       rectangleValueDomain?.[1] ?? valueDomainMax
+                   }
+               />
+           )}
+           </>
+         );
 
         if (part === "header") {
             return renderHeader();

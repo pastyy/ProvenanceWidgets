@@ -9,3 +9,8 @@ export {
 export {
     brushSelectionToValueRange,
 } from "./strategies/zoomIn/valueRange.js";
+export {
+    normalizeRectangle,
+    rectangleContainsPoint,
+    rectangleContainsAnyPoint,
+} from "./strategies/zoomIn/rectangle2d.js";
