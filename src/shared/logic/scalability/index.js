@@ -24,11 +24,9 @@ export {
     axisToInteraction,
     interactionToAxisPosition,
     getInteractionClippingWindow,
-    resolveClippingAxisSelection,
 } from "./strategies/clipping/interactionAxis.js";
 export {
     resolveTemporalClippingView,
-    resolveTemporalClippingBrushEnd,
 } from "./views/temporalClipping.js";
 export { resolveSelectionTemporalView } from "./views/selectionTemporal.js";
 export {

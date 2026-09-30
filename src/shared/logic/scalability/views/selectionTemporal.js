@@ -25,6 +25,7 @@ export function resolveSelectionTemporalView({ scalability, mode, count, brushRa
         window,
         ticks: [],
         clipCount: 0,
+        sliderStep: null,
         effectiveBrushRange: normalizeSelectionBrushRange(brushRange),
     };
 }

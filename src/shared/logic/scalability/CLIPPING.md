@@ -20,7 +20,13 @@ The same object works on the other three selection widgets. Without it, their
 existing temporal display remains unchanged. Clipping starts after the 50th
 interaction by default, advances in threshold-sized blocks, and affects only
 the interaction-mode temporal view. The history remains available when the
-brush enters the compressed region; aggregate data is unchanged. The axis
+brush enters the compressed region. Both brush handles move continuously across
+the whole axis: for example, with 101 interactions the visible range can be
+20–101, and releasing a handle does not expand it to a whole 50-interaction
+block. When a new clipping block starts (for example, at interaction 101),
+the brush moves to the new cutoff (n=100) through now, even if it was moved
+earlier; it can then be dragged continuously back into the compressed history.
+Aggregate data is unchanged. The axis
 compression percentage is an experimental constant in
 `strategies/clipping/interactionAxis.js`.
 
