@@ -19,6 +19,7 @@ export function getInteractionClippingWindow({ count = 0, active = false, thresh
         ...axis,
         axisRange,
         visibleDomain,
+        axisStep: active && cutoff > 0 ? COMPRESSED_HISTORY_PERCENT / cutoff : null,
         brushRange: end > 0 ? visibleDomain.map(value => value / end * 100) : [0, 100],
     };
 }
@@ -42,15 +43,4 @@ export function interactionToAxisPosition(interaction, { active, cutoff, domain 
         COMPRESSED_HISTORY_PERCENT +
         ((n - cutoff) / (end - cutoff)) * (100 - COMPRESSED_HISTORY_PERCENT)
     );
-}
-
-/** Crossing the compressed segment recalls all older data; returning recalls the latest block. */
-export function resolveClippingAxisSelection(range, previousRange, window) {
-    const next = normalizeSelectionBrushRange(range);
-    if (!window.active) return next;
-    const [previousLow, previousHigh] = previousRange;
-    if (previousHigh <= COMPRESSED_HISTORY_PERCENT && next[1] > COMPRESSED_HISTORY_PERCENT) return [COMPRESSED_HISTORY_PERCENT, 100];
-    if (previousLow >= COMPRESSED_HISTORY_PERCENT && next[0] < COMPRESSED_HISTORY_PERCENT) return [0, COMPRESSED_HISTORY_PERCENT];
-    if (next[1] <= COMPRESSED_HISTORY_PERCENT) return [0, COMPRESSED_HISTORY_PERCENT];
-    return next;
 }

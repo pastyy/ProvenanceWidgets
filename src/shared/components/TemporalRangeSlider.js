@@ -112,6 +112,7 @@ const TemporalRangeSlider = ({
     mode,
     axis = null,
     ticks = [],
+    step = null,
     onChange,
     onSlideEnd,
     placement = "inline",
@@ -234,6 +235,7 @@ const TemporalRangeSlider = ({
                     range
                     min={0}
                     max={100}
+                    step={step}
                     value={value}
                     onChange={onChange}
                     onSlideEnd={onSlideEnd}

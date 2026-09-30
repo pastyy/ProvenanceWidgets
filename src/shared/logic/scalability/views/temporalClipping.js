@@ -1,9 +1,7 @@
-import { normalizeSelectionBrushRange } from "../../selectionTimeline.js";
 import { isClippingTriggered } from "../triggers/clipping.js";
 import {
     interactionToAxisPosition,
     getInteractionClippingWindow,
-    resolveClippingAxisSelection,
 } from "../strategies/clipping/interactionAxis.js";
 
 /** Resolve the interaction axis contract shared by selection widgets. */
@@ -35,14 +33,7 @@ export function resolveTemporalClippingView({ config, mode, count, brushRange })
         window,
         ticks,
         clipCount: active ? Math.floor(window.cutoff / config.threshold) : 0,
+        sliderStep: window.axisStep,
         effectiveBrushRange: clippingEnabled ? window.brushRange : (brushRange ?? [0, 100]),
     };
-}
-
-/** At release, entering compressed history selects its complete interval. */
-export function resolveTemporalClippingBrushEnd(range, previousRange, window) {
-    const normalized = normalizeSelectionBrushRange(range);
-    return window.active
-        ? resolveClippingAxisSelection(normalized, previousRange ?? window.axisRange, window)
-        : normalized;
 }
