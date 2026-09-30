@@ -9,19 +9,19 @@
 
             "zoom_in_options":{	// takes effect only when 'strategy' is 'zoom_in', if an attribute is not set explicitly by user, then there is a default value. 
 
-                "zoom_by": ["interactions", "values", "rectangle-2d"],		// can choose 1-3 options; defualt: all
+                "modes": ["interactions", "values", "interactions-values"],	// can choose 1-3 options; default: all
+
+                "visibility": "all-active" | "after-trigger" | "off", // default: all-active
 
                 "trigger": {
 
-                    "type": "on_interaction_over" | "on_time_over",	// default: interaction
+                    "type": "interaction" | "time",	// default: interaction
 
-                    "threshold": int, 	// interaction times/time-by-sec depends on 'trigger_type"; default (interaction): width / k (constant; need test to determine.); default (time): 3600s
+                    "threshold": int, 	// interaction count or seconds depending on type; default (interaction): 50; default (time): 3600s
 
-                    "tool_visible_before_trigger": true | false, 	// whether shows the zoom-in tool before the threshold is reached; default: true
+                    "auto_zoom": true | false,	// whether automatically shows zoomed-in view when the threshold is reached; default: false
 
-                	"auto_zoom_on_trigger": true | false,	// whether automatically shows zoomed-in view when the threshold is reached; default: false
-
-                    "suggestion_on": true | false 		// (not sure) (takes effect when auto_zoom_on_trigger==false:) whether shows a suggestion (with a confirm button) of switching to zoomed-in view when threshold is reached; default: false
+                    "suggestion": true | false 		// takes effect when auto_zoom is false; whether to suggest switching to the zoomed-in view; default: false
 
                 }
 

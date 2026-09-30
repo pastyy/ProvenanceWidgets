@@ -54,27 +54,27 @@ type TemporalViewScalability = {
 
 ```ts
 type TemporalZoomInOptions = {
-  zoom_by?: Array<"interactions" | "values" | "rectangle-2d">;
+  modes?: Array<"interactions" | "values" | "interactions-values">;
+  visibility?: "all-active" | "after-trigger" | "off";
   trigger?: {
-    type?: "on_interaction_over" | "on_time_over";
+    type?: "interaction" | "time";
     threshold?: number;
-    tool_visible_before_trigger?: boolean;
-    auto_zoom_on_trigger?: boolean;
-    suggestion_on?: boolean;
+    auto_zoom?: boolean;
+    suggestion?: boolean;
   };
 };
 ```
 
-- `zoom_by` 指定放大维度：交互次数 (`interactions`)、Slider 数值 (`values`)，
-  或交互次数与数值组成的二维区域 (`rectangle-2d`)。
-- `zoom_by` 可包含 1～3 个不重复的选项，默认包含全部三个选项。
-- `trigger.type` 默认 `on_interaction_over`。
-- `trigger.threshold` 在 `on_interaction_over` 下表示交互次数，在
-  `on_time_over` 下表示秒数。交互阈值默认 `width / 10`；时间阈值沿用 JSON
-  中明确的 `3600` 秒。
-- `tool_visible_before_trigger` 表示达到阈值前是否显示缩放工具，默认 `true`。
-- `auto_zoom_on_trigger` 表示达到阈值时是否自动放大，默认 `false`。
-- `suggestion_on` 仅在不自动放大时有意义；表示是否显示带确认按钮的放大建议，
+- `modes` 指定放大维度：交互次数 (`interactions`)、Slider 数值 (`values`)，
+  或交互次数与数值组成的二维区域 (`interactions-values`)。
+- `modes` 可包含 1～3 个不重复的选项，默认包含全部三个选项。
+- `visibility` 默认 `all-active`；`after-trigger` 表示达到阈值后才启用缩放工具，
+  `off` 表示始终关闭缩放工具。
+- `trigger.type` 默认 `interaction`。
+- `trigger.threshold` 在 `interaction` 下表示交互次数，默认 `50`；在 `time`
+  下表示秒数，默认 `3600`。
+- `auto_zoom` 表示达到阈值时是否自动放大，默认 `false`。
+- `suggestion` 仅在不自动放大时有意义；表示是否显示带确认按钮的放大建议，
   默认 `false`。
 
 ### Clipping
@@ -203,7 +203,7 @@ type WindowOptions = {
    策略或窗口。
 2. `threshold` 的单位必须严格跟随 `trigger.type`；不能把秒数当成交互次数，
    也不能把 `on_range_over` 当作 Slider 数值范围。
-3. `zoom_by` 只影响 temporal zoom-in；aggregate zoom-in 不支持该字段。
+3. `modes` 只影响 temporal zoom-in；aggregate zoom-in 不支持该字段。
 4. 与当前策略不匹配的选项不得触发额外渲染或交互行为。
 5. 平滑窗口的单位转换必须使用同一套像素/数据域坐标，不能在两个视图中使用
    不同的换算基准。

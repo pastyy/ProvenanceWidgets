@@ -461,16 +461,16 @@ const Chart = ({
     );
     const temporalZoomKey = [
         temporalZoom.enabled,
-        temporalZoom.zoomBy.join(","),
+        temporalZoom.modes.join(","),
+        temporalZoom.visibility,
         temporalZoom.trigger.type ?? "",
         temporalZoom.trigger.threshold ?? "",
-        temporalZoom.trigger.tool_visible_before_trigger ?? "",
-        temporalZoom.trigger.auto_zoom_on_trigger ?? "",
-        temporalZoom.trigger.suggestion_on ?? "",
+        temporalZoom.trigger.auto_zoom ?? "",
+        temporalZoom.trigger.suggestion ?? "",
     ].join("|");
     const rectangleConfigured =
         temporalZoom.enabled &&
-        temporalZoom.zoomBy.includes("rectangle-2d");
+        temporalZoom.modes.includes("interactions-values");
     const {
         clear: clearRectangleSelection,
         handleMouseDown: handleRectangleMouseDown,
@@ -934,7 +934,7 @@ const Chart = ({
             return;
         }
         rectangleLogTargetRef.current = target;
-        console.log("rectangle-2d enabled");
+        console.log("interactions-values enabled");
     }, [chartData, part, rectangleConfigured, target]);
 
     useEffect(() => {
@@ -957,9 +957,9 @@ const Chart = ({
             isTemporalSlider &&
             normalizeTemporalBrush(temporalBrush) &&
             temporalZoom.enabled &&
-            temporalZoom.zoomBy.includes("interactions") &&
+            temporalZoom.modes.includes("interactions") &&
             entryCount > 1 &&
-            (temporalZoom.trigger.auto_zoom_on_trigger === true ||
+            (temporalZoom.trigger.auto_zoom === true ||
                 zoomSuggestionAccepted ||
                 session.isAccepted(suggestionSessionKey)) &&
             hasTemporalZoomTriggerCrossed({
@@ -982,9 +982,9 @@ const Chart = ({
             isTemporalSlider &&
             normalizeTemporalBrush(temporalBrush) &&
             temporalZoom.enabled &&
-            temporalZoom.zoomBy.includes("interactions") &&
-            temporalZoom.trigger.auto_zoom_on_trigger !== true &&
-            temporalZoom.trigger.suggestion_on === true &&
+            temporalZoom.modes.includes("interactions") &&
+            temporalZoom.trigger.auto_zoom !== true &&
+            temporalZoom.trigger.suggestion === true &&
             hasTemporalZoomTriggerCrossed({
                 previousMetric: lastTemporalMetricRef.current,
                 entries,
@@ -1060,18 +1060,20 @@ const Chart = ({
             normalizeTemporalBrush(temporalBrush) &&
             allSortedEntries.length > 1 &&
             temporalZoom.enabled &&
-            temporalZoom.zoomBy.includes("interactions") &&
+            temporalZoom.modes.includes("interactions") &&
             isTemporalZoomToolVisible({
                 entries: allSortedEntries,
+                visibility: temporalZoom.visibility,
                 trigger: temporalZoom.trigger,
             });
         const valueBrushEnabled =
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
             normalizeTemporalBrush(temporalBrush) &&
             temporalZoom.enabled &&
-            temporalZoom.zoomBy.includes("values") &&
+            temporalZoom.modes.includes("values") &&
             isTemporalZoomToolVisible({
                 entries: allSortedEntries,
+                visibility: temporalZoom.visibility,
                 trigger: temporalZoom.trigger,
             });
         const rectangleToolEnabled =
@@ -1080,6 +1082,7 @@ const Chart = ({
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
             isTemporalZoomToolVisible({
                 entries: allSortedEntries,
+                visibility: temporalZoom.visibility,
                 trigger: temporalZoom.trigger,
             });
         const showInteractionAxis =
@@ -1581,7 +1584,7 @@ const Chart = ({
                                     whiteSpace: "nowrap",
                                 }}
                             >
-                                <span>Zoom in to recent interactions?</span>{" "}
+                                <span>Declutter now?</span>{" "}
                                 <button
                                     type="button"
                                     onClick={() => {

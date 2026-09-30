@@ -1,4 +1,10 @@
-export { DEFAULT_ZOOM_BY } from "./core/defaults.js";
+export {
+    DEFAULT_TEMPORAL_INTERACTION_THRESHOLD,
+    DEFAULT_TEMPORAL_TIME_THRESHOLD,
+    DEFAULT_TEMPORAL_ZOOM_MODES,
+    DEFAULT_TEMPORAL_ZOOM_TRIGGER_TYPE,
+    DEFAULT_TEMPORAL_ZOOM_VISIBILITY,
+} from "./core/defaults.js";
 export { resolveTemporalZoomIn } from "./core/normalizeConfig.js";
 export { isTemporalZoomToolVisible } from "./triggers/visibility.js";
 export {

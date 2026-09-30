@@ -273,14 +273,14 @@ export default function PlaygroundPage() {
                 scalability={{"temporal_view": {
                   "strategy": "zoom_in",
                   "zoom_in_options": {
-                      "zoom_by": ["interactions", "rectangle-2d", "values"],
-                      "trigger": {
-                        // "type": "on_interaction_over",
-                        "tool_visible_before_trigger": false,
-                        "threshold": 10,
-                        "auto_zoom_on_trigger": false,
-                        "suggestion_on": true
-                      }
+                    "modes": ["interactions", "interactions-values", "values"],
+                    "visibility": "after-trigger",
+                    "trigger": {
+                      "type": "interaction",
+                      "threshold": 10,
+                      "auto_zoom": false,
+                      "suggestion": true
+                    }
                   }
                 }}}
               />

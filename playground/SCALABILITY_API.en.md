@@ -57,29 +57,29 @@ type TemporalViewScalability = {
 
 ```ts
 type TemporalZoomInOptions = {
-  zoom_by?: Array<"interactions" | "values" | "rectangle-2d">;
+  modes?: Array<"interactions" | "values" | "interactions-values">;
+  visibility?: "all-active" | "after-trigger" | "off";
   trigger?: {
-    type?: "on_interaction_over" | "on_time_over";
+    type?: "interaction" | "time";
     threshold?: number;
-    tool_visible_before_trigger?: boolean;
-    auto_zoom_on_trigger?: boolean;
-    suggestion_on?: boolean;
+    auto_zoom?: boolean;
+    suggestion?: boolean;
   };
 };
 ```
 
-- `zoom_by` selects the zoom dimensions: interaction count (`interactions`), Slider
-  values (`values`), or the two-dimensional interaction/value region (`rectangle-2d`).
+- `modes` selects the zoom dimensions: interaction count (`interactions`), Slider
+  values (`values`), or the two-dimensional interaction/value region
+  (`interactions-values`).
 - It may contain one to three unique options. The default includes all three.
-- `trigger.type` defaults to `on_interaction_over`.
-- For `on_interaction_over`, `threshold` is an interaction count. For `on_time_over`,
-  it is seconds. The interaction threshold defaults to `width / 10`; the time threshold
-  uses the explicit JSON default of `3600` seconds.
-- `tool_visible_before_trigger` controls whether the zoom tool is shown before the
-  threshold and defaults to `true`.
-- `auto_zoom_on_trigger` controls whether reaching the threshold automatically zooms
+- `visibility` defaults to `all-active`. `after-trigger` activates the tools only after
+  the threshold is reached, while `off` disables them.
+- `trigger.type` defaults to `interaction`.
+- For `interaction`, `threshold` is an interaction count and defaults to `50`. For
+  `time`, it is seconds and defaults to `3600`.
+- `auto_zoom` controls whether reaching the threshold automatically zooms
   the view and defaults to `false`.
-- `suggestion_on` is meaningful only when automatic zoom is disabled. It controls a
+- `suggestion` is meaningful only when automatic zoom is disabled. It controls a
   zoom suggestion with a confirmation button and defaults to `false`.
 
 ### Clipping
@@ -210,7 +210,7 @@ It can be used for value-window paging or scrolling with `zoom_in`, `clipping`, 
    view must not change the other view's strategy or window.
 2. Threshold units must follow `trigger.type` exactly. Seconds must not be interpreted as
    interaction counts, and `on_range_over` must not be treated as a Slider value range.
-3. `zoom_by` affects temporal zoom-in only; aggregate zoom-in does not support it.
+3. `modes` affects temporal zoom-in only; aggregate zoom-in does not support it.
 4. Options that do not match the active strategy must not trigger extra rendering or
    interaction behavior.
 5. Smoothing-window unit conversion must use the same pixel/data-domain coordinate basis
