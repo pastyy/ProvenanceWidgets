@@ -38,6 +38,15 @@ const meatOptions = [
   { label: "Lamb", value: "Lamb" },
 ];
 
+const checkboxClippingScalability = {
+  temporal_view: {
+    strategy: "clipping",
+    clipping_options: {
+      trigger: { type: "on_interaction_over", threshold: 50 },
+    },
+  },
+};
+
 const checkboxHistoryValues = [
   [],
   ["Chicken"],
@@ -222,6 +231,7 @@ export default function PlaygroundPage() {
                 optionLabel="label"
                 optionValue="value"
                 provenance={playgroundCheckboxProvenance}
+                scalability={checkboxClippingScalability}
                 selected={checkboxSelection}
                 onSelectedChange={setCheckboxSelection}
                 dataLabel="Meat"

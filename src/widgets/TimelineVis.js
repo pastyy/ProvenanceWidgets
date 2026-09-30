@@ -7,6 +7,10 @@ import {
 import {
     buildSelectionTimelineBars,
 } from "../shared/logic/selectionTimeline.js";
+import {
+    buildClippedSelectionBars,
+    getClippedSelectionRestorePoint,
+} from "../shared/logic/scalability/index.js";
 
 const TimelineVis = ({
     records,
@@ -14,6 +18,7 @@ const TimelineVis = ({
     mode = "interaction",
     timeDomain,
     brushRange,
+    clipping = false,
     leftInsetPx = 0,
     tooltipId,
     widgetId,
@@ -22,7 +27,9 @@ const TimelineVis = ({
     onRestore,
 }) => {
     const bars = useMemo(
-        () => buildSelectionTimelineBars({
+        () => (clipping
+            ? buildClippedSelectionBars
+            : buildSelectionTimelineBars)({
             records,
             maxIndex,
             mode,
@@ -53,6 +60,7 @@ const TimelineVis = ({
             mode,
             timeDomain,
             brushRange,
+            clipping,
         ]
     );
 
@@ -64,6 +72,7 @@ const TimelineVis = ({
             event.currentTarget?.parentElement?.getBoundingClientRect?.();
         const clientX = Number(event.clientX);
         const pointerRatio =
+            (!clipping || (event.type === "click" && event.detail !== 0)) &&
             bounds &&
             Number.isFinite(clientX) &&
             bounds.width > 0
@@ -72,12 +81,14 @@ const TimelineVis = ({
                     Math.min(1, (clientX - bounds.left) / bounds.width)
                 )
                 : null;
-        const point = pointerRatio === null
-            ? bar.startValue
-            : (
-                bar.visibleMin +
-                pointerRatio * (bar.visibleMax - bar.visibleMin)
-            );
+        const point = clipping
+            ? getClippedSelectionRestorePoint(bar, pointerRatio)
+            : pointerRatio === null
+                ? bar.startValue
+                : (
+                    bar.visibleMin +
+                    pointerRatio * (bar.visibleMax - bar.visibleMin)
+                );
         onRestore(value, bar.record, event, {
             point,
             mode,
@@ -102,6 +113,7 @@ const TimelineVis = ({
                     bottom: 0,
                     left: `${leftInsetPx}px`,
                     right: 0,
+                    overflow: clipping ? "hidden" : undefined,
                 }}
             >
                 {bars.map(bar => {
@@ -154,6 +166,9 @@ const TimelineVis = ({
                                 left: bar.left,
                                 width: bar.width,
                                 minWidth: "8px",
+                                boxSizing: clipping
+                                    ? "border-box"
+                                    : undefined,
                                 height: "24px",
                                 top: 0,
                                 backgroundColor: bar.color,
