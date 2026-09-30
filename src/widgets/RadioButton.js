@@ -246,6 +246,7 @@ const Radiobutton = ({
                                 mode={provenanceMode}
                                 timeDomain={radioGroup?.timeDomain}
                                 brushRange={radioGroup?.brushRange}
+                                clipping={radioGroup?.clipping}
                                 tooltipId={tooltip}
                                 widgetId={
                                     radioGroup?.tooltipLabel ??

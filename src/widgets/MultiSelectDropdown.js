@@ -42,13 +42,10 @@ import {
     resolveMultiSelectOptions,
     restoreMultiSelectTemporalValue,
 } from "../shared/logic/multiSelectDropdownValue.js";
-import {
-    getSelectionTimeDomain,
-    normalizeSelectionBrushRange,
-} from "../shared/logic/selectionTimeline.js";
-import { shouldCommitSliderChange } from "../shared/logic/sliderInteraction.js";
+import { getSelectionTimeDomain } from "../shared/logic/selectionTimeline.js";
 import { resolveTemporalBrushEnabled } from "../shared/logic/sliderTemporal.js";
 import TemporalRangeSlider from "../shared/components/TemporalRangeSlider.js";
+import useSelectionTemporalScalability from "../shared/hooks/useSelectionTemporalScalability.js";
 
 const MultiSelectItem = ({
     children,
@@ -59,6 +56,7 @@ const MultiSelectItem = ({
     showTimeline,
     timeDomain,
     brushRange,
+    clipping,
     target,
     tooltipLabel,
     visualize,
@@ -197,6 +195,7 @@ const MultiSelectItem = ({
                             mode={mode}
                             timeDomain={timeDomain}
                             brushRange={brushRange}
+                            clipping={clipping}
                             tooltipId={tooltip}
                             widgetId={tooltipLabel}
                             value={optionKey}
@@ -259,6 +258,7 @@ const MultiSelectDropdown = (props) => {
         multiSelectProps = {},
         temporalBrush: temporalBrushProp,
         enableTemporalBrush,
+        scalability: scalabilityProp,
         ...primeProps
     } = props;
     const tooltipLabel = dataLabel ?? legacyDataLabel ?? id;
@@ -295,9 +295,6 @@ const MultiSelectDropdown = (props) => {
         restoreWidgetValue,
     } = useWidgetRegistry();
     const [showTimeline, setShowTimeline] = useState(false);
-    const [brushRange, setBrushRange] = useState([0, 100]);
-    const [brushDisplayRange, setBrushDisplayRange] =
-        useState([0, 100]);
     const elementRef = useRef(null);
     const dropdownRef = useRef(null);
     const propsRef = useRef(props);
@@ -338,6 +335,13 @@ const MultiSelectDropdown = (props) => {
         onProvenanceChange:
             props.onProvenanceChange ?? props.provenanceChange,
         strategyFactory,
+    });
+    const clipping = useSelectionTemporalScalability({
+        id,
+        widget: "multiselect",
+        mode: provenanceMode,
+        provenance: strategy,
+        scalability: scalabilityProp,
     });
     const [selection, setSelection] = useState(() =>
         provenanceValueToMultiSelect(
@@ -600,38 +604,6 @@ const MultiSelectDropdown = (props) => {
         });
     };
 
-    const commitBrushRange = range => {
-        setBrushRange(range);
-        setBrushDisplayRange(range);
-        window.dispatchEvent(new CustomEvent(
-            "provenance-widgets",
-            {
-                detail: {
-                    id,
-                    widget: "multiselect",
-                    mode: provenanceMode,
-                    interaction: "brush-end",
-                    data: { selection: range },
-                },
-            }
-        ));
-    };
-
-    const handleBrushChange = event => {
-        const range = normalizeSelectionBrushRange(event.value);
-        setBrushDisplayRange(range);
-        if (shouldCommitSliderChange(event)) {
-            commitBrushRange(range);
-        }
-    };
-
-    const handleBrushEnd = event => {
-        const range = normalizeSelectionBrushRange(
-            event.value ?? brushDisplayRange
-        );
-        commitBrushRange(range);
-    };
-
     const originalItemTemplate =
         multiSelectProps.itemTemplate ??
         primeProps.itemTemplate;
@@ -745,7 +717,8 @@ const MultiSelectDropdown = (props) => {
                             mode={provenanceMode}
                             showTimeline={showTimeline}
                             timeDomain={timeDomain}
-                            brushRange={brushRange}
+                            brushRange={clipping.brushRange}
+                            clipping={clipping.enabled}
                             target={id}
                             tooltipLabel={tooltipLabel}
                             visualize={visualize}
@@ -773,15 +746,13 @@ const MultiSelectDropdown = (props) => {
                                     backgroundColor: "#fff",
                                 }}
                             >
-                                {temporalBrush && (
+                                {temporalBrush && clipping.showTemporalAxis && (
                                     <TemporalRangeSlider
                                         id={id}
                                         label={tooltipLabel}
                                         mode={provenanceMode}
                                         placement="footer"
-                                        value={brushDisplayRange}
-                                        onChange={handleBrushChange}
-                                        onSlideEnd={handleBrushEnd}
+                                        {...clipping.sliderProps}
                                     />
                                 )}
                             </div>

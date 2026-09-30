@@ -39,13 +39,10 @@ import {
     singleSelectToProvenanceValue,
     singleSelectValueKey,
 } from "../shared/logic/singleSelectDropdownValue.js";
-import {
-    getSelectionTimeDomain,
-    normalizeSelectionBrushRange,
-} from "../shared/logic/selectionTimeline.js";
-import { shouldCommitSliderChange } from "../shared/logic/sliderInteraction.js";
+import { getSelectionTimeDomain } from "../shared/logic/selectionTimeline.js";
 import { resolveTemporalBrushEnabled } from "../shared/logic/sliderTemporal.js";
 import TemporalRangeSlider from "../shared/components/TemporalRangeSlider.js";
+import useSelectionTemporalScalability from "../shared/hooks/useSelectionTemporalScalability.js";
 
 const SingleSelectItem = ({
     children,
@@ -57,6 +54,7 @@ const SingleSelectItem = ({
     showTimeline,
     timeDomain,
     brushRange,
+    clipping,
     target,
     tooltipLabel,
     visualize,
@@ -197,6 +195,7 @@ const SingleSelectItem = ({
                             mode={mode}
                             timeDomain={timeDomain}
                             brushRange={brushRange}
+                            clipping={clipping}
                             tooltipId={tooltip}
                             widgetId={tooltipLabel}
                             value={optionKey}
@@ -256,6 +255,7 @@ const SingleSelectDropdown = (props) => {
         dropdownProps = {},
         temporalBrush: temporalBrushProp,
         enableTemporalBrush,
+        scalability: scalabilityProp,
         ...primeProps
     } = props;
     const tooltipLabel = dataLabel ?? legacyDataLabel ?? id;
@@ -292,9 +292,6 @@ const SingleSelectDropdown = (props) => {
         restoreWidgetValue,
     } = useWidgetRegistry();
     const [showTimeline, setShowTimeline] = useState(false);
-    const [brushRange, setBrushRange] = useState([0, 100]);
-    const [brushDisplayRange, setBrushDisplayRange] =
-        useState([0, 100]);
     const elementRef = useRef(null);
     const dropdownRef = useRef(null);
     const propsRef = useRef(props);
@@ -335,6 +332,13 @@ const SingleSelectDropdown = (props) => {
         onProvenanceChange:
             props.onProvenanceChange ?? props.provenanceChange,
         strategyFactory,
+    });
+    const clipping = useSelectionTemporalScalability({
+        id,
+        widget: "select",
+        mode: provenanceMode,
+        provenance: strategy,
+        scalability: scalabilityProp,
     });
     const [selection, setSelection] = useState(() =>
         provenanceValueToSingleSelect(
@@ -619,38 +623,6 @@ const SingleSelectDropdown = (props) => {
         });
     };
 
-    const commitBrushRange = range => {
-        setBrushRange(range);
-        setBrushDisplayRange(range);
-        window.dispatchEvent(new CustomEvent(
-            "provenance-widgets",
-            {
-                detail: {
-                    id,
-                    widget: "select",
-                    mode: provenanceMode,
-                    interaction: "brush-end",
-                    data: { selection: range },
-                },
-            }
-        ));
-    };
-
-    const handleBrushChange = event => {
-        const range = normalizeSelectionBrushRange(event.value);
-        setBrushDisplayRange(range);
-        if (shouldCommitSliderChange(event)) {
-            commitBrushRange(range);
-        }
-    };
-
-    const handleBrushEnd = event => {
-        const range = normalizeSelectionBrushRange(
-            event.value ?? brushDisplayRange
-        );
-        commitBrushRange(range);
-    };
-
     const originalItemTemplate =
         dropdownProps.itemTemplate ??
         primeProps.itemTemplate;
@@ -756,7 +728,8 @@ const SingleSelectDropdown = (props) => {
                             mode={provenanceMode}
                             showTimeline={showTimeline}
                             timeDomain={timeDomain}
-                            brushRange={brushRange}
+                            brushRange={clipping.brushRange}
+                            clipping={clipping.enabled}
                             target={id}
                             tooltipLabel={tooltipLabel}
                             visualize={visualize}
@@ -785,15 +758,13 @@ const SingleSelectDropdown = (props) => {
                                     backgroundColor: "#fff",
                                 }}
                             >
-                                {temporalBrush && (
+                                {temporalBrush && clipping.showTemporalAxis && (
                                     <TemporalRangeSlider
                                         id={id}
                                         label={tooltipLabel}
                                         mode={provenanceMode}
                                         placement="footer"
-                                        value={brushDisplayRange}
-                                        onChange={handleBrushChange}
-                                        onSlideEnd={handleBrushEnd}
+                                        {...clipping.sliderProps}
                                     />
                                 )}
                             </div>

@@ -14,3 +14,26 @@ export {
     rectangleContainsPoint,
     rectangleContainsAnyPoint,
 } from "./strategies/zoomIn/rectangle2d.js";
+export {
+    DEFAULT_CLIPPING_THRESHOLD,
+    resolveTemporalClippingConfig,
+} from "./core/normalizeClippingConfig.js";
+export { isClippingTriggered } from "./triggers/clipping.js";
+export {
+    COMPRESSED_HISTORY_PERCENT,
+    axisToInteraction,
+    interactionToAxisPosition,
+    getInteractionClippingWindow,
+    resolveClippingAxisSelection,
+} from "./strategies/clipping/interactionAxis.js";
+export {
+    resolveTemporalClippingView,
+    resolveTemporalClippingBrushEnd,
+} from "./views/temporalClipping.js";
+export { resolveSelectionTemporalView } from "./views/selectionTemporal.js";
+export {
+    getSelectionInteractionCount,
+    buildClippedSelectionBars,
+    findClippedSelectionBar,
+    getClippedSelectionRestorePoint,
+} from "./adapters/selectionTimeline.js";

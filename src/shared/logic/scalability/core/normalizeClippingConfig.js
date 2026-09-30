@@ -1,18 +1,22 @@
-/** Each threshold-sized block becomes compressed history once exceeded. */
-export const CHECKBOX_CLIPPING_WINDOW = 50;
+/** Default size of each compressed interaction block. */
+export const DEFAULT_CLIPPING_THRESHOLD = 50;
 
-export function resolveCheckboxClipping(scalability) {
+export function resolveTemporalClippingConfig(scalability) {
     const view = scalability?.temporal_view;
-    const enabled = (view?.strategy ?? "clipping") === "clipping";
-    const trigger = view?.clipping_options?.trigger ?? {};
+    const strategy = view?.strategy ?? "zoom_in";
+    const enabled = strategy === "clipping";
+    // Inactive strategy options must have no effect on the selected strategy.
+    const trigger = enabled ? view?.clipping_options?.trigger ?? {} : {};
     if (enabled && trigger.type && trigger.type !== "on_interaction_over") {
-        throw new RangeError("Checkbox clipping currently supports on_interaction_over only.");
+        throw new RangeError("Temporal clipping currently supports on_interaction_over only.");
     }
-    const threshold = Number(trigger.threshold ?? CHECKBOX_CLIPPING_WINDOW);
+    const threshold = Number(trigger.threshold ?? DEFAULT_CLIPPING_THRESHOLD);
     return {
+        strategy,
         enabled,
+        triggerType: enabled ? trigger.type ?? "on_interaction_over" : null,
         threshold: Number.isFinite(threshold) && threshold > 0
             ? Math.max(1, Math.floor(threshold))
-            : CHECKBOX_CLIPPING_WINDOW,
+            : DEFAULT_CLIPPING_THRESHOLD,
     };
 }

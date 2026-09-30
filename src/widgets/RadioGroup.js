@@ -29,13 +29,10 @@ import {
     resolveRadioGroupValue,
     restoreRadioGroupTemporalValue,
 } from "../shared/logic/radioGroupValue.js";
-import {
-    getSelectionTimeDomain,
-    normalizeSelectionBrushRange,
-} from "../shared/logic/selectionTimeline.js";
-import { shouldCommitSliderChange } from "../shared/logic/sliderInteraction.js";
+import { getSelectionTimeDomain } from "../shared/logic/selectionTimeline.js";
 import { resolveTemporalBrushEnabled } from "../shared/logic/sliderTemporal.js";
 import TemporalRangeSlider from "../shared/components/TemporalRangeSlider.js";
+import useSelectionTemporalScalability from "../shared/hooks/useSelectionTemporalScalability.js";
 
 export { useRadioGroup };
 
@@ -145,9 +142,6 @@ const RadioGroup = (props) => {
         restoreWidgetValue,
     } = useWidgetRegistry();
     const [showTimeline, setShowTimeline] = useState(false);
-    const [brushRange, setBrushRange] = useState([0, 100]);
-    const [brushDisplayRange, setBrushDisplayRange] =
-        useState([0, 100]);
     const elementRef = useRef(null);
     const propsRef = useRef(props);
     const availableOptionsRef = useRef(availableOptions);
@@ -432,38 +426,6 @@ const RadioGroup = (props) => {
         [restoreWidgetValue, id]
     );
 
-    const commitBrushRange = range => {
-        setBrushRange(range);
-        setBrushDisplayRange(range);
-        window.dispatchEvent(new CustomEvent(
-            "provenance-widgets",
-            {
-                detail: {
-                    id,
-                    widget: "radio-group",
-                    mode: provenanceMode,
-                    interaction: "brush-end",
-                    data: { selection: range },
-                },
-            }
-        ));
-    };
-
-    const handleBrushChange = event => {
-        const range = normalizeSelectionBrushRange(event.value);
-        setBrushDisplayRange(range);
-        if (shouldCommitSliderChange(event)) {
-            commitBrushRange(range);
-        }
-    };
-
-    const handleBrushEnd = event => {
-        const range = normalizeSelectionBrushRange(
-            event.value ?? brushDisplayRange
-        );
-        commitBrushRange(range);
-    };
-
     const renderedChildren = usesData
         ? optionData.map((option, index) => {
             const value = getRadioOptionValue(option, config);
@@ -525,6 +487,14 @@ const RadioGroup = (props) => {
         })
         : children;
 
+    const clipping = useSelectionTemporalScalability({
+        id,
+        widget: "radio-group",
+        mode: provenanceMode,
+        provenance: strategy,
+        scalability: props.scalability,
+    });
+
     const contextValue = useMemo(
         () => ({
             id,
@@ -537,7 +507,8 @@ const RadioGroup = (props) => {
             mode: provenanceMode,
             showTimeline,
             timeDomain,
-            brushRange,
+            brushRange: clipping.brushRange,
+            clipping: clipping.enabled,
             tooltipLabel,
             restoreTemporalValue,
         }),
@@ -552,7 +523,8 @@ const RadioGroup = (props) => {
             provenanceMode,
             showTimeline,
             timeDomain,
-            brushRange,
+            clipping.brushRange,
+            clipping.enabled,
             tooltipLabel,
             restoreTemporalValue,
         ]
@@ -584,14 +556,12 @@ const RadioGroup = (props) => {
                             marginBottom: "12px",
                         }}
                     >
-                        {temporalBrush && (
+                        {temporalBrush && clipping.showTemporalAxis && (
                             <TemporalRangeSlider
                                 id={id}
                                 label={tooltipLabel}
                                 mode={provenanceMode}
-                                value={brushDisplayRange}
-                                onChange={handleBrushChange}
-                                onSlideEnd={handleBrushEnd}
+                                {...clipping.sliderProps}
                             />
                         )}
                     </div>

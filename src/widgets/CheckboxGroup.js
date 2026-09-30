@@ -31,13 +31,10 @@ import {
     resolveCheckboxGroupValue,
     restoreCheckboxGroupTemporalValue,
 } from "../shared/logic/checkboxGroupValue.js";
-import {
-    getSelectionTimeDomain,
-    normalizeSelectionBrushRange,
-} from "../shared/logic/selectionTimeline.js";
-import { shouldCommitSliderChange } from "../shared/logic/sliderInteraction.js";
+import { getSelectionTimeDomain } from "../shared/logic/selectionTimeline.js";
 import { resolveTemporalBrushEnabled } from "../shared/logic/sliderTemporal.js";
 import TemporalRangeSlider from "../shared/components/TemporalRangeSlider.js";
+import useSelectionTemporalScalability from "../shared/hooks/useSelectionTemporalScalability.js";
 
 export { useCheckboxGroup };
 
@@ -157,9 +154,6 @@ const CheckboxGroup = (props) => {
         restoreWidgetValue,
     } = useWidgetRegistry();
     const [showTimeline, setShowTimeline] = useState(false);
-    const [brushRange, setBrushRange] = useState([0, 100]);
-    const [brushDisplayRange, setBrushDisplayRange] =
-        useState([0, 100]);
     const elementRef = useRef(null);
     const propsRef = useRef(props);
     const availableOptionsRef = useRef(availableOptions);
@@ -475,38 +469,6 @@ const CheckboxGroup = (props) => {
         ]
     );
 
-    const commitBrushRange = range => {
-        setBrushRange(range);
-        setBrushDisplayRange(range);
-        window.dispatchEvent(new CustomEvent(
-            "provenance-widgets",
-            {
-                detail: {
-                    id,
-                    widget: "checkbox-group",
-                    mode: provenanceMode,
-                    interaction: "brush-end",
-                    data: { selection: range },
-                },
-            }
-        ));
-    };
-
-    const handleBrushChange = event => {
-        const range = normalizeSelectionBrushRange(event.value);
-        setBrushDisplayRange(range);
-        if (shouldCommitSliderChange(event)) {
-            commitBrushRange(range);
-        }
-    };
-
-    const handleBrushEnd = event => {
-        const range = normalizeSelectionBrushRange(
-            event.value ?? brushDisplayRange
-        );
-        commitBrushRange(range);
-    };
-
     const renderedChildren = usesData
         ? optionData.map((option, index) => {
             const value = getCheckboxOptionValue(option, config);
@@ -568,6 +530,14 @@ const CheckboxGroup = (props) => {
         })
         : children;
 
+    const clipping = useSelectionTemporalScalability({
+        id,
+        widget: "checkbox-group",
+        scalability: props.scalability,
+        mode: provenanceMode,
+        provenance: strategy,
+    });
+
     const contextValue = useMemo(
         () => ({
             id,
@@ -580,7 +550,8 @@ const CheckboxGroup = (props) => {
             mode: provenanceMode,
             showTimeline,
             timeDomain,
-            brushRange,
+            brushRange: clipping.brushRange,
+            clipping: clipping.enabled,
             tooltipLabel,
             restoreTemporalAtContext,
         }),
@@ -595,7 +566,8 @@ const CheckboxGroup = (props) => {
             provenanceMode,
             showTimeline,
             timeDomain,
-            brushRange,
+            clipping.brushRange,
+            clipping.enabled,
             tooltipLabel,
             restoreTemporalAtContext,
         ]
@@ -618,7 +590,11 @@ const CheckboxGroup = (props) => {
                 className={className ?? styleClass}
                 style={style}
             >
-                {visualize && hasProvenance && showTimeline && (
+                {visualize &&
+                    hasProvenance &&
+                    showTimeline &&
+                    temporalBrush &&
+                    clipping.showTemporalAxis && (
                     <div
                         data-timeline-axis={id}
                         data-provenance-chart-target={id}
@@ -627,16 +603,12 @@ const CheckboxGroup = (props) => {
                             marginBottom: "12px",
                         }}
                     >
-                        {temporalBrush && (
-                            <TemporalRangeSlider
+                        <TemporalRangeSlider
                                 id={id}
                                 label={tooltipLabel}
                                 mode={provenanceMode}
-                                value={brushDisplayRange}
-                                onChange={handleBrushChange}
-                                onSlideEnd={handleBrushEnd}
-                            />
-                        )}
+                                {...clipping.sliderProps}
+                        />
                     </div>
                 )}
                 {renderedChildren}
