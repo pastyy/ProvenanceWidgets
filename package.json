@@ -41,6 +41,8 @@
   "scripts": {
     "playground": "vite --config playground/vite.config.js",
     "playground:build": "vite build --config playground/vite.config.js",
+    "playground:clipping": "vite --config playground-clipping/vite.config.js",
+    "playground:clipping:build": "vite build --config playground-clipping/vite.config.js",
     "typecheck": "tsc --noEmit",
     "build": "npm run build:library && npm run build:web-components",
     "build:library": "tsup",
