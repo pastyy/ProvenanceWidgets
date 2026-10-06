@@ -274,7 +274,7 @@ export default function PlaygroundPage() {
                   "strategy": "zoom_in",
                   "zoom_in_options": {
                     "modes": ["interactions", "interactions-values", "values"],
-                    "visibility": "after-trigger",
+                    "visibility": "all-active",
                     "trigger": {
                       "type": "interaction",
                       "threshold": 10,
