@@ -342,6 +342,8 @@ const MultiSelectDropdown = (props) => {
         mode: provenanceMode,
         provenance: strategy,
         scalability: scalabilityProp,
+        records: serializedProvenance.data,
+        elementRef,
     });
     const [selection, setSelection] = useState(() =>
         provenanceValueToMultiSelect(
@@ -586,7 +588,7 @@ const MultiSelectDropdown = (props) => {
 
     const handleTemporalRestore = context => {
         const keys = getMultiSelectKeysAtTimelinePoint({
-            provenance: strategy,
+            provenance: clipping.temporalProvenance,
             // TimelineVis removes the baseline index for plotting. Strategy
             // intervals retain it, so add it back before
             // resolving the simultaneously selected set.
@@ -712,11 +714,11 @@ const MultiSelectDropdown = (props) => {
                     return (
                         <MultiSelectItem
                             optionKey={optionKey}
-                            provenance={strategy}
+                            provenance={showTimeline ? clipping.temporalProvenance : clipping.aggregateProvenance}
                             hasProvenance={hasProvenance}
                             mode={provenanceMode}
                             showTimeline={showTimeline}
-                            timeDomain={timeDomain}
+                            timeDomain={clipping.timeDomain ?? timeDomain}
                             brushRange={clipping.brushRange}
                             clipping={clipping.enabled}
                             target={id}

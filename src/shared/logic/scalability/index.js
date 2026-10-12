@@ -5,6 +5,7 @@ export {
     hasTemporalZoomTriggerCrossed,
     getTemporalAutoZoomRange,
     temporalTriggerMetric,
+    resolveTemporalZoomActions,
 } from "./triggers/autoZoom.js";
 export {
     brushSelectionToValueRange,
@@ -15,19 +16,16 @@ export {
     rectangleContainsAnyPoint,
 } from "./strategies/zoomIn/rectangle2d.js";
 export {
-    DEFAULT_CLIPPING_THRESHOLD,
-    resolveTemporalClippingConfig,
+    CLIPPING_PIXELS_PER_RECORD,
+    resolveClippingConfig,
 } from "./core/normalizeClippingConfig.js";
-export { isClippingTriggered } from "./triggers/clipping.js";
+export { getClippingBoundary } from "./triggers/clipping.js";
 export {
     COMPRESSED_HISTORY_PERCENT,
     axisToInteraction,
     interactionToAxisPosition,
     getInteractionClippingWindow,
 } from "./strategies/clipping/interactionAxis.js";
-export {
-    resolveTemporalClippingView,
-} from "./views/temporalClipping.js";
 export { resolveSelectionTemporalView } from "./views/selectionTemporal.js";
 export {
     getSelectionInteractionCount,

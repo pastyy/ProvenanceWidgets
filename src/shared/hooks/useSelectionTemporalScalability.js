@@ -1,95 +1,56 @@
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { normalizeSelectionBrushRange } from "../logic/selectionTimeline.js";
 import { shouldCommitSliderChange } from "../logic/sliderInteraction.js";
-import {
-    getSelectionInteractionCount,
-    resolveSelectionTemporalView,
-} from "../logic/scalability/index.js";
+import { resolveSelectionTemporalView } from "../logic/scalability/index.js";
 
-/** Shared temporal strategy selection and brush presentation for selection widgets. */
+/** Shared display-only clipping and brush state for categorical selection widgets. */
 export default function useSelectionTemporalScalability({
-    id,
-    widget,
-    mode,
-    provenance,
-    scalability,
+    id, widget, mode, provenance, scalability, records = [], elementRef,
 }) {
-    const [brushRange, setBrushRange] = useState(null);
-    const [brushDisplayRange, setBrushDisplayRange] = useState(null);
-    const count = getSelectionInteractionCount(provenance);
-    const defaultView = resolveSelectionTemporalView({
-        scalability,
-        mode,
-        count,
-        brushRange: null,
-    });
-    const brushKey = [
-        defaultView.config.strategy,
-        defaultView.clippingEnabled,
-        defaultView.config.threshold,
-        defaultView.window.cutoff,
-    ].join(":");
-    const displayRange = brushDisplayRange?.key === brushKey
-        ? brushDisplayRange.value
-        : null;
-    const selectedRange = displayRange ?? (
-        brushRange?.key === brushKey ? brushRange.value : null
-    );
-    const view = selectedRange === null
-        ? defaultView
-        : resolveSelectionTemporalView({
-            scalability,
-            mode,
-            count,
-            brushRange: selectedRange,
-        });
+    const [width, setWidth] = useState(0);
+    const [selection, setSelection] = useState(null);
+    useLayoutEffect(() => {
+        const element = elementRef?.current;
+        if (!element) return undefined;
+        const measure = () => setWidth(element.getBoundingClientRect().width);
+        measure();
+        if (typeof ResizeObserver === "undefined") return undefined;
+        const observer = new ResizeObserver(measure);
+        observer.observe(element);
+        return () => observer.disconnect();
+    }, [elementRef]);
 
-    useEffect(() => {
-        setBrushRange(null);
-        setBrushDisplayRange(null);
-    }, [brushKey]);
-
-    const commit = range => {
-        setBrushRange({ key: brushKey, value: range });
-        setBrushDisplayRange({ key: brushKey, value: range });
+    const view = resolveSelectionTemporalView({ scalability, mode, provenance, records, width });
+    const brushKey = `${id}:${view.resetKey}`;
+    const brushRange = selection?.key === brushKey ? selection.value : [0, 100];
+    const commit = value => {
+        setSelection({ key: brushKey, value });
         window.dispatchEvent(new CustomEvent("provenance-widgets", {
-            detail: {
-                id,
-                widget,
-                mode,
-                interaction: "brush-end",
-                data: { selection: range },
-            },
+            detail: { id, widget, mode, interaction: "brush-end", data: { selection: value } },
         }));
     };
     const onChange = event => {
         const range = normalizeSelectionBrushRange(event.value);
-        setBrushDisplayRange({ key: brushKey, value: range });
-        if (shouldCommitSliderChange(event)) {
-            commit(range);
-        }
-    };
-    const onSlideEnd = event => {
-        const range = normalizeSelectionBrushRange(event.value ?? displayRange);
-        commit(range);
+        setSelection({ key: brushKey, value: range });
+        if (shouldCommitSliderChange(event)) commit(range);
     };
 
     return {
         enabled: view.clippingEnabled,
         showTemporalAxis: view.showTemporalAxis,
-        brushRange: view.effectiveBrushRange,
+        brushRange,
+        temporalProvenance: view.temporalProvenance,
+        aggregateProvenance: view.aggregateProvenance,
+        timeDomain: view.timeDomain,
         sliderProps: {
-            startLabel: mode === "time" ? "t=0" : "n=0",
-            clipCount: view.clipCount,
-            nowLabel: view.clippingEnabled ? `now (${count})` : "now",
-            axis: view.clippingEnabled ? view.window : null,
-            ticks: view.clippingEnabled ? view.ticks : [],
-            step: view.sliderStep,
-            value: displayRange ?? (
-                view.clippingEnabled ? view.window.axisRange : [0, 100]
-            ),
+            startLabel: view.startLabel,
+            nowLabel: view.nowLabel,
+            axis: view.axis,
+            ticks: [],
+            step: null,
+            value: brushRange,
             onChange,
-            onSlideEnd,
+            onSlideEnd: event => commit(normalizeSelectionBrushRange(event.value ?? brushRange)),
         },
     };
 }

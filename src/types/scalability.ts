@@ -44,9 +44,13 @@ export interface AggregateScalabilityZoomInOptions {
   trigger?: ScalabilityZoomTrigger<AggregateScalabilityTriggerType>;
 }
 
+/** Clears display history at each threshold; the source provenance is preserved.
+ * Omitted/invalid thresholds use max(1, floor(widgetWidth / 10)) after layout.
+ */
 export interface ScalabilityClippingOptions<
   TType extends string = TemporalScalabilityTriggerType,
 > {
+  /** Defaults to on_interaction_over; on_time_over uses recorded elapsed seconds. */
   trigger?: ScalabilityThresholdTrigger<TType>;
 }
 
@@ -103,3 +107,23 @@ export type ScalabilityProps = ScalabilityOptions;
 
 /** Alias used by widget-specific APIs such as SingleSlider. */
 export type SingleSliderScalability = ScalabilityOptions;
+
+/** CheckboxGroup uses temporal zoom_in with zoom_by: ["interactions"]. */
+export type CheckboxScalability = ScalabilityOptions;
+
+/** Active checkbox zoom defaults. Explicit clipping props use the shared selection implementation. */
+export const DEFAULT_CHECKBOX_SCALABILITY: CheckboxScalability = {
+  temporal_view: {
+    strategy: "zoom_in",
+    zoom_in_options: {
+      zoom_by: ["interactions"],
+      trigger: {
+        type: "on_interaction_over",
+        threshold: 20,
+        tool_visible_before_trigger: false,
+        auto_zoom_on_trigger: false,
+        suggestion_on: true,
+      },
+    },
+  },
+};

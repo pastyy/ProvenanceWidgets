@@ -81,6 +81,59 @@ npm pack --dry-run
 npm publish --access public
 ```
 
+## Selection clipping
+
+CheckboxGroup, RadioGroup, SingleSelectDropdown, and MultiSelectDropdown share
+clipping for both `temporal_view` and `aggregate_view`. Each view uses
+`strategy: "clipping"` and `clipping_options.trigger`, supporting
+`on_interaction_over` (default) and `on_time_over` (recorded elapsed seconds).
+The default threshold is `max(1, floor(widgetWidth / 10))`.
+At each threshold boundary, the view clears its displayed history and starts a
+new period; original provenance and current values are preserved. Temporal
+axis labels keep the cumulative offset, e.g. `n=20` through `now (21)`.
+See [clipping configuration and semantics](src/shared/logic/scalability/CLIPPING.md).
+
+## Checkbox scalability
+
+Checkbox zoom calculation, state, and UI live together in `src/widgets/CheckboxGroup.js`,
+following the slider renderer in `src/widgets/Chart.js`. Both import configuration
+and trigger helpers through `src/shared/logic/scalability/index.js`.
+
+`CheckboxGroup` uses the active `DEFAULT_CHECKBOX_SCALABILITY` configuration in
+`src/types/scalability.ts`, with the same field names as sliders. Edit parameters
+there for the existing zoom path. Explicit `clipping` configurations supplied
+through `scalability` use the shared selection implementation instead.
+The configuration is shared, while each group maintains independent brush and
+suggestion state. The playground is not required by the library.
+
+For example, `threshold: 20` uses blocks of 20 for checkbox zoom.
+`auto_zoom_on_trigger: false` keeps the full history visible until the user
+brushes or accepts a suggestion.
+
+In interaction mode, checkbox zoom keeps older history in a compressed region
+of the brush axis. With threshold 20, automatic zoom compresses completed
+blocks of 20 and focuses on the current block. Both handles can still
+move continuously back through older history. Changing `threshold` changes
+the block size. This preserves the existing checkbox history zoom behavior.
+
+`tool_visible_before_trigger` controls brush visibility before the threshold.
+`auto_zoom_on_trigger` controls automatic focus and axis compression. When false,
+reaching the threshold leaves both the full history and the uncompressed axis
+unchanged. Manual brushing selects a range on that axis; accepting a suggestion
+activates the compressed axis and focuses the current block. Set `suggestion_on`
+to true to offer that suggestion. `on_time_over` measures the recorded history
+span in seconds and zooms to recent history without interaction-block compression.
+Suggestions appear even while the checkbox history view is closed; accepting
+one opens that view and applies the zoom. Dismissing a suggestion leaves the
+current view unchanged.
+`temporalBrush={false}` disables the zoom tool and automatic zoom.
+
+Checkbox currently supports `zoom_by: ["interactions"]` (history-range zoom).
+Numeric `values` and `rectangle-2d` dimensions do not apply to its categorical
+options and are ignored. Checkbox zoom does not implement `smoothening` or
+aggregate zoom. Aggregate clipping is supported through `scalability` as described
+above. Configure checkbox zoom using `zoom_in_options` in the central object.
+
 ## Contact
 
 If you have any questions, feel free to [open an issue](https://github.com/ProvenanceWidgets/ProvenanceWidgets/issues/new/choose) or contact [Arpit Narechania](https://narechania.com).

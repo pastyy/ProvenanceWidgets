@@ -147,10 +147,14 @@ const ProvenanceButton = ({ target }) => {
             "provenance-dropdown-visibility",
             handleVisibility
         );
-        return () => window.removeEventListener(
-            "provenance-dropdown-visibility",
+        window.addEventListener(
+            "provenance-timeline-visibility",
             handleVisibility
         );
+        return () => {
+            window.removeEventListener("provenance-dropdown-visibility", handleVisibility);
+            window.removeEventListener("provenance-timeline-visibility", handleVisibility);
+        };
     }, [target]);
 
     useEffect(() => {

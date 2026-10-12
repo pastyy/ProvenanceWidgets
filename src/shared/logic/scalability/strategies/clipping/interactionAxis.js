@@ -27,7 +27,7 @@ export function getInteractionClippingWindow({ count = 0, active = false, thresh
 export function axisToInteraction(position, { active, cutoff, domain }) {
     const percent = Math.max(0, Math.min(100, Number(position) || 0));
     const end = domain[1];
-    if (!active) return end * percent / 100;
+    if (!active) return domain[0] + (end - domain[0]) * percent / 100;
     return percent <= COMPRESSED_HISTORY_PERCENT
         ? cutoff * percent / COMPRESSED_HISTORY_PERCENT
         : cutoff + (end - cutoff) * (percent - COMPRESSED_HISTORY_PERCENT) / (100 - COMPRESSED_HISTORY_PERCENT);
@@ -37,7 +37,11 @@ export function axisToInteraction(position, { active, cutoff, domain }) {
 export function interactionToAxisPosition(interaction, { active, cutoff, domain }) {
     const end = domain?.[1] ?? 0;
     const n = Math.max(0, Math.min(end, Number(interaction) || 0));
-    if (!active || end <= 0) return end > 0 ? (n / end) * 100 : 0;
+    if (!active) {
+        const start = domain?.[0] ?? 0;
+        return end > start ? Math.max(0, (n - start) / (end - start) * 100) : 0;
+    }
+    if (end <= 0) return 0;
     if (n <= cutoff) return (n / cutoff) * COMPRESSED_HISTORY_PERCENT;
     return (
         COMPRESSED_HISTORY_PERCENT +

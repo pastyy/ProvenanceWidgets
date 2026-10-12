@@ -143,7 +143,7 @@ const TemporalRangeSlider = ({
         );
         setTooltip({
             position,
-            text: `Now at ${Math.round(interaction)}`,
+            text: `Now at ${Math.round(interaction)}${currentAxis.unit === "seconds" ? "s" : ""}`,
         });
     };
 

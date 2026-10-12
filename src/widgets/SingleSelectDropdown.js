@@ -339,6 +339,8 @@ const SingleSelectDropdown = (props) => {
         mode: provenanceMode,
         provenance: strategy,
         scalability: scalabilityProp,
+        records: serializedProvenance.data,
+        elementRef,
     });
     const [selection, setSelection] = useState(() =>
         provenanceValueToSingleSelect(
@@ -723,11 +725,11 @@ const SingleSelectDropdown = (props) => {
                         <SingleSelectItem
                             option={option}
                             optionKey={optionKey}
-                            provenance={strategy}
+                            provenance={showTimeline ? clipping.temporalProvenance : clipping.aggregateProvenance}
                             hasProvenance={hasProvenance}
                             mode={provenanceMode}
                             showTimeline={showTimeline}
-                            timeDomain={timeDomain}
+                            timeDomain={clipping.timeDomain ?? timeDomain}
                             brushRange={clipping.brushRange}
                             clipping={clipping.enabled}
                             target={id}

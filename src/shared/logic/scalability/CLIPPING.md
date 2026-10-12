@@ -1,14 +1,21 @@
-# Temporal clipping for selection widgets
+# Display clipping for selection widgets
 
-CheckboxGroup, RadioGroup, SingleSelectDropdown, and MultiSelectDropdown use
-the same `scalability` attribute to opt into temporal interaction clipping:
+`CheckboxGroup`, `RadioGroup`, `SingleSelectDropdown`, and `MultiSelectDropdown`
+share the same clipping implementation. InputText and numeric sliders do not
+use this path.
 
 ```jsx
 const scalability = {
   temporal_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 50 },
+      trigger: { type: "on_interaction_over", threshold: 20 },
+    },
+  },
+  aggregate_view: {
+    strategy: "clipping",
+    clipping_options: {
+      trigger: { type: "on_time_over", threshold: 30 },
     },
   },
 };
@@ -16,32 +23,61 @@ const scalability = {
 <RadioGroup scalability={scalability} {...props} />
 ```
 
-The same object works on the other three selection widgets. Without it, their
-existing temporal display remains unchanged. Clipping starts after the 50th
-interaction by default, advances in threshold-sized blocks, and affects only
-the interaction-mode temporal view. The history remains available when the
-brush enters the compressed region. Both brush handles move continuously across
-the whole axis: for example, with 101 interactions the visible range can be
-20–101, and releasing a handle does not expand it to a whole 50-interaction
-block. When a new clipping block starts (for example, at interaction 101),
-the brush moves to the new cutoff (n=100) through now, even if it was moved
-earlier; it can then be dragged continuously back into the compressed history.
-Aggregate data is unchanged. The axis
-compression percentage is an experimental constant in
-`strategies/clipping/interactionAxis.js`.
+Each widget can receive its own object. Each view has its own strategy and
+trigger: enabling aggregate clipping does not enable temporal clipping, and
+vice versa. Explicit clipping props also take precedence over CheckboxGroup's
+existing centralized zoom configuration.
 
-Configuration normalization lives in `core/`, the threshold decision in
-`triggers/`, the axis algorithm in `strategies/clipping/`, and the temporal
-contract in `views/`. `adapters/selectionTimeline.js` converts selection
-provenance records for the shared timeline renderer. React brush state and
-events are handled by `useSelectionTemporalScalability` outside the pure logic
-directory.
+## Trigger and reset behavior
 
-For selection widgets, `views/selectionTemporal.js` selects the temporal
-strategy from the object. Only `strategy: "clipping"` reads `clipping_options`;
-`zoom_in_options`, `smoothening_options`, and `aggregate_view` do not affect
-this interaction-clipping path. Numeric sliders and text input require a
-separate adapter and are outside this first selection-widget implementation.
+- `type` defaults to `on_interaction_over`.
+- `threshold` is a positive integer. When omitted or invalid it defaults to
+  `max(1, floor(widgetWidth / 10))`, using the widget's CSS pixel width. The hook
+  waits for layout before applying this default and observes width changes.
+- Interaction triggers count records with `kind: "interaction"`. Baseline and
+  time-sampling records do not increase the count. One multi-selection change
+  counts as one interaction, regardless of how many options changed.
+- `on_time_over` measures elapsed **seconds in the recorded history**, including
+  time samples. In `mode="time"`, the existing controller's sampling advances
+  that span while idle; in interaction mode it advances when history changes.
+  Importing old history does not count the wall-clock gap since it was recorded.
+- A display resets **at** the threshold, then at each multiple of it. For a
+  threshold of 20, interactions 20, 40, 60, etc. clear the display. Interaction
+  21 starts the next display period; this is not a rolling window of 20 records.
+- Imported history skips completed periods in the same way. With 45 interaction
+  records and threshold 20, only interactions 41–45 contribute to that view.
 
-`on_time_over` and aggregate-view clipping are not implemented by this
-interaction-axis strategy.
+## What changes on screen
+
+Temporal clipping removes older intervals from the display rather than
+compressing them into a brush region. The interaction axis progresses from
+`n=0` to `n=20`, `n=40`, etc.; its right label keeps the cumulative count, such
+as `now (21)`. Time-mode labels use elapsed seconds instead. The brush only
+selects within the current display period and resets to its full range when a
+new period begins.
+
+Aggregate clipping resets displayed frequencies and recency. It counts only
+selection/deselection changes in the current period. An option that remains
+selected across a boundary is not counted as newly selected just because the
+view was reset. Current selected values remain unchanged.
+
+Both views are empty at an exact reset boundary. Original serialized
+provenance, registration, export, and global history restoration are preserved.
+Selecting a visible temporal bar resolves against the displayed period.
+
+## Implementation
+
+- `core/normalizeClippingConfig.js`: shared view configuration and width default.
+- `triggers/clipping.js`: threshold-boundary calculation.
+- `views/selectionTemporal.js`: display projections for aggregate and temporal.
+- `shared/hooks/useSelectionTemporalScalability.js`: width measurement and brush
+  state shared by all four widgets.
+
+Components pass their records and `scalability` attributes into the shared
+hook and render its display strategies. Source strategies stay registered for
+export and restoration. The older `strategies/clipping/interactionAxis.js`
+compressed-axis helpers remain used by checkbox **zoom**, not by reset clipping.
+
+Clipping is implemented entirely in the library's `src/` directory. Callers
+choose the view configuration through `scalability`; the library does not depend
+on playground configuration or demo data.

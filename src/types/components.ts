@@ -28,7 +28,7 @@ import type {
   CommonProvenanceWidgetProps,
   WidgetRegistration,
 } from "./provenance";
-import type { ScalabilityOptions } from "./scalability";
+import type { CheckboxScalability, ScalabilityOptions } from "./scalability";
 
 export type ProvenanceComponent<P> = (
   props: P
@@ -88,6 +88,8 @@ export interface CheckboxGroupProps<
   TValue = unknown,
   TOption extends ProvenanceOption<TValue> = ProvenanceOption<TValue>,
 > extends CommonProvenanceWidgetProps<TValue[]>, WidgetLayoutProps {
+  /** Per-view clipping configuration; zoom continues to use DEFAULT_CHECKBOX_SCALABILITY. */
+  scalability?: CheckboxScalability;
   data?: Array<TOption | TValue>;
   options?: Array<TOption | TValue>;
   children?: ReactNode;

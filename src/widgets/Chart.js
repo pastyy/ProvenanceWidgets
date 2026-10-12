@@ -28,7 +28,7 @@ import {
 import {
     brushSelectionToValueRange,
     getTemporalAutoZoomRange,
-    hasTemporalZoomTriggerCrossed,
+    resolveTemporalZoomActions,
     isTemporalZoomToolVisible,
     resolveTemporalZoomIn,
     temporalTriggerMetric,
@@ -952,21 +952,17 @@ const Chart = ({
             entries,
             temporalZoom.trigger.type
         );
-        const shouldAutoZoom =
-            !autoZoomTriggeredRef.current &&
-            isTemporalSlider &&
-            normalizeTemporalBrush(temporalBrush) &&
-            temporalZoom.enabled &&
-            temporalZoom.zoomBy.includes("interactions") &&
-            entryCount > 1 &&
-            (temporalZoom.trigger.auto_zoom_on_trigger === true ||
-                zoomSuggestionAccepted ||
-                session.isAccepted(suggestionSessionKey)) &&
-            hasTemporalZoomTriggerCrossed({
-                previousMetric: lastTemporalMetricRef.current,
-                entries,
-                trigger: temporalZoom.trigger,
-            });
+        const { shouldAutoZoom, shouldSuggest } = resolveTemporalZoomActions({
+            entries,
+            trigger: temporalZoom.trigger,
+            previousMetric: lastTemporalMetricRef.current,
+            enabled: isTemporalSlider && normalizeTemporalBrush(temporalBrush) &&
+                temporalZoom.enabled && temporalZoom.zoomBy.includes("interactions"),
+            accepted: zoomSuggestionAccepted || session.isAccepted(suggestionSessionKey),
+            alreadyAutoZoomed: autoZoomTriggeredRef.current,
+            suggestionHandled: session.has(suggestionSessionKey),
+            suggestionVisible: zoomSuggestionVisible,
+        });
 
         if (shouldAutoZoom) {
             autoZoomTriggeredRef.current = true;
@@ -974,22 +970,6 @@ const Chart = ({
             setBrushSyncRevision(revision => revision + 1);
         }
 
-        const shouldSuggest =
-            !shouldAutoZoom &&
-            !session.has(suggestionSessionKey) &&
-            !zoomSuggestionVisible &&
-            !zoomSuggestionAccepted &&
-            isTemporalSlider &&
-            normalizeTemporalBrush(temporalBrush) &&
-            temporalZoom.enabled &&
-            temporalZoom.zoomBy.includes("interactions") &&
-            temporalZoom.trigger.auto_zoom_on_trigger !== true &&
-            temporalZoom.trigger.suggestion_on === true &&
-            hasTemporalZoomTriggerCrossed({
-                previousMetric: lastTemporalMetricRef.current,
-                entries,
-                trigger: temporalZoom.trigger,
-            });
         if (shouldSuggest) {
             session.register(suggestionSessionKey);
             setZoomSuggestionVisible(true);
