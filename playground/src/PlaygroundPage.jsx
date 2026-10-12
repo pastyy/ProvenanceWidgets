@@ -270,6 +270,19 @@ export default function PlaygroundPage() {
                 options={singleSliderOptions}
                 provenance={playgroundSingleSliderProvenance}
                 dataLabel="Single value"
+                scalability={{"temporal_view": {
+                  "strategy": "zoom_in",
+                  "zoom_in_options": {
+                    "modes": ["interactions", "interactions-values", "values"],
+                    "visibility": "all-active",
+                    "trigger": {
+                      "type": "interaction",
+                      "threshold": 10,
+                      "auto_zoom": false,
+                      "suggestion": true
+                    }
+                  }
+                }}}
               />
             </WidgetCard>
 

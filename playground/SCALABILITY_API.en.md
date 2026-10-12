@@ -1,20 +1,38 @@
-# SingleSlider Scalability API
+# Widget Scalability API
 
-This document defines the `scalability` configuration interface for `SingleSlider`.
+This document defines the shared `scalability` configuration contract for the seven
+playground widgets and `SuperProvenanceWidget`. The existing SingleSlider proposal
+provides the foundation. Every component requires both temporal and aggregate
+scalability plans.
 Field names and enum values follow `scalability_api.json` in this directory. That
 file is an interface draft containing comments and pseudo-type expressions; it is
 not strict JSON and cannot be parsed directly as such.
 
+This is the development target, rather than a claim that all components already
+implement every option. See the progress table below for current integration.
+Differences in data semantics, strategy behavior, applicable parameters, and
+defaults will be documented while developing each component. Unresolved details
+remain open until that work.
+
 ## Configuration overview
 
-`SingleSlider` accepts an optional `scalability` configuration:
+The target interface for every component uses an optional `scalability`
+configuration with the same base structure:
 
 ```ts
-type SingleSliderScalability = {
+type ScalabilityOptions = {
   temporal_view?: TemporalViewScalability;
   aggregate_view?: AggregateViewScalability;
 };
 ```
+
+`SingleSliderScalability` is an existing alias for this shared configuration.
+Other components use the same base structure and may add documented extensions
+when needed. `SuperProvenanceWidget` is included in this target interface: its
+configuration applies to views across components, while child widget
+configurations apply to their own views. Coordination rules will be defined
+during its development. SuperProvenance does not currently integrate the
+`scalability` prop.
 
 `temporal_view` and `aggregate_view` are independent:
 
@@ -23,6 +41,21 @@ type SingleSliderScalability = {
 - `strategy` is optional and currently defaults to `zoom_in`.
 - Only the `*_options` object matching the active `strategy` takes effect. Options for
   other strategies should be ignored, although they may remain in the configuration.
+
+### Strategy scope and component differences
+
+- Both views of every component require plans for the three baseline strategies:
+  `clipping`, `zoom_in`, and `smoothening`. Additional strategies may be added later,
+  with corresponding updates to enums, option documentation, and the progress table.
+- Sharing a configuration structure does not require identical algorithms. Continuous
+  slider values, discrete selection options, InputText strings, and SuperProvenance
+  states across components require their own data adaptation and presentation.
+- Document component differences during development, including zoom dimensions,
+  clipping units, smoothing targets, aggregate items, trigger metrics, and defaults.
+  Numeric curve smoothing must not be applied directly to category labels or text.
+- When a shared parameter is inapplicable, document the limitation or alternative in
+  that component's notes. Keep the task in the table and record the decision rather
+  than omitting it because it is unimplemented.
 
 ### Default-value rules
 
@@ -40,7 +73,8 @@ type SingleSliderScalability = {
 
 ## Temporal view
 
-`temporal_view` controls the time-based and interaction-history view of `SingleSlider`.
+`temporal_view` controls the current component's time-based and interaction-history
+view. For SuperProvenance, it controls history across components.
 
 ```ts
 type TemporalViewScalability = {
@@ -57,29 +91,31 @@ type TemporalViewScalability = {
 
 ```ts
 type TemporalZoomInOptions = {
-  zoom_by?: Array<"interactions" | "values" | "rectangle-2d">;
+  modes?: Array<"interactions" | "values" | "interactions-values">;
+  visibility?: "all-active" | "after-trigger" | "off";
   trigger?: {
-    type?: "on_interaction_over" | "on_time_over";
+    type?: "interaction" | "time";
     threshold?: number;
-    tool_visible_before_trigger?: boolean;
-    auto_zoom_on_trigger?: boolean;
-    suggestion_on?: boolean;
+    auto_zoom?: boolean;
+    suggestion?: boolean;
   };
 };
 ```
 
-- `zoom_by` selects the zoom dimensions: interaction count (`interactions`), Slider
-  values (`values`), or the two-dimensional interaction/value region (`rectangle-2d`).
-- It may contain one to three unique options. The default includes all three.
-- `trigger.type` defaults to `on_interaction_over`.
-- For `on_interaction_over`, `threshold` is an interaction count. For `on_time_over`,
-  it is seconds. The interaction threshold defaults to `width / 10`; the time threshold
-  uses the explicit JSON default of `3600` seconds.
-- `tool_visible_before_trigger` controls whether the zoom tool is shown before the
-  threshold and defaults to `true`.
-- `auto_zoom_on_trigger` controls whether reaching the threshold automatically zooms
+- `modes` selects the zoom dimensions: interactions (`interactions`), values
+  (`values`), or the two-dimensional interaction/value region (`interactions-values`).
+  SingleSlider's value dimension represents slider values. Other components' value
+  dimensions and applicable modes will be defined during development.
+- It may contain one to three unique options. The shared draft defaults to all three;
+  any component-specific restriction on supported modes must be documented.
+- `visibility` defaults to `all-active`. `after-trigger` activates the tools only after
+  the threshold is reached, while `off` disables them.
+- `trigger.type` defaults to `interaction`.
+- For `interaction`, `threshold` is an interaction count and defaults to `50`. For
+  `time`, it is seconds and defaults to `3600`.
+- `auto_zoom` controls whether reaching the threshold automatically zooms
   the view and defaults to `false`.
-- `suggestion_on` is meaningful only when automatic zoom is disabled. It controls a
+- `suggestion` is meaningful only when automatic zoom is disabled. It controls a
   zoom suggestion with a confirmation button and defaults to `false`.
 
 ### Clipping
@@ -96,7 +132,9 @@ type ClippingOptions = {
 ```
 
 - `trigger.type` defaults to `on_interaction_over`.
-- The threshold unit follows the trigger type. The default is `width / 10`.
+- The threshold unit follows the trigger type. For `on_interaction_over`, it is an
+  interaction count and defaults to `50`. For `on_time_over`, it is seconds and
+  defaults to `3600`.
 
 ### Smoothening
 
@@ -120,11 +158,16 @@ type SmootheningOptions = {
 - `window_unit` defaults to `pixel`: the smoothing window changes with page pixel
   dimensions. `data_domain` defines the window in data-domain units instead.
 - `window_size` is the smoothing calculation window and defaults to `width / 10`.
+- Each component defines the data to smooth. These numeric methods do not mean
+  smoothing category labels or text directly; the adaptation will be specified
+  during that component's development.
 
 ## Aggregate view
 
-`aggregate_view` controls history aggregated by Slider value, such as interaction
-counts per value or aggregate bars.
+`aggregate_view` controls the current component's aggregate history. For example,
+SingleSlider may count interactions per numeric value, while selection widgets
+may aggregate by option. Aggregate items and metrics for InputText, RangeSlider,
+and SuperProvenance will be defined during their development.
 
 ```ts
 type AggregateViewScalability = {
@@ -196,8 +239,9 @@ type WindowOptions = {
 It can be used for value-window paging or scrolling with `zoom_in`, `clipping`, or
 `smoothening`.
 
-- `window_size` is the number of items shown in the current window. An item may be a
-  SingleSlider value or an aggregate value. By default, all items are shown.
+- `window_size` is the number of items shown in the current window. Items may be
+  numeric values, options, or other component-defined aggregate items; SingleSlider
+  values are one example. By default, all items are shown.
 - `window_start` is the starting item index and defaults to `0` (the first item).
 - A window must stay within item bounds. If `window_start + window_size` exceeds the
   available range, clamp it to the last valid item.
@@ -210,10 +254,67 @@ It can be used for value-window paging or scrolling with `zoom_in`, `clipping`, 
    view must not change the other view's strategy or window.
 2. Threshold units must follow `trigger.type` exactly. Seconds must not be interpreted as
    interaction counts, and `on_range_over` must not be treated as a Slider value range.
-3. `zoom_by` affects temporal zoom-in only; aggregate zoom-in does not support it.
+3. `modes` affects temporal zoom-in only; aggregate zoom-in does not support it.
 4. Options that do not match the active strategy must not trigger extra rendering or
    interaction behavior.
-5. Smoothing-window unit conversion must use the same pixel/data-domain coordinate basis
-   throughout both views.
+5. Smoothing-window unit conversion must follow the component's documented data domain
+   and coordinate mapping. If the views use different domains, document their units
+   separately rather than mixing them implicitly.
 6. Resolve all defaults during configuration normalization. The rendering layer should
    consume only normalized configuration.
+
+## Development progress
+
+The table covers the seven playground widgets plus SuperProvenance, tracking
+component × view × strategy. There are currently 8 × 2 × 3 = 48 baseline strategy
+tasks. Both temporal and aggregate plans must be completed for each component;
+add columns when introducing strategies. `aggregate_view.window_options` is not
+a separate strategy; track it in the aggregate row's notes.
+
+Statuses: `Pending` = the corresponding configuration is not integrated;
+`In progress` = active development; `Partial` = some behavior exists, but API
+capabilities remain unintegrated; `Implemented (unverified)` = corresponding
+integration code exists, but acceptance verification is outstanding; `Verified`
+= the component/view/strategy has passed verification, with evidence recorded.
+A draft, type declaration, or shared algorithm alone does not establish widget
+integration.
+
+Initial statuses reflect inspection of the current workspace on 2026-10-12.
+This documentation update did not include runtime acceptance checks, so no task
+is marked `Verified`.
+
+| Component | View | clipping | zoom_in | smoothening | Notes / differences to specify |
+| --- | --- | --- | --- | --- | --- |
+| SingleSlider (exported as `Singleslider`) | temporal | Pending | Implemented (unverified) | Pending | Passes configuration to Chart for interaction, value, and 2D zoom; clipping is not integrated. |
+| SingleSlider | aggregate | Pending | Pending | Pending | Aggregation by value; strategies and window_options await integration. |
+| RangeSlider (exported as `Rangeslider`) | temporal | Pending | Implemented (unverified) | Pending | Reuses Chart zoom configuration; specify interval endpoint and 2D selection semantics during development and acceptance. |
+| RangeSlider | aggregate | Pending | Pending | Pending | Define interval aggregation; develop strategies and window_options. |
+| CheckboxGroup | temporal | Partial | Partial | Pending | Clipping supports only on_interaction_over in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |
+| CheckboxGroup | aggregate | Pending | Pending | Pending | Define option / selection-combination aggregation; integrate strategies and window_options. |
+| RadioGroup | temporal | Partial | Partial | Pending | Clipping supports only on_interaction_over in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |
+| RadioGroup | aggregate | Pending | Pending | Pending | Aggregation by option; strategies and window_options await integration. |
+| InputText | temporal | Pending | Pending | Pending | Does not pass scalability to Chart; define zoom and smoothing semantics for text values. |
+| InputText | aggregate | Pending | Pending | Pending | Define text aggregation; develop strategies and window_options. |
+| SingleSelectDropdown | temporal | Partial | Partial | Pending | Clipping supports only on_interaction_over in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |
+| SingleSelectDropdown | aggregate | Pending | Pending | Pending | Aggregation by option; strategies and window_options await integration. |
+| MultiSelectDropdown | temporal | Partial | Partial | Pending | Clipping supports only on_interaction_over in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |
+| MultiSelectDropdown | aggregate | Pending | Pending | Pending | Define option / selection-combination aggregation; integrate strategies and window_options. |
+| SuperProvenanceWidget | temporal | Pending | Pending | Pending | No scalability integration; define events and states across components and coordination with child widgets. |
+| SuperProvenanceWidget | aggregate | Pending | Pending | Pending | Define aggregation across components; develop strategies and window_options. |
+
+Code evidence for the current statuses:
+
+- Slider configuration forwarding and temporal zoom-in:
+  [SingleSlider.js](../src/widgets/SingleSlider.js),
+  [RangeSlider.js](../src/widgets/RangeSlider.js), and [Chart.js](../src/widgets/Chart.js).
+- Strategy dispatch and current limitations for the four selection widgets:
+  [selectionTemporal.js](../src/shared/logic/scalability/views/selectionTemporal.js)
+  and [CLIPPING.md](../src/shared/logic/scalability/CLIPPING.md).
+- Components without configuration integration:
+  [InputText.js](../src/widgets/InputText.js) and
+  [SuperProvenanceWidget.js](../src/widgets/SuperProvenanceWidget.js).
+
+When developing a component, document its API differences and update the relevant
+strategy statuses and notes. Record test or playground acceptance evidence when
+marking a task `Verified`. After implementing shared capabilities, confirm
+integration for each component before marking its tasks complete.

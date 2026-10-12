@@ -58,7 +58,7 @@ function resolveCheckboxTemporalZoom({
 }) {
     const config = resolveTemporalZoomIn(scalability);
     // Checkbox values are categorical; only history-range zoom is supported.
-    const enabled = config.enabled && config.zoomBy.includes("interactions") && temporalBrush;
+    const enabled = config.enabled && config.modes.includes("interactions") && temporalBrush;
     const entries = records.map((record, index) => [index, [{ time: record.timestamp }]]);
     const metric = temporalTriggerMetric(entries, config.trigger.type);
     const threshold = Number(config.trigger.threshold);
@@ -67,7 +67,7 @@ function resolveCheckboxTemporalZoom({
     const { crossed: triggered, shouldAutoZoom: auto } = resolveTemporalZoomActions({
         entries, trigger: config.trigger, enabled, accepted,
     });
-    const canCompress = triggered && mode === "interaction" && config.trigger.type !== "on_time_over" && count > threshold;
+    const canCompress = triggered && mode === "interaction" && config.trigger.type !== "time" && count > threshold;
     // Reaching the threshold alone must not change the axis in manual mode.
     const compressed = auto && canCompress;
     const blockSize = Math.max(1, Math.floor(threshold) || 1);
@@ -99,7 +99,7 @@ function resolveCheckboxTemporalZoom({
     }
     return {
         config, enabled, entries, metric, triggered, targetRange,
-        showTemporalAxis: enabled && isTemporalZoomToolVisible({ entries, trigger: config.trigger }),
+        showTemporalAxis: enabled && isTemporalZoomToolVisible({ entries, trigger: config.trigger, visibility: config.visibility }),
         compressed,
         axis,
         ticks,
@@ -153,7 +153,7 @@ function useCheckboxTemporalScalability(options) {
             setSuggestion(configKey);
         }
         previous.current = { key: configKey, count, metric: view.metric, triggered: view.triggered };
-    }, [configKey, count, view.metric, view.triggered, view.config.trigger.auto_zoom_on_trigger, view.config.trigger.suggestion_on, decision]);
+    }, [configKey, count, view.metric, view.triggered, view.config.trigger.auto_zoom, view.config.trigger.suggestion, decision]);
 
     const commit = value => {
         setSelection({ key: rangeKey, value });

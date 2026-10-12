@@ -1,19 +1,31 @@
-# SingleSlider Scalability API
+# Widget Scalability API
 
-本文档定义 `SingleSlider` 的 `scalability` 配置接口。字段命名和枚举值沿用
+本文档定义所有 widget 共用的 `scalability` 配置规范，适用于 playground 中的
+七种 widget 和 `SuperProvenanceWidget`。现有 SingleSlider 方案作为通用接口的
+基础；每个组件都需要 temporal 和 aggregate 两套 scalability 方案。
+字段命名和枚举值沿用
 `scalability_api.json`；该 JSON 是接口草案，包含注释和伪类型表达式，不能直接
 作为严格 JSON 解析。
 
+这是一份开发目标规范，不代表所有组件已经实现全部配置。当前接入情况见文末
+开发进度表。各组件的数据含义、策略表现、适用参数和默认值差异，在开发对应
+组件时补充；尚未确定的差异不在这里提前定案。
+
 ## 总体配置
 
-`SingleSlider` 可接收一个可选的 `scalability` 配置：
+所有组件的目标接口都使用可选的 `scalability` 配置，共用以下结构：
 
 ```ts
-type SingleSliderScalability = {
+type ScalabilityOptions = {
   temporal_view?: TemporalViewScalability;
   aggregate_view?: AggregateViewScalability;
 };
 ```
+
+`SingleSliderScalability` 是通用配置的现有类型别名。其他组件沿用同一基础结构，
+在需要时定义组件专属扩展；`SuperProvenanceWidget` 也纳入这一目标接口，
+其自身配置作用于跨组件视图，子 widget 的配置作用于各自的视图，具体联动规则
+在开发该组件时补充。当前 SuperProvenance 尚未接入 `scalability` 属性。
 
 `temporal_view` 和 `aggregate_view` 彼此独立：
 
@@ -22,6 +34,18 @@ type SingleSliderScalability = {
 - `strategy` 非必填；未提供时暂定默认为 `zoom_in`。
 - 只有与当前 `strategy` 对应的 `*_options` 生效，其他策略选项应被忽略，
   但可以保留在配置对象中。
+
+### 策略范围与组件差异
+
+- 每个组件的两个视图都需要规划 `clipping`、`zoom_in`、`smoothening` 三种
+  基础策略。后续可扩展更多策略，并同步更新接口枚举、选项说明和进度表。
+- 共用配置结构不意味着所有组件使用完全相同的算法。例如，Slider 的连续数值、
+  选择类 widget 的离散选项、InputText 的文本和 SuperProvenance 的跨组件状态，
+  需要各自的数据适配和展示方式。
+- 组件差异应在开发时明确，包括缩放维度、裁剪单位、平滑对象、聚合条目、触发
+  指标和默认值。尤其不能直接把数值曲线平滑用于类别标签或文本。
+- 若某个通用参数不适用，应在该组件的补充说明中写明限制或替代方案；进度表
+  保留对应任务并记录决策，不因尚未实现而省略。
 
 ### 默认值规则
 
@@ -37,7 +61,8 @@ type SingleSliderScalability = {
 
 ## Temporal view
 
-`temporal_view` 控制 SingleSlider 的时间/交互历史视图。
+`temporal_view` 控制当前组件的时间/交互历史视图；对 SuperProvenance，则是
+跨组件的时间/交互历史视图。
 
 ```ts
 type TemporalViewScalability = {
@@ -54,27 +79,29 @@ type TemporalViewScalability = {
 
 ```ts
 type TemporalZoomInOptions = {
-  zoom_by?: Array<"interactions" | "values" | "rectangle-2d">;
+  modes?: Array<"interactions" | "values" | "interactions-values">;
+  visibility?: "all-active" | "after-trigger" | "off";
   trigger?: {
-    type?: "on_interaction_over" | "on_time_over";
+    type?: "interaction" | "time";
     threshold?: number;
-    tool_visible_before_trigger?: boolean;
-    auto_zoom_on_trigger?: boolean;
-    suggestion_on?: boolean;
+    auto_zoom?: boolean;
+    suggestion?: boolean;
   };
 };
 ```
 
-- `zoom_by` 指定放大维度：交互次数 (`interactions`)、Slider 数值 (`values`)，
-  或交互次数与数值组成的二维区域 (`rectangle-2d`)。
-- `zoom_by` 可包含 1～3 个不重复的选项，默认包含全部三个选项。
-- `trigger.type` 默认 `on_interaction_over`。
-- `trigger.threshold` 在 `on_interaction_over` 下表示交互次数，在
-  `on_time_over` 下表示秒数。交互阈值默认 `width / 10`；时间阈值沿用 JSON
-  中明确的 `3600` 秒。
-- `tool_visible_before_trigger` 表示达到阈值前是否显示缩放工具，默认 `true`。
-- `auto_zoom_on_trigger` 表示达到阈值时是否自动放大，默认 `false`。
-- `suggestion_on` 仅在不自动放大时有意义；表示是否显示带确认按钮的放大建议，
+- `modes` 指定放大维度：交互维度 (`interactions`)、值维度 (`values`)，
+  或交互与值组成的二维区域 (`interactions-values`)。对 SingleSlider，值维度
+  对应 Slider 数值；其他组件的值维度含义和适用模式在开发时补充。
+- `modes` 可包含 1～3 个不重复的选项，通用草案默认包含全部三个选项；
+  组件若需要限制支持的模式，应明确记录。
+- `visibility` 默认 `all-active`；`after-trigger` 表示达到阈值后才启用缩放工具，
+  `off` 表示始终关闭缩放工具。
+- `trigger.type` 默认 `interaction`。
+- `trigger.threshold` 在 `interaction` 下表示交互次数，默认 `50`；在 `time`
+  下表示秒数，默认 `3600`。
+- `auto_zoom` 表示达到阈值时是否自动放大，默认 `false`。
+- `suggestion` 仅在不自动放大时有意义；表示是否显示带确认按钮的放大建议，
   默认 `false`。
 
 ### Clipping
@@ -91,7 +118,8 @@ type ClippingOptions = {
 ```
 
 - `trigger.type` 默认 `on_interaction_over`。
-- `threshold` 的单位由 `type` 决定；默认值为 `width / 10`。
+- `threshold` 的单位由 `type` 决定；在 `on_interaction_over` 下表示交互次数，
+  默认 `50`；在 `on_time_over` 下表示秒数，默认 `3600`。
 
 ### Smoothening
 
@@ -115,11 +143,14 @@ type SmootheningOptions = {
 - `window_unit` 默认为 `pixel`：窗口随页面像素尺寸变化；
   `data_domain` 则按数据域定义窗口。
 - `window_size` 是平滑计算窗口大小，默认 `width / 10`。
+- 具体平滑的数据对象由组件定义；上述数值方法不能直接解释为对类别或文本
+  本身进行平滑，适配方案在该组件开发时补充。
 
 ## Aggregate view
 
-`aggregate_view` 控制按 Slider 值聚合的历史视图，例如每个数值的交互次数或
-聚合柱状条。
+`aggregate_view` 控制当前组件的聚合历史视图。例如，SingleSlider 可按数值
+统计交互次数，选择类 widget 可按选项聚合。InputText、RangeSlider 和
+SuperProvenance 的具体聚合条目与统计口径，在开发对应组件时补充。
 
 ```ts
 type AggregateViewScalability = {
@@ -190,7 +221,8 @@ type WindowOptions = {
 无论聚合视图采用 `zoom_in`、`clipping` 还是 `smoothening`，都可以使用它进行
 值窗口分页或滚动。
 
-- `window_size` 是当前窗口显示的条目数。条目可以是 SingleSlider 的数值/聚合值。
+- `window_size` 是当前窗口显示的条目数。条目可以是数值、选项或其他组件
+  定义的聚合条目；SingleSlider 的数值/聚合值只是其中一种例子。
   默认显示全部条目（总条目数）。
 - `window_start` 是窗口起始索引，默认 `0`（第一个条目）。
 - 窗口不得越过条目边界；当 `window_start + window_size` 超出范围时，应裁剪到
@@ -203,8 +235,57 @@ type WindowOptions = {
    策略或窗口。
 2. `threshold` 的单位必须严格跟随 `trigger.type`；不能把秒数当成交互次数，
    也不能把 `on_range_over` 当作 Slider 数值范围。
-3. `zoom_by` 只影响 temporal zoom-in；aggregate zoom-in 不支持该字段。
+3. `modes` 只影响 temporal zoom-in；aggregate zoom-in 不支持该字段。
 4. 与当前策略不匹配的选项不得触发额外渲染或交互行为。
-5. 平滑窗口的单位转换必须使用同一套像素/数据域坐标，不能在两个视图中使用
-   不同的换算基准。
+5. 平滑窗口的单位转换必须遵循组件明确的数据域和坐标映射；两个视图采用
+   不同数据域时，应分别说明单位含义，不能隐式混用。
 6. 所有默认值都应在配置归一化阶段确定，渲染层只消费归一化后的配置。
+
+## 开发进度表
+
+以下覆盖 playground 中的七种 widget 加一个 SuperProvenance 组件，按
+“组件 × 视图 × 策略”追踪。目前共 8 × 2 × 3 = 48 项基础策略任务，
+每个组件的 temporal 和 aggregate 方案均必须完成；新增策略时增加对应列。
+`aggregate_view.window_options` 不属于独立策略，其进度记录在 aggregate 行的
+备注中。
+
+状态含义：`待开发` = 尚未接入对应配置；`开发中` = 正在开发；`部分实现` =
+已有部分行为，但仍有接口能力未接入；`已实现（待验证）` = 已找到对应接入代码，
+尚未完成该项验收；`已验证` = 对应组件、视图和策略已完成验证，需附验证依据。
+接口草案、类型声明或共享算法存在，不等于某个 widget 已完成接入。
+
+初始状态根据 2026-10-12 的当前工作区代码检查填写，本次文档修改未进行运行时
+验收，因此没有标记为“已验证”的项目。
+
+| 组件 | 视图 | clipping | zoom_in | smoothening | 备注 / 待补充差异 |
+| --- | --- | --- | --- | --- | --- |
+| SingleSlider（导出名 `Singleslider`） | temporal | 待开发 | 已实现（待验证） | 待开发 | 已向 Chart 传递配置并接入交互、数值和二维缩放；clipping 尚未接入。 |
+| SingleSlider | aggregate | 待开发 | 待开发 | 待开发 | 按数值聚合；策略与 window_options 待接入。 |
+| RangeSlider（导出名 `Rangeslider`） | temporal | 待开发 | 已实现（待验证） | 待开发 | 复用 Chart 的缩放配置；区间端点、二维选择等语义在开发与验收时补充。 |
+| RangeSlider | aggregate | 待开发 | 待开发 | 待开发 | 区间聚合口径、策略与 window_options 待开发。 |
+| CheckboxGroup | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 on_interaction_over；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |
+| CheckboxGroup | aggregate | 待开发 | 待开发 | 待开发 | 选项 / 多选组合的聚合语义待明确；策略与 window_options 待接入。 |
+| RadioGroup | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 on_interaction_over；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |
+| RadioGroup | aggregate | 待开发 | 待开发 | 待开发 | 按选项聚合；策略与 window_options 待接入。 |
+| InputText | temporal | 待开发 | 待开发 | 待开发 | 尚未向 Chart 传递 scalability；文本值的缩放与平滑语义待明确。 |
+| InputText | aggregate | 待开发 | 待开发 | 待开发 | 文本聚合口径、策略与 window_options 待开发。 |
+| SingleSelectDropdown | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 on_interaction_over；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |
+| SingleSelectDropdown | aggregate | 待开发 | 待开发 | 待开发 | 按选项聚合；策略与 window_options 待接入。 |
+| MultiSelectDropdown | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 on_interaction_over；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |
+| MultiSelectDropdown | aggregate | 待开发 | 待开发 | 待开发 | 选项 / 多选组合的聚合语义待明确；策略与 window_options 待接入。 |
+| SuperProvenanceWidget | temporal | 待开发 | 待开发 | 待开发 | 尚未接入 scalability；跨组件事件、状态及与子 widget 的联动规则待明确。 |
+| SuperProvenanceWidget | aggregate | 待开发 | 待开发 | 待开发 | 跨组件聚合口径、策略与 window_options 待开发。 |
+
+当前状态的代码依据：
+
+- Slider 配置传递与 temporal zoom-in：[SingleSlider.js](../src/widgets/SingleSlider.js)、
+  [RangeSlider.js](../src/widgets/RangeSlider.js)、[Chart.js](../src/widgets/Chart.js)。
+- 四种选择类 widget 的策略分派与现有限制：
+  [selectionTemporal.js](../src/shared/logic/scalability/views/selectionTemporal.js)、
+  [CLIPPING.md](../src/shared/logic/scalability/CLIPPING.md)。
+- 尚未接入配置的组件：[InputText.js](../src/widgets/InputText.js)、
+  [SuperProvenanceWidget.js](../src/widgets/SuperProvenanceWidget.js)。
+
+开发单个组件时，应同步补充该组件的接口差异、更新对应策略状态和备注，并在
+标记“已验证”时记录测试或 playground 验收依据。共享能力实现后，仍须逐个
+确认组件接入，不能一次性将所有组件标记为完成。

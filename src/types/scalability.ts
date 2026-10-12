@@ -11,10 +11,17 @@ export type AggregateScalabilityTriggerType =
   | TemporalScalabilityTriggerType
   | "on_range_over";
 
-export type ScalabilityZoomBy =
+export type TemporalZoomMode =
   | "interactions"
   | "values"
-  | "rectangle-2d";
+  | "interactions-values";
+
+export type TemporalZoomVisibility =
+  | "all-active"
+  | "after-trigger"
+  | "off";
+
+export type TemporalZoomTriggerType = "interaction" | "time";
 
 export interface ScalabilityThresholdTrigger<
   TType extends string = string,
@@ -34,10 +41,17 @@ export interface ScalabilityZoomTrigger<
   suggestion_on?: boolean;
 }
 
-export interface TemporalScalabilityZoomInOptions {
-  /** One or more dimensions to use for temporal zooming. */
-  zoom_by?: ScalabilityZoomBy[];
-  trigger?: ScalabilityZoomTrigger<TemporalScalabilityTriggerType>;
+export interface TemporalZoomInOptions {
+  /** One or more interaction/value dimensions to use for temporal zooming. */
+  modes?: TemporalZoomMode[];
+  /** Whether zoom tools are always active, trigger-gated, or disabled. */
+  visibility?: TemporalZoomVisibility;
+  trigger?: ScalabilityThresholdTrigger<TemporalZoomTriggerType> & {
+    /** Whether zooming happens automatically at the threshold. */
+    auto_zoom?: boolean;
+    /** Whether to show a confirmation suggestion when auto zoom is disabled. */
+    suggestion?: boolean;
+  };
 }
 
 export interface AggregateScalabilityZoomInOptions {
@@ -83,7 +97,7 @@ export interface ScalabilityWindowOptions {
 
 export interface TemporalViewScalability {
   strategy?: ScalabilityStrategy;
-  zoom_in_options?: TemporalScalabilityZoomInOptions;
+  zoom_in_options?: TemporalZoomInOptions;
   clipping_options?: TemporalScalabilityClippingOptions;
   smoothening_options?: ScalabilitySmootheningOptions;
 }
@@ -108,7 +122,7 @@ export type ScalabilityProps = ScalabilityOptions;
 /** Alias used by widget-specific APIs such as SingleSlider. */
 export type SingleSliderScalability = ScalabilityOptions;
 
-/** CheckboxGroup uses temporal zoom_in with zoom_by: ["interactions"]. */
+/** CheckboxGroup uses temporal zoom_in with modes: ["interactions"]. */
 export type CheckboxScalability = ScalabilityOptions;
 
 /** Active checkbox zoom defaults. Explicit clipping props use the shared selection implementation. */
@@ -116,13 +130,13 @@ export const DEFAULT_CHECKBOX_SCALABILITY: CheckboxScalability = {
   temporal_view: {
     strategy: "zoom_in",
     zoom_in_options: {
-      zoom_by: ["interactions"],
+      modes: ["interactions"],
+      visibility: "after-trigger",
       trigger: {
-        type: "on_interaction_over",
+        type: "interaction",
         threshold: 20,
-        tool_visible_before_trigger: false,
-        auto_zoom_on_trigger: false,
-        suggestion_on: true,
+        auto_zoom: false,
+        suggestion: true,
       },
     },
   },

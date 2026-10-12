@@ -6,17 +6,19 @@ const getRecordTime = record => {
     return Number.isFinite(timestamp) ? timestamp : null;
 };
 
-/** Whether a scalability tool should remain visible before its trigger. */
+/** Whether temporal zoom tools are active for the current trigger state. */
 export const isTemporalZoomToolVisible = ({
     entries = [],
+    visibility = "all-active",
     trigger = {},
 }) => {
-    if (trigger.tool_visible_before_trigger !== false) return true;
+    if (visibility === "off") return false;
+    if (visibility !== "after-trigger") return true;
 
     const threshold = Number(trigger.threshold);
     if (!Number.isFinite(threshold) || threshold <= 0) return false;
 
-    if (trigger.type === "on_time_over") {
+    if (trigger.type === "time") {
         const timestamps = entries
             .map(([, records]) => getRecordTime(records?.[0]))
             .filter(value => value !== null);

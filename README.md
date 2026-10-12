@@ -107,7 +107,7 @@ The configuration is shared, while each group maintains independent brush and
 suggestion state. The playground is not required by the library.
 
 For example, `threshold: 20` uses blocks of 20 for checkbox zoom.
-`auto_zoom_on_trigger: false` keeps the full history visible until the user
+`auto_zoom: false` keeps the full history visible until the user
 brushes or accepts a suggestion.
 
 In interaction mode, checkbox zoom keeps older history in a compressed region
@@ -116,19 +116,19 @@ blocks of 20 and focuses on the current block. Both handles can still
 move continuously back through older history. Changing `threshold` changes
 the block size. This preserves the existing checkbox history zoom behavior.
 
-`tool_visible_before_trigger` controls brush visibility before the threshold.
-`auto_zoom_on_trigger` controls automatic focus and axis compression. When false,
+`visibility` controls brush visibility before the threshold (`all-active`, `after-trigger`, or `off`).
+`auto_zoom` controls automatic focus and axis compression. When false,
 reaching the threshold leaves both the full history and the uncompressed axis
 unchanged. Manual brushing selects a range on that axis; accepting a suggestion
-activates the compressed axis and focuses the current block. Set `suggestion_on`
-to true to offer that suggestion. `on_time_over` measures the recorded history
+activates the compressed axis and focuses the current block. Set `suggestion`
+to true to offer that suggestion. `time` measures the recorded history
 span in seconds and zooms to recent history without interaction-block compression.
 Suggestions appear even while the checkbox history view is closed; accepting
 one opens that view and applies the zoom. Dismissing a suggestion leaves the
 current view unchanged.
 `temporalBrush={false}` disables the zoom tool and automatic zoom.
 
-Checkbox currently supports `zoom_by: ["interactions"]` (history-range zoom).
+Checkbox currently supports `modes: ["interactions"]` (history-range zoom).
 Numeric `values` and `rectangle-2d` dimensions do not apply to its categorical
 options and are ignored. Checkbox zoom does not implement `smoothening` or
 aggregate zoom. Aggregate clipping is supported through `scalability` as described

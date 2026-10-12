@@ -8,7 +8,7 @@ const getRecordTime = record => {
 
 export const temporalTriggerMetric = (entries, triggerType) => {
     if (!Array.isArray(entries)) return 0;
-    if (triggerType !== "on_time_over") return entries.length;
+    if (triggerType !== "time") return entries.length;
 
     const timestamps = entries
         .map(([, records]) => getRecordTime(records?.[0]))
@@ -28,10 +28,10 @@ export const resolveTemporalZoomActions = ({
 } = {}) => {
     const crossed = enabled && hasTemporalZoomTriggerCrossed({ entries, trigger, previousMetric });
     const shouldAutoZoom = crossed && entries.length > 1 && !alreadyAutoZoomed &&
-        (trigger.auto_zoom_on_trigger === true || accepted);
+        (trigger.auto_zoom === true || accepted);
     const shouldSuggest = crossed && !shouldAutoZoom && !suggestionHandled &&
-        !suggestionVisible && !accepted && trigger.auto_zoom_on_trigger !== true &&
-        trigger.suggestion_on === true;
+        !suggestionVisible && !accepted && trigger.auto_zoom !== true &&
+        trigger.suggestion === true;
     return { crossed, shouldAutoZoom, shouldSuggest };
 };
 
@@ -44,7 +44,7 @@ export const getTemporalAutoZoomRange = (entries = [], trigger = {}) => {
         return [0, entries.length - 1];
     }
 
-    if (trigger.type !== "on_time_over") {
+    if (trigger.type !== "time") {
         const count = Math.max(1, Math.floor(threshold));
         return [Math.max(0, entries.length - count), entries.length - 1];
     }

@@ -1,0 +1,187 @@
+import { buildAdaptiveSliderTicks } from "../logic/sliderTicks.js";
+
+const HORIZONTAL_INSET = 6;
+const VERTICAL_INSET = 8;
+const AXIS_WIDTH = 24;
+const AXIS_HEIGHT = 24;
+export const ZOOM_AXIS_TOP_SPACE = 28;
+export const ZOOM_AXIS_RIGHT_SPACE = 28;
+
+const isValidDomain = (domain) => (
+    Array.isArray(domain) &&
+    domain.length === 2 &&
+    Number.isFinite(Number(domain[0])) &&
+    Number.isFinite(Number(domain[1])) &&
+    Number(domain[1]) >= Number(domain[0])
+);
+
+const axisColors = theme => theme === "light"
+    ? {
+        background: "rgba(255, 255, 255, 0.94)",
+        line: "#6c757d",
+        text: "#495057",
+    }
+    : {
+        background: "rgba(51, 51, 51, 0.94)",
+        line: "#adb5bd",
+        text: "#ced4da",
+    };
+
+/** Render a non-layout-affecting axis for the currently selected domain. */
+const ZoomedRangeAxis = ({
+    domain,
+    orientation = "horizontal",
+    pixelLength,
+    step = 1,
+    minimumStep,
+    ticksArray,
+    theme = "dark",
+    label,
+    topInset = ZOOM_AXIS_TOP_SPACE,
+    rightInset = ZOOM_AXIS_RIGHT_SPACE,
+}) => {
+    if (!isValidDomain(domain)) return null;
+
+    const min = Number(domain[0]);
+    const max = Number(domain[1]);
+    const colors = axisColors(theme);
+    const horizontal = orientation === "horizontal";
+    const length = Math.max(1, Number(pixelLength) || 1);
+    const ticks = buildAdaptiveSliderTicks({
+        min,
+        max,
+        step,
+        minimumStep,
+        ticksArray,
+        pixelLength: length,
+    });
+    const span = max - min;
+    const getRatio = value => span > 0
+        ? (Number(value) - min) / span
+        : 0.5;
+
+    if (horizontal) {
+        const trackLength = Math.max(1, length - (HORIZONTAL_INSET * 2));
+        return (
+            <div
+                data-provenance-zoom-axis="values"
+                aria-hidden="true"
+                style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: `${rightInset}px`,
+                    height: `${AXIS_HEIGHT}px`,
+                    background: colors.background,
+                    pointerEvents: "none",
+                    zIndex: 8,
+                }}
+            >
+                <svg
+                    width="100%"
+                    height={AXIS_HEIGHT}
+                    style={{ display: "block", overflow: "visible" }}
+                >
+                    <line
+                        x1={HORIZONTAL_INSET}
+                        x2={length - HORIZONTAL_INSET}
+                        y1="8"
+                        y2="8"
+                        stroke={colors.line}
+                    />
+                    {ticks.map(tick => {
+                        const x = HORIZONTAL_INSET + (
+                            getRatio(tick) * trackLength
+                        );
+                        return (
+                            <g key={`zoom-values-tick-${tick}`}>
+                                <line
+                                    x1={x}
+                                    x2={x}
+                                    y1="8"
+                                    y2="14"
+                                    stroke={colors.line}
+                                />
+                                <text
+                                    x={x}
+                                    y="28"
+                                    fill={colors.text}
+                                    fontSize="10"
+                                    textAnchor="middle"
+                                >
+                                    {tick}
+                                </text>
+                            </g>
+                        );
+                    })}
+                    {label && (
+                        <title>{label}</title>
+                    )}
+                </svg>
+            </div>
+        );
+    }
+
+    const trackLength = Math.max(1, length - (VERTICAL_INSET * 2));
+    return (
+        <div
+            data-provenance-zoom-axis="interactions"
+            aria-hidden="true"
+            style={{
+                position: "absolute",
+                top: `${topInset}px`,
+                right: 0,
+                width: `${AXIS_WIDTH}px`,
+                height: `${length}px`,
+                background: colors.background,
+                pointerEvents: "none",
+                zIndex: 8,
+            }}
+        >
+            <svg
+                width={AXIS_WIDTH}
+                height={length}
+                style={{ display: "block", overflow: "visible" }}
+            >
+                <line
+                    x1="8"
+                    x2="8"
+                    y1={VERTICAL_INSET}
+                    y2={length - VERTICAL_INSET}
+                    stroke={colors.line}
+                />
+                {ticks.map(tick => {
+                    const y = VERTICAL_INSET + (
+                        getRatio(tick) * trackLength
+                    );
+                    return (
+                        <g key={`zoom-interactions-tick-${tick}`}>
+                            <line
+                                x1="8"
+                                x2="14"
+                                y1={y}
+                                y2={y}
+                                stroke={colors.line}
+                            />
+                            <text
+                                x="18"
+                                y={y}
+                                dy="0.32em"
+                                fill={colors.text}
+                                fontSize="10"
+                                textAnchor="start"
+                            >
+                                {tick}
+                            </text>
+                        </g>
+                    );
+                })}
+                {label && (
+                    <title>{label}</title>
+                )}
+            </svg>
+        </div>
+    );
+};
+
+export default ZoomedRangeAxis;

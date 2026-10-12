@@ -41,6 +41,10 @@ import {
     buildSliderTicks,
     getSliderPosition,
 } from '../shared/logic/sliderTicks.js';
+import ZoomedRangeAxis, {
+    ZOOM_AXIS_RIGHT_SPACE,
+    ZOOM_AXIS_TOP_SPACE,
+} from '../shared/components/ZoomedRangeAxis.js';
 import {
     RectangleDerivedChart,
     useRectangle2D,
@@ -58,6 +62,7 @@ const TemporalBrush = ({
     mode,
     onInteractionStart,
     onRangeChange,
+    offsetTop = 0,
     positions,
     range,
     syncRevision = 0,
@@ -77,17 +82,22 @@ const TemporalBrush = ({
     useEffect(() => {
         if (!interactive || !brushRef.current || entryCount <= 1) return undefined;
 
+        const updateRange = event => {
+            const nextRange = brushSelectionToPositionRange(
+                event.selection,
+                positions
+            );
+            onRangeChange(nextRange);
+            return nextRange;
+        };
         const brush = d3
             .brushY()
             // Attach the brush to the y-axis and extend its hit area left.
             .extent([[-42, 0], [0, height]])
             .on("start", () => onInteractionStart?.())
+            .on("brush", updateRange)
             .on("end", event => {
-                const range = brushSelectionToPositionRange(
-                    event.selection,
-                    positions
-                );
-                onRangeChange(range);
+                const range = updateRange(event);
                 if (typeof window !== "undefined") {
                     window.dispatchEvent(new CustomEvent(
                         "provenance-widgets",
@@ -192,6 +202,7 @@ const TemporalBrush = ({
                 ...tooltipProps.style,
                 flex: "0 0 64px",
                 width: "64px",
+                marginTop: `${offsetTop}px`,
             }}
         >
             <svg
@@ -290,14 +301,24 @@ const TemporalValueBrush = ({
             return undefined;
         }
 
+        const updateRange = event => {
+            const range = brushSelectionToValueRange(
+                event.selection,
+                width,
+                min,
+                max,
+                step
+            );
+            onRangeChange(range);
+            return range;
+        };
         const brush = d3
             .brushX()
             .extent([[0, 0], [width, Math.max(1, height - 8)]])
             .on("start", () => onInteractionStart?.())
+            .on("brush", updateRange)
             .on("end", event => {
-                onRangeChange(
-                    brushSelectionToValueRange(event.selection, width, min, max, step)
-                );
+                updateRange(event);
                 if (typeof window !== "undefined") {
                     window.dispatchEvent(new CustomEvent(
                         "provenance-widgets",
@@ -461,16 +482,16 @@ const Chart = ({
     );
     const temporalZoomKey = [
         temporalZoom.enabled,
-        temporalZoom.zoomBy.join(","),
+        temporalZoom.modes.join(","),
+        temporalZoom.visibility,
         temporalZoom.trigger.type ?? "",
         temporalZoom.trigger.threshold ?? "",
-        temporalZoom.trigger.tool_visible_before_trigger ?? "",
-        temporalZoom.trigger.auto_zoom_on_trigger ?? "",
-        temporalZoom.trigger.suggestion_on ?? "",
+        temporalZoom.trigger.auto_zoom ?? "",
+        temporalZoom.trigger.suggestion ?? "",
     ].join("|");
     const rectangleConfigured =
         temporalZoom.enabled &&
-        temporalZoom.zoomBy.includes("rectangle-2d");
+        temporalZoom.modes.includes("interactions-values");
     const {
         clear: clearRectangleSelection,
         handleMouseDown: handleRectangleMouseDown,
@@ -934,7 +955,7 @@ const Chart = ({
             return;
         }
         rectangleLogTargetRef.current = target;
-        console.log("rectangle-2d enabled");
+        console.log("interactions-values enabled");
     }, [chartData, part, rectangleConfigured, target]);
 
     useEffect(() => {
@@ -957,7 +978,7 @@ const Chart = ({
             trigger: temporalZoom.trigger,
             previousMetric: lastTemporalMetricRef.current,
             enabled: isTemporalSlider && normalizeTemporalBrush(temporalBrush) &&
-                temporalZoom.enabled && temporalZoom.zoomBy.includes("interactions"),
+                temporalZoom.enabled && temporalZoom.modes.includes("interactions"),
             accepted: zoomSuggestionAccepted || session.isAccepted(suggestionSessionKey),
             alreadyAutoZoomed: autoZoomTriggeredRef.current,
             suggestionHandled: session.has(suggestionSessionKey),
@@ -1040,18 +1061,20 @@ const Chart = ({
             normalizeTemporalBrush(temporalBrush) &&
             allSortedEntries.length > 1 &&
             temporalZoom.enabled &&
-            temporalZoom.zoomBy.includes("interactions") &&
+            temporalZoom.modes.includes("interactions") &&
             isTemporalZoomToolVisible({
                 entries: allSortedEntries,
+                visibility: temporalZoom.visibility,
                 trigger: temporalZoom.trigger,
             });
         const valueBrushEnabled =
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
             normalizeTemporalBrush(temporalBrush) &&
             temporalZoom.enabled &&
-            temporalZoom.zoomBy.includes("values") &&
+            temporalZoom.modes.includes("values") &&
             isTemporalZoomToolVisible({
                 entries: allSortedEntries,
+                visibility: temporalZoom.visibility,
                 trigger: temporalZoom.trigger,
             });
         const rectangleToolEnabled =
@@ -1060,6 +1083,7 @@ const Chart = ({
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
             isTemporalZoomToolVisible({
                 entries: allSortedEntries,
+                visibility: temporalZoom.visibility,
                 trigger: temporalZoom.trigger,
             });
         const showInteractionAxis =
@@ -1068,6 +1092,14 @@ const Chart = ({
         const showValueAxis =
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
             normalizeTemporalBrush(temporalBrush);
+        const reserveValueZoomAxisSpace =
+            showValueAxis &&
+            temporalZoom.enabled &&
+            temporalZoom.modes.includes("values");
+        const reserveInteractionZoomAxisSpace =
+            showInteractionAxis &&
+            temporalZoom.enabled &&
+            temporalZoom.modes.includes("interactions");
         const sortedEntries = brushEnabled
             ? filterTemporalEntries(allSortedEntries, brushRange)
             : allSortedEntries;
@@ -1138,6 +1170,22 @@ const Chart = ({
         const domainMin = indexDomain ? indexDomain[0] : 0;
         const valueDomainMin = valueBrushRange?.[0] ?? domainMin;
         const valueDomainMax = valueBrushRange?.[1] ?? domainMax;
+        const interactionZoomRange = (
+            Array.isArray(brushRange) &&
+            brushRange.length === 2 &&
+            allSortedEntries.length > 0
+        )
+            ? [
+                Math.max(0, Math.min(
+                    allSortedEntries.length - 1,
+                    brushRange[0]
+                )),
+                Math.max(0, Math.min(
+                    allSortedEntries.length - 1,
+                    brushRange[1]
+                )),
+            ]
+            : null;
         const usesContinuousDomain =
             chartData.isRangeSlider ||
             chartData.isSingleSlider ||
@@ -1476,6 +1524,9 @@ const Chart = ({
                          mode={chartData.mode ?? mode}
                          onInteractionStart={clearRectangleSelection}
                          onRangeChange={handleBrushRangeChange}
+                         offsetTop={reserveValueZoomAxisSpace
+                             ? ZOOM_AXIS_TOP_SPACE
+                             : 0}
                          positions={brushYPositions}
                          range={brushRange}
                          syncRevision={brushSyncRevision}
@@ -1500,7 +1551,42 @@ const Chart = ({
                          : 'auto',
                      flexGrow: 1,
                      position: 'relative',
+                     paddingTop: reserveValueZoomAxisSpace
+                         ? `${ZOOM_AXIS_TOP_SPACE}px`
+                         : undefined,
+                     paddingRight: reserveInteractionZoomAxisSpace
+                         ? `${ZOOM_AXIS_RIGHT_SPACE}px`
+                         : undefined,
+                     boxSizing: 'border-box',
                  }}>
+                 {valueBrushEnabled && Array.isArray(valueBrushRange) && (
+                     <ZoomedRangeAxis
+                         domain={valueBrushRange}
+                         label="Selected slider value range"
+                         orientation="horizontal"
+                         pixelLength={valueBrushWidth}
+                         step={sliderTickStep ?? sliderStep}
+                         minimumStep={sliderStep}
+                         ticksArray={sliderTicksArray}
+                         theme={theme}
+                         rightInset={reserveInteractionZoomAxisSpace
+                             ? ZOOM_AXIS_RIGHT_SPACE
+                             : 0}
+                     />
+                 )}
+                 {brushEnabled && interactionZoomRange && (
+                     <ZoomedRangeAxis
+                         domain={interactionZoomRange}
+                         label="Selected interaction range"
+                         orientation="vertical"
+                         pixelLength={temporalPlotHeight}
+                         step={1}
+                         theme={theme}
+                         topInset={reserveValueZoomAxisSpace
+                             ? ZOOM_AXIS_TOP_SPACE
+                             : 0}
+                     />
+                 )}
                  {showValueAxis && (
                      <div ref={valueBrushContainerRef} style={{ width: "100%", order: 2 }}>
                          <TemporalValueBrush
@@ -1561,7 +1647,7 @@ const Chart = ({
                                     whiteSpace: "nowrap",
                                 }}
                             >
-                                <span>Zoom in to recent interactions?</span>{" "}
+                                <span>Declutter now?</span>{" "}
                                 <button
                                     type="button"
                                     onClick={() => {
