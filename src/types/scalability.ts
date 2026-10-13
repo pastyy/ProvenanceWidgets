@@ -126,18 +126,18 @@ export type SingleSliderScalability = ScalabilityOptions;
 /** CheckboxGroup uses temporal zoom_in with modes: ["interactions"]. */
 export type CheckboxScalability = ScalabilityOptions;
 
-/** Active checkbox zoom defaults. Explicit clipping props use the shared selection implementation. */
+/** Checkbox defaults to manual drag-to-zoom, using the shared slider trigger defaults. */
 export const DEFAULT_CHECKBOX_SCALABILITY: CheckboxScalability = {
   temporal_view: {
     strategy: "zoom_in",
     zoom_in_options: {
       modes: ["interactions"],
-      visibility: "after-trigger",
+      visibility: "all-active",
       trigger: {
         type: "interaction",
-        threshold: 20,
+        threshold: 50,
         auto_zoom: false,
-        suggestion: true,
+        suggestion: false,
       },
     },
   },

@@ -22,8 +22,7 @@ Each widget can receive its own object. If `aggregate_view` is omitted,
 it inherits `temporal_view` when that view uses clipping, including its trigger
 and threshold. An explicit `aggregate_view` overrides this inheritance and
 can use a different threshold or strategy. Aggregate-only clipping does not
-enable temporal clipping. Explicit clipping props also take precedence over
-CheckboxGroup's existing centralized zoom configuration.
+enable temporal clipping. Each widget honors its supplied configuration.
 
 ## Trigger and reset behavior
 
@@ -46,15 +45,9 @@ CheckboxGroup's existing centralized zoom configuration.
 
 ## What changes on screen
 
-Temporal clipping removes older intervals from the display rather than
-compressing them into a brush region. Selection and text axes progress from
-`n=0` to `n=20`, `n=40`, etc.; the endpoint keeps the cumulative count, such
-as `now (21)`. Time-mode labels use elapsed seconds instead. The two numeric
-sliders retain their normal per-interaction numeric ticks and point spacing;
-clipping does not replace their axis with threshold/now labels. Selection-widget brushes only select within the current display period and
-reset to their full range when a new period begins. Text and numeric temporal
-views display the current period on a fixed axis; zoom tools are inactive while
-clipping is selected.
+Temporal clipping displays only the current period. It does not render a
+separate timeline, axis footer, or zoom brush. The clipped temporal marks and
+aggregate bars remain visible and interactive; source history is retained.
 
 Aggregate clipping resets displayed frequencies and recency. Text suggestions,
 numeric frequencies, and range coverage use only interactions after the reset.
@@ -85,8 +78,8 @@ Selecting a visible temporal bar resolves against the displayed period.
 
 Components pass their records and `scalability` attributes into the shared
 hook and render its display strategies. Source strategies stay registered for
-export and restoration. The older `strategies/clipping/interactionAxis.js`
-compressed-axis helpers remain used by checkbox **zoom**, not by reset clipping.
+export and restoration. Checkbox zoom uses a linear drag-selection brush;
+threshold-based history compression has been removed.
 
 Clipping is implemented entirely in the library's `src/` directory. Callers
 choose the view configuration through `scalability`; the library does not depend

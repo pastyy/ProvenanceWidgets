@@ -1,3 +1,4 @@
+import { styleZoomBrush } from "../shared/components/brushAppearance.js";
 import {
     useCallback,
     useEffect,
@@ -124,20 +125,7 @@ const TemporalBrush = ({
         brushInstanceRef.current = brush;
 
         const brushGroup = d3.select(brushRef.current).call(brush);
-        brushGroup
-            .selectAll(".overlay")
-            .attr("fill", "rgba(113, 231, 251, 0.06)")
-            .style("cursor", "ns-resize");
-        brushGroup
-            .selectAll(".selection")
-            .attr("fill", "#71e7fb")
-            .attr("fill-opacity", 0.24)
-            .attr("stroke", "#17a2b8")
-            .attr("stroke-width", 1.5);
-        brushGroup
-            .selectAll(".handle")
-            .attr("fill", "#17a2b8")
-            .attr("fill-opacity", 0.8);
+        styleZoomBrush(brushGroup, "y");
         return () => {
             d3.select(brushRef.current).on(".brush", null);
             brushInstanceRef.current = null;
@@ -343,20 +331,7 @@ const TemporalValueBrush = ({
             });
 
         const brushGroup = d3.select(brushRef.current).call(brush);
-        brushGroup
-            .selectAll(".overlay")
-            .attr("fill", "rgba(113, 231, 251, 0.06)")
-            .style("cursor", "ew-resize");
-        brushGroup
-            .selectAll(".selection")
-            .attr("fill", "#71e7fb")
-            .attr("fill-opacity", 0.24)
-            .attr("stroke", "#17a2b8")
-            .attr("stroke-width", 1.5);
-        brushGroup
-            .selectAll(".handle")
-            .attr("fill", "#17a2b8")
-            .attr("fill-opacity", 0.8);
+        styleZoomBrush(brushGroup, "x");
 
         return () => {
             d3.select(brushRef.current).on(".brush", null);
@@ -1121,10 +1096,10 @@ const Chart = ({
                 visibility: temporalZoom.visibility,
                 trigger: temporalZoom.trigger,
             });
-        const showInteractionAxis =
+        const showInteractionAxis = !clipping.enabled &&
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
             normalizeTemporalBrush(temporalBrush);
-        const showValueAxis =
+        const showValueAxis = !clipping.enabled &&
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
             normalizeTemporalBrush(temporalBrush);
         const reserveValueZoomAxisSpace =
@@ -1364,7 +1339,7 @@ const Chart = ({
                     overflow: "visible",
                 }}
             >
-                {inputTextBrushEnabled || clipping.enabled ? (
+                {!clipping.enabled && (inputTextBrushEnabled ? (
                     <TemporalBrush
                         clipping={clipping}
                         interactive={inputTextBrushEnabled}
@@ -1451,7 +1426,7 @@ const Chart = ({
                         ))}
                     </svg>
                 </div>
-                )}
+                ))}
                 <div
                     style={{
                         position: "relative",

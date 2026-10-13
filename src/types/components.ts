@@ -88,7 +88,7 @@ export interface CheckboxGroupProps<
   TValue = unknown,
   TOption extends ProvenanceOption<TValue> = ProvenanceOption<TValue>,
 > extends CommonProvenanceWidgetProps<TValue[]>, WidgetLayoutProps {
-  /** Per-view clipping configuration; zoom continues to use DEFAULT_CHECKBOX_SCALABILITY. */
+  /** Per-view scalability; checkbox supports the shared interactions zoom options. */
   scalability?: CheckboxScalability;
   data?: Array<TOption | TValue>;
   options?: Array<TOption | TValue>;

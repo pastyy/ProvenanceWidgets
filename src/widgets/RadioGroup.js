@@ -559,7 +559,7 @@ const RadioGroup = (props) => {
                     width={clipping.width}
                     mode={provenanceMode}
                 />}
-                {visualize && hasProvenance && showTimeline && (
+                {visualize && hasProvenance && showTimeline && temporalBrush && clipping.showTemporalAxis && (
                     <div
                         data-timeline-axis={id}
                         data-provenance-chart-target={id}

@@ -42,7 +42,7 @@ const checkboxClippingScalability = {
   temporal_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 50 },
+      trigger: { type: "on_interaction_over", threshold: 10 },
     },
   },
 };

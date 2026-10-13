@@ -32,174 +32,12 @@ import {
     resolveCheckboxGroupValue,
     restoreCheckboxGroupTemporalValue,
 } from "../shared/logic/checkboxGroupValue.js";
-import { getSelectionTimeDomain, normalizeSelectionBrushRange } from "../shared/logic/selectionTimeline.js";
+import { getSelectionTimeDomain } from "../shared/logic/selectionTimeline.js";
 import { resolveTemporalBrushEnabled } from "../shared/logic/sliderTemporal.js";
-import TemporalRangeSlider from "../shared/components/TemporalRangeSlider.js";
-import useSelectionTemporalScalability from "../shared/hooks/useSelectionTemporalScalability.js";
-import { shouldCommitSliderChange } from "../shared/logic/sliderInteraction.js";
-import {
-    getSelectionInteractionCount,
-    getInteractionClippingWindow,
-    interactionToAxisPosition,
-    resolveTemporalZoomIn,
-    isTemporalZoomToolVisible,
-    temporalTriggerMetric,
-    getTemporalAutoZoomRange,
-    resolveTemporalZoomActions,
-} from "../shared/logic/scalability/index.js";
-import { DEFAULT_CHECKBOX_SCALABILITY } from "../types/scalability.ts";
+import TemporalZoomBrush from "../shared/components/TemporalZoomBrush.js";
+import useCheckboxTemporalScalability from "../shared/hooks/useCheckboxTemporalScalability.js";
 
 export { useCheckboxGroup };
-
-// Like Chart.js for sliders, this renderer owns its zoom calculation and state.
-/** Checkbox history zoom uses a compressed interaction axis, preserving older history. */
-function resolveCheckboxTemporalZoom({
-    scalability, records = [], count = 0, mode = "interaction",
-    brushRange = null, accepted = false, temporalBrush = true,
-}) {
-    const config = resolveTemporalZoomIn(scalability);
-    // Checkbox values are categorical; only history-range zoom is supported.
-    const enabled = config.enabled && config.modes.includes("interactions") && temporalBrush;
-    const entries = records.map((record, index) => [index, [{ time: record.timestamp }]]);
-    const metric = temporalTriggerMetric(entries, config.trigger.type);
-    const threshold = Number(config.trigger.threshold);
-    // A zero baseline asks whether the threshold is reached for the current view.
-    // The hook supplies the previous metric separately for one-time suggestions.
-    const { crossed: triggered, shouldAutoZoom: auto } = resolveTemporalZoomActions({
-        entries, trigger: config.trigger, enabled, accepted,
-    });
-    const canCompress = triggered && mode === "interaction" && config.trigger.type !== "time" && count > threshold;
-    // Reaching the threshold alone must not change the axis in manual mode.
-    const compressed = auto && canCompress;
-    const blockSize = Math.max(1, Math.floor(threshold) || 1);
-    const defaultAxis = getInteractionClippingWindow({ count, active: canCompress, threshold: blockSize });
-    let targetRange = [0, 100];
-    if (canCompress) {
-        targetRange = defaultAxis.axisRange;
-    } else if (triggered && entries.length > 1) {
-        const [start] = getTemporalAutoZoomRange(entries, config.trigger);
-        if (mode === "time") {
-            const times = records.map(record => new Date(record.timestamp).getTime());
-            const valid = times.filter(Number.isFinite);
-            const min = Math.min(...valid);
-            const max = Math.max(...valid);
-            if (max > min && Number.isFinite(times[start])) {
-                targetRange = [(times[start] - min) / (max - min) * 100, 100];
-            }
-        } else {
-            targetRange = [count > 0 ? start / count * 100 : 0, 100];
-        }
-    }
-    const selected = normalizeSelectionBrushRange(brushRange ?? (auto ? targetRange : [0, 100]));
-    const axis = getInteractionClippingWindow({ count, active: compressed, threshold: blockSize, brushRange: selected });
-    const ticks = [];
-    if (compressed) {
-        for (let n = blockSize; n <= axis.cutoff; n += blockSize) {
-            ticks.push({ position: interactionToAxisPosition(n, axis), label: `n=${n}` });
-        }
-    }
-    return {
-        config, enabled, entries, metric, triggered, targetRange,
-        showTemporalAxis: enabled && isTemporalZoomToolVisible({ entries, trigger: config.trigger, visibility: config.visibility }),
-        compressed,
-        axis,
-        ticks,
-        clipCount: compressed ? Math.floor(axis.cutoff / blockSize) : 0,
-        brushRange: compressed ? axis.brushRange : selected,
-        selectedRange: selected,
-    };
-}
-
-/** Checkbox-only configuration/state; other selection widgets retain their behavior. */
-function useCheckboxTemporalScalability(options) {
-    // Clipping uses the same per-view props as RadioGroup and both dropdowns.
-    // Keep the existing checkbox zoom defaults when clipping is not requested.
-    const hasClipping = options.scalability?.temporal_view?.strategy === "clipping" ||
-        options.scalability?.aggregate_view?.strategy === "clipping";
-    options = { ...options, scalability: hasClipping ? options.scalability : DEFAULT_CHECKBOX_SCALABILITY };
-    const selectionView = useSelectionTemporalScalability(options);
-    const { id, mode, scalability, provenance, records, temporalBrush } = options;
-    const count = getSelectionInteractionCount(provenance);
-    const configKey = JSON.stringify([id, mode, temporalBrush, scalability?.temporal_view]);
-    const [selection, setSelection] = useState(null);
-    const [decision, setDecision] = useState(null);
-    const [suggestion, setSuggestion] = useState(null);
-    const previous = useRef(null);
-    const accepted = decision?.key === configKey && decision.accepted;
-    const initial = resolveCheckboxTemporalZoom({ ...options, count, accepted });
-    // Entering a new compressed block follows the existing checkbox zoom behavior.
-    const rangeKey = `${configKey}:${initial.axis.cutoff}`;
-    const view = resolveCheckboxTemporalZoom({
-        scalability, records, count, mode, temporalBrush, accepted,
-        brushRange: selection?.key === rangeKey ? selection.value : null,
-    });
-
-    useEffect(() => {
-        const prior = previous.current;
-        const reset = !prior || prior.key !== configKey || count < prior.count || view.metric < prior.metric;
-        if (reset) {
-            setSelection(null);
-            setDecision(null);
-            setSuggestion(null);
-        }
-        const { shouldSuggest } = resolveTemporalZoomActions({
-            entries: view.entries,
-            trigger: view.config.trigger,
-            enabled: view.enabled,
-            previousMetric: reset ? 0 : prior.metric,
-            accepted: !reset && accepted,
-            suggestionHandled: !reset && decision?.key === configKey,
-        });
-        if (shouldSuggest) {
-            setSuggestion(configKey);
-        }
-        previous.current = { key: configKey, count, metric: view.metric, triggered: view.triggered };
-    }, [configKey, count, view.metric, view.triggered, view.config.trigger.auto_zoom, view.config.trigger.suggestion, decision]);
-
-    const commit = value => {
-        setSelection({ key: rangeKey, value });
-        window.dispatchEvent(new CustomEvent("provenance-widgets", {
-            detail: { id, widget: "checkbox-group", mode, interaction: "brush-end", data: { selection: value } },
-        }));
-    };
-    const onChange = event => {
-        const value = normalizeSelectionBrushRange(event.value);
-        setSelection({ key: rangeKey, value });
-        if (shouldCommitSliderChange(event)) commit(value);
-    };
-    const zoom = {
-        enabled: view.compressed,
-        showTemporalAxis: view.showTemporalAxis,
-        brushRange: view.brushRange,
-        suggestionVisible: suggestion === configKey && view.enabled,
-        acceptSuggestion: () => {
-            setDecision({ key: configKey, accepted: true });
-            // Acceptance changes the axis mapping; let the accepted view choose
-            // its target instead of carrying percentages from the old axis.
-            setSelection(null);
-            setSuggestion(null);
-        },
-        dismissSuggestion: () => {
-            setDecision({ key: configKey, accepted: false });
-            setSuggestion(null);
-        },
-        sliderProps: {
-            startLabel: mode === "time" ? "t=0" : "n=0",
-            nowLabel: view.compressed ? `now (${count})` : "now",
-            // Hover needs the interaction mapping even when compression is off.
-            // axis.active controls compression independently of tooltip availability.
-            axis: mode === "interaction" ? view.axis : null,
-            ticks: view.ticks,
-            clipCount: view.clipCount,
-            step: view.axis.axisStep,
-            value: view.selectedRange,
-            onChange,
-            onSlideEnd: event => commit(normalizeSelectionBrushRange(event.value ?? view.selectedRange)),
-        },
-    };
-    return view.config.enabled ? { ...selectionView, ...zoom } : selectionView;
-}
-
 
 const getChildValues = children =>
     Children.toArray(children)
@@ -777,11 +615,11 @@ const CheckboxGroup = (props) => {
                             marginBottom: "12px",
                         }}
                     >
-                        <TemporalRangeSlider
+                        <TemporalZoomBrush
                                 id={id}
                                 label={tooltipLabel}
                                 mode={provenanceMode}
-                                {...clipping.sliderProps}
+                                {...clipping.zoomProps}
                         />
                     </div>
                 )}

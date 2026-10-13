@@ -755,7 +755,7 @@ const SingleSelectDropdown = (props) => {
                 panelFooterTemplate={templateOptions => (
                     <>
                         {originalFooterTemplate?.(templateOptions)}
-                        {showTimeline && (
+                        {showTimeline && temporalBrush && clipping.showTemporalAxis && (
                             <div
                                 data-provenance-temporal-footer={id}
                                 style={{

@@ -27,10 +27,7 @@ export {
 } from "./core/normalizeClippingConfig.js";
 export { getClippingBoundary } from "./triggers/clipping.js";
 export {
-    COMPRESSED_HISTORY_PERCENT,
     axisToInteraction,
-    interactionToAxisPosition,
-    getInteractionClippingWindow,
 } from "./strategies/clipping/interactionAxis.js";
 export { resolveSelectionTemporalView } from "./views/selectionTemporal.js";
 export {
