@@ -1,3 +1,4 @@
+import ClippingNotice from "../shared/components/ClippingNotice.js";
 import { Slider as Slider_ } from "primereact/slider/slider.esm.js";
 import {
     useCallback,
@@ -17,6 +18,7 @@ import useWidgetRegistry from "../provenance/hooks/useWidgetRegistry.js";
 import useElementSize from "../shared/hooks/useElementSize.js";
 import useProvenanceTooltip from "../provenance/hooks/useProvenanceTooltip.js";
 import Chart from "./Chart.js";
+import { resolveRecordAggregateView } from "../shared/logic/scalability/index.js";
 import SliderTickMarks from "../shared/components/SliderTickMarks.js";
 import RangeSliderBars from "../shared/components/RangeSliderBars.js";
 import { shouldCommitSliderChange } from "../shared/logic/sliderInteraction.js";
@@ -107,6 +109,14 @@ const Rangeslider = (props) => {
         strategyFactory,
         valuesEqual: rangeSliderValuesEqual,
     });
+    const { aggregateProvenance } = useMemo(() => resolveRecordAggregateView({
+        records: serializedProvenance.data,
+        provenance: strategy,
+        strategyFactory,
+        scalability: props.scalability,
+        width: containerWidth,
+        mode: provenanceMode,
+    }), [serializedProvenance, strategy, strategyFactory, props.scalability, containerWidth, provenanceMode]);
     const [displayValue, setDisplayValue] = useState(currentValue);
     const viewPanelLayout = getSliderViewPanelLayout({
         temporalBrush,
@@ -330,6 +340,13 @@ const Rangeslider = (props) => {
                 position: "relative",
             }}
         >
+            {visualize && <ClippingNotice
+                id={props.id}
+                records={serializedProvenance.data}
+                scalability={props.scalability}
+                width={containerWidth}
+                mode={provenanceMode}
+            />}
             <div
                 style={{
                     position: "relative",
@@ -349,7 +366,7 @@ const Rangeslider = (props) => {
                             }}
                         >
                             <RangeSliderBars
-                                provenance={strategy}
+                                provenance={aggregateProvenance}
                                 colorScheme={interpolateOranges}
                                 min={min}
                                 max={max}
@@ -366,14 +383,14 @@ const Rangeslider = (props) => {
                                             kind: "range",
                                             sequenceIndex: Math.max(
                                                 0,
-                                                (record.index ?? 1) - 1
+                                                (record.index ?? 1) - (aggregateProvenance.tooltipIndexOffset ?? 1)
                                             ),
                                             sequenceTotal: Math.max(
                                                 0,
                                                 (
-                                                    strategy.detailedData
-                                                        ?.size ?? 1
-                                                ) - 1
+                                                    aggregateProvenance.detailedData
+                                                        ?.size ?? 0
+                                                ) - (aggregateProvenance.tooltipIndexOffset ?? 1)
                                             ),
                                         })
                                     )
@@ -444,6 +461,7 @@ const Rangeslider = (props) => {
                     }}
                 >
                     <Chart
+                        widgetWidth={containerWidth}
                         target={props.id}
                         theme="light"
                         provenance={serializedProvenance}

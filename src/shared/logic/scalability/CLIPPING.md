@@ -1,8 +1,9 @@
-# Display clipping for selection widgets
+# Display clipping for widgets
 
-`CheckboxGroup`, `RadioGroup`, `SingleSelectDropdown`, and `MultiSelectDropdown`
-share the same clipping implementation. InputText and numeric sliders do not
-use this path.
+All seven widgets share temporal and aggregate clipping: `CheckboxGroup`, `RadioGroup`,
+`SingleSelectDropdown`, `MultiSelectDropdown`, `InputText`, `Singleslider`, and
+`Rangeslider`. By default, aggregate inherits temporal clipping so both views
+reset together using one threshold.
 
 ```jsx
 const scalability = {
@@ -12,21 +13,17 @@ const scalability = {
       trigger: { type: "on_interaction_over", threshold: 20 },
     },
   },
-  aggregate_view: {
-    strategy: "clipping",
-    clipping_options: {
-      trigger: { type: "on_time_over", threshold: 30 },
-    },
-  },
 };
 
 <RadioGroup scalability={scalability} {...props} />
 ```
 
-Each widget can receive its own object. Each view has its own strategy and
-trigger: enabling aggregate clipping does not enable temporal clipping, and
-vice versa. Explicit clipping props also take precedence over CheckboxGroup's
-existing centralized zoom configuration.
+Each widget can receive its own object. If `aggregate_view` is omitted,
+it inherits `temporal_view` when that view uses clipping, including its trigger
+and threshold. An explicit `aggregate_view` overrides this inheritance and
+can use a different threshold or strategy. Aggregate-only clipping does not
+enable temporal clipping. Explicit clipping props also take precedence over
+CheckboxGroup's existing centralized zoom configuration.
 
 ## Trigger and reset behavior
 
@@ -50,16 +47,26 @@ existing centralized zoom configuration.
 ## What changes on screen
 
 Temporal clipping removes older intervals from the display rather than
-compressing them into a brush region. The interaction axis progresses from
-`n=0` to `n=20`, `n=40`, etc.; its right label keeps the cumulative count, such
-as `now (21)`. Time-mode labels use elapsed seconds instead. The brush only
-selects within the current display period and resets to its full range when a
-new period begins.
+compressing them into a brush region. Selection and text axes progress from
+`n=0` to `n=20`, `n=40`, etc.; the endpoint keeps the cumulative count, such
+as `now (21)`. Time-mode labels use elapsed seconds instead. The two numeric
+sliders retain their normal per-interaction numeric ticks and point spacing;
+clipping does not replace their axis with threshold/now labels. Selection-widget brushes only select within the current display period and
+reset to their full range when a new period begins. Text and numeric temporal
+views display the current period on a fixed axis; zoom tools are inactive while
+clipping is selected.
 
-Aggregate clipping resets displayed frequencies and recency. It counts only
-selection/deselection changes in the current period. An option that remains
-selected across a boundary is not counted as newly selected just because the
-view was reset. Current selected values remain unchanged.
+Aggregate clipping resets displayed frequencies and recency. Text suggestions,
+numeric frequencies, and range coverage use only interactions after the reset.
+For selection widgets, it counts only selection/deselection changes in the
+current period: an option that stays selected across a boundary is not counted
+as newly selected just because the view was reset. Current values stay unchanged.
+
+When a widget crosses a new clipping boundary, it briefly announces
+`hide 20 interacts` (using its configured threshold), then dismisses the notice
+after three seconds. Synchronized temporal/aggregate resets announce only once.
+An initial imported history does not replay old notifications. Time triggers
+use `seconds` in the notice.
 
 Both views are empty at an exact reset boundary. Original serialized
 provenance, registration, export, and global history restoration are preserved.
@@ -69,6 +76,9 @@ Selecting a visible temporal bar resolves against the displayed period.
 
 - `core/normalizeClippingConfig.js`: shared view configuration and width default.
 - `triggers/clipping.js`: threshold-boundary calculation.
+- `views/clippingPeriod.js`: shared cutoff, cumulative counts, and axis labels.
+- `views/recordTemporal.js`: text/numeric temporal records and axis positions.
+- `views/recordAggregate.js`: text/numeric frequencies for the current period.
 - `views/selectionTemporal.js`: display projections for aggregate and temporal.
 - `shared/hooks/useSelectionTemporalScalability.js`: width measurement and brush
   state shared by all four widgets.

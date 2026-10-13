@@ -1,3 +1,4 @@
+import ClippingNotice from "../shared/components/ClippingNotice.js";
 import {
     Children,
     isValidElement,
@@ -756,6 +757,13 @@ const CheckboxGroup = (props) => {
                 className={className ?? styleClass}
                 style={style}
             >
+                {visualize && <ClippingNotice
+                    id={id}
+                    records={serializedProvenance.data}
+                    scalability={props.scalability}
+                    width={clipping.width}
+                    mode={provenanceMode}
+                />}
                 {visualize &&
                     hasProvenance &&
                     showTimeline &&

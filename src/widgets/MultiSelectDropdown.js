@@ -1,3 +1,4 @@
+import ClippingNotice from "../shared/components/ClippingNotice.js";
 import { MultiSelect as MultiSelect_ } from "primereact/multiselect/multiselect.esm.js";
 import {
     useCallback,
@@ -638,6 +639,13 @@ const MultiSelectDropdown = (props) => {
                 position: "relative",
             }}
         >
+            {visualize && <ClippingNotice
+                id={id}
+                records={serializedProvenance.data}
+                scalability={scalabilityProp}
+                width={clipping.width}
+                mode={provenanceMode}
+            />}
             <style>{`
                 .${safePanelClass} .p-multiselect-item {
                     padding: 0 !important;

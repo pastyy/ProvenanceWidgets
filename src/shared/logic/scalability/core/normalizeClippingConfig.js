@@ -2,7 +2,12 @@
 export const CLIPPING_PIXELS_PER_RECORD = 10;
 
 export function resolveClippingConfig(scalability, { view = "temporal_view", width = 0 } = {}) {
-    const options = scalability?.[view];
+    // With no aggregate override, both views reset at the same boundary.
+    const options = scalability?.[view] ?? (
+        view === "aggregate_view" && scalability?.temporal_view?.strategy === "clipping"
+            ? scalability.temporal_view
+            : undefined
+    );
     const strategy = options?.strategy ?? "zoom_in";
     const enabled = strategy === "clipping";
     const trigger = enabled ? options?.clipping_options?.trigger ?? {} : {};

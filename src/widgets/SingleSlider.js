@@ -1,3 +1,4 @@
+import ClippingNotice from "../shared/components/ClippingNotice.js";
 import { Slider as Slider_ } from "primereact/slider/slider.esm.js";
 import {
     useCallback,
@@ -18,6 +19,7 @@ import useElementSize from "../shared/hooks/useElementSize.js";
 import useProvenanceTooltip from "../provenance/hooks/useProvenanceTooltip.js";
 import { generateRange } from "../shared/logic/valueMath.js";
 import Chart from "./Chart.js";
+import { resolveRecordAggregateView } from "../shared/logic/scalability/index.js";
 import SliderTickMarks from "../shared/components/SliderTickMarks.js";
 import { shouldCommitSliderChange } from "../shared/logic/sliderInteraction.js";
 import SingleSliderBars from "../shared/components/SingleSliderBars.js";
@@ -108,6 +110,14 @@ const Singleslider = (props) => {
             props.onProvenanceChange ?? props.provenanceChange,
         strategyFactory,
     });
+    const { aggregateProvenance } = useMemo(() => resolveRecordAggregateView({
+        records: serializedProvenance.data,
+        provenance: strategy,
+        strategyFactory,
+        scalability: props.scalability,
+        width: containerWidth,
+        mode: provenanceMode,
+    }), [serializedProvenance, strategy, strategyFactory, props.scalability, containerWidth, provenanceMode]);
     // Display value tracks the slider thumb position during a drag.
     // It follows intermediate onChange steps, while currentValue (from the
     // controller) only updates when provenance is actually committed.
@@ -295,6 +305,13 @@ const Singleslider = (props) => {
                 position: "relative",
             }}
         >
+            {visualize && <ClippingNotice
+                id={props.id}
+                records={serializedProvenance.data}
+                scalability={props.scalability}
+                width={containerWidth}
+                mode={provenanceMode}
+            />}
             <div
                 style={{
                     position: "relative",
@@ -320,7 +337,7 @@ const Singleslider = (props) => {
                             }}
                         >
                             <SingleSliderBars
-                                provenance={strategy}
+                                provenance={aggregateProvenance}
                                 orientationScheme={interpolateOranges}
                                 barKeys={barKeys}
                                 min={min}
@@ -337,7 +354,7 @@ const Singleslider = (props) => {
                             }}
                         >
                             {barKeys.map(key => {
-                                const record = strategy.aggregateData?.get(key);
+                                const record = aggregateProvenance.aggregateData?.get(key);
                                 if (!record) return null;
                                 const centerPercent = max === min
                                     ? 50
@@ -366,11 +383,11 @@ const Singleslider = (props) => {
                                         kind: "slider",
                                         sequenceIndex: Math.max(
                                             0,
-                                            (record.index ?? 1) - 1
+                                            (record.index ?? 1) - (aggregateProvenance.tooltipIndexOffset ?? 1)
                                         ),
                                         sequenceTotal: Math.max(
                                             0,
-                                            (strategy.detailedData?.size ?? 1) - 1
+                                            (aggregateProvenance.detailedData?.size ?? 0) - (aggregateProvenance.tooltipIndexOffset ?? 1)
                                         ),
                                     })
                                 );
@@ -474,6 +491,7 @@ const Singleslider = (props) => {
                     }}
                 >
                     <Chart
+                        widgetWidth={containerWidth}
                         target={props.id}
                         theme="light"
                         provenance={serializedProvenance}

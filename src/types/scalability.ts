@@ -113,6 +113,7 @@ export interface AggregateViewScalability {
 
 export interface ScalabilityOptions {
   temporal_view?: TemporalViewScalability;
+  /** Inherits temporal clipping when omitted, synchronizing both display resets. */
   aggregate_view?: AggregateViewScalability;
 }
 

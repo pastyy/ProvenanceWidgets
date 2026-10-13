@@ -44,15 +44,16 @@ const temporalRangeSliderStyles = `
     .pw-temporal-range-slider__track { position: relative; }
 
     .pw-temporal-range-slider__control.p-slider {
-        height: 3px !important;
+        height: 16px !important;
         margin: 0 !important;
-        background: lightgray !important;
+        background: rgba(113, 231, 251, 0.06) !important;
         border: 0 !important;
         border-radius: 0 !important;
     }
 
     .pw-temporal-range-slider__control .p-slider-range {
-        background: var(--blue-500, #3b82f6) !important;
+        background: rgba(113, 231, 251, 0.24) !important;
+        box-shadow: inset 0 0 0 1px #17a2b8;
     }
 
     .pw-temporal-range-slider__control .p-slider-handle {
@@ -62,9 +63,9 @@ const temporalRangeSliderStyles = `
         height: 16px !important;
         margin-top: 0 !important;
         margin-left: -4px !important;
-        background: #333 !important;
+        background: #17a2b8 !important;
         border: 0 !important;
-        border-radius: 3px 3px 0 0 !important;
+        border-radius: 0 !important;
         box-shadow: none !important;
     }
 

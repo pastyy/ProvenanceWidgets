@@ -32,6 +32,8 @@ import {
     isTemporalZoomToolVisible,
     resolveTemporalZoomIn,
     temporalTriggerMetric,
+    resolveRecordTemporalView,
+    getClippedTemporalYPositions,
 } from "../shared/logic/scalability/index.js";
 import {
     buildInputTextTemporalEntries,
@@ -58,6 +60,8 @@ const INPUT_TEXT_TEMPORAL_HEIGHT = 440;
 
 const TemporalBrush = ({
     height = TEMPORAL_BRUSH_HEIGHT,
+    clipping,
+    interactionLabels,
     interactive = true,
     mode,
     onInteractionStart,
@@ -178,8 +182,11 @@ const TemporalBrush = ({
     }, [interactive, positionsKey, syncRevision]);
 
     const tickStride = Math.max(1, Math.ceil(entryCount / 8));
-    const ticks = positions
-        .map((position, index) => ({ position, index }))
+    const ticks = clipping?.enabled ? [
+        { position: 8, index: "start", label: clipping.startLabel },
+        { position: height - 8, index: "now", label: clipping.nowLabel },
+    ] : positions
+        .map((position, index) => ({ position, index, label: mode === "time" ? undefined : interactionLabels?.[index] }))
         .filter(({ index }) => (
             mode === "time"
                 ? index === 0 || index === entryCount - 1
@@ -231,7 +238,7 @@ const TemporalBrush = ({
                         `rotate(-90 10 ${height / 2})`
                     }
                 >
-                    {`interaction${interactive ? " · drag to zoom" : ""}`}
+                    {`${mode === "time" ? "time" : "interaction"}${interactive ? " · drag to zoom" : ""}`}
                 </text>
                 <line
                     x1="58"
@@ -240,7 +247,7 @@ const TemporalBrush = ({
                     y2={height}
                     stroke="#6c757d"
                 />
-                {ticks.map(({ position, index }) => (
+                {ticks.map(({ position, index, label }) => (
                     <g key={index}>
                         <line
                             x1="52"
@@ -257,9 +264,9 @@ const TemporalBrush = ({
                             fontSize="10"
                             textAnchor="end"
                         >
-                            {mode === "time"
+                            {label ?? (mode === "time"
                                 ? index === 0 ? "t=0" : "now"
-                                : index}
+                                : index)}
                         </text>
                     </g>
                 ))}
@@ -450,6 +457,7 @@ const Chart = ({
     mode = "interaction",
     temporalBrush = true,
     scalability,
+    widgetWidth = 0,
     sliderStep = 1,
     sliderShowTicks = false,
     sliderTickStep,
@@ -566,7 +574,7 @@ const Chart = ({
         temporalBrush,
     ]);
     
-    const chartData = useMemo(() => {
+    const sourceChartData = useMemo(() => {
         if (!target) return null;
 
         const componentData = provenanceStrategy ?? (
@@ -881,10 +889,10 @@ const Chart = ({
             ).sort((a, b) => a[0] - b[0]);
 
             const sequenceOffset = componentData.tooltipIndexOffset ?? 1;
-            const sequenceTotal = sorted.filter(([, record]) =>
-                record.kind === undefined ||
-                record.kind === "interaction"
-            ).length - sequenceOffset;
+            const hasRecordKinds = sorted.some(([, record]) => record.kind !== undefined);
+            const sequenceTotal = hasRecordKinds
+                ? sorted.filter(([, record]) => record.kind === "interaction").length
+                : Math.max(0, sorted.length - sequenceOffset);
             let interactionIndex = 0;
             const transformedData = sorted.map(([, record]) => {
                 if (
@@ -901,10 +909,9 @@ const Chart = ({
                     time: record.time,
                     kind: record.kind,
                     source: record.source,
-                    sequenceIndex: Math.max(
-                        0,
-                        interactionIndex - sequenceOffset
-                    ),
+                    sequenceIndex: hasRecordKinds
+                        ? interactionIndex
+                        : Math.max(0, interactionIndex - sequenceOffset),
                     sequenceTotal: Math.max(0, sequenceTotal),
                 }]];
             });
@@ -943,6 +950,34 @@ const Chart = ({
         provenanceStrategy,
         mode,
     ]);
+
+    const clipping = useMemo(() => resolveRecordTemporalView({
+        entries: sourceChartData?.isInputText
+            ? sourceChartData.inputTextEntries
+            : sourceChartData?.isSingleSlider || sourceChartData?.isRangeSlider
+                ? sourceChartData.detailedDataEntries
+                : [],
+        scalability,
+        width: widgetWidth,
+        mode,
+    }), [sourceChartData, scalability, widgetWidth, mode]);
+    const chartData = useMemo(() => {
+        if (!clipping.enabled || !sourceChartData) return sourceChartData;
+        if (sourceChartData.isInputText) {
+            return { ...sourceChartData, inputTextEntries: clipping.entries };
+        }
+        if (sourceChartData.isSingleSlider || sourceChartData.isRangeSlider) {
+            return { ...sourceChartData, detailedDataEntries: clipping.entries };
+        }
+        return sourceChartData;
+    }, [sourceChartData, clipping]);
+
+    useEffect(() => {
+        setBrushRange(null);
+        setValueBrushRange(null);
+        clearRectangleSelection();
+        setBrushSyncRevision(revision => revision + 1);
+    }, [clipping.resetKey, clearRectangleSelection]);
 
     useEffect(() => {
         const isTemporalSlider = chartData?.isSingleSlider || chartData?.isRangeSlider;
@@ -1118,22 +1153,27 @@ const Chart = ({
         );
         const allInputTextEntries = chartData.inputTextEntries ?? [];
         const inputTextBrushEnabled =
+            !clipping.enabled &&
             normalizeTemporalBrush(temporalBrush) &&
             allInputTextEntries.length > 1;
         const inputTextEntries = inputTextBrushEnabled
             ? filterTemporalEntries(allInputTextEntries, brushRange)
             : allInputTextEntries;
         const inputTextPlotHeight = INPUT_TEXT_TEMPORAL_HEIGHT;
-        const inputTextYPositions = getTemporalYPositions(
-            inputTextEntries,
-            mode,
-            inputTextPlotHeight
-        );
-        const inputTextBrushYPositions = getTemporalYPositions(
-            allInputTextEntries,
-            mode,
-            inputTextPlotHeight
-        );
+        const inputTextYPositions = clipping.enabled
+            ? getClippedTemporalYPositions(clipping, inputTextPlotHeight)
+            : getTemporalYPositions(
+                inputTextEntries,
+                mode,
+                inputTextPlotHeight
+            );
+        const inputTextBrushYPositions = clipping.enabled
+            ? inputTextYPositions
+            : getTemporalYPositions(
+                allInputTextEntries,
+                mode,
+                inputTextPlotHeight
+            );
         const inputTextSequenceMax = Math.max(
             0,
             inputTextEntries.length - 1
@@ -1324,8 +1364,12 @@ const Chart = ({
                     overflow: "visible",
                 }}
             >
-                {inputTextBrushEnabled ? (
+                {inputTextBrushEnabled || clipping.enabled ? (
                     <TemporalBrush
+                        clipping={clipping}
+                        interactive={inputTextBrushEnabled}
+                        range={brushRange}
+                        syncRevision={brushSyncRevision}
                         height={inputTextPlotHeight}
                         mode={mode}
                         onInteractionStart={clearRectangleSelection}
@@ -1519,6 +1563,7 @@ const Chart = ({
              >
                  {showInteractionAxis && (
                      <TemporalBrush
+                         interactionLabels={allSortedEntries.map(([, records]) => records[0]?.sequenceIndex)}
                          height={temporalPlotHeight}
                          interactive={brushEnabled}
                          mode={chartData.mode ?? mode}

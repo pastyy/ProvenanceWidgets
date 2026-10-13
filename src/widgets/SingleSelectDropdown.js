@@ -1,3 +1,4 @@
+import ClippingNotice from "../shared/components/ClippingNotice.js";
 import { Dropdown as Dropdown_ } from "primereact/dropdown/dropdown.esm.js";
 import {
     useCallback,
@@ -657,6 +658,13 @@ const SingleSelectDropdown = (props) => {
                 position: "relative",
             }}
         >
+            {visualize && <ClippingNotice
+                id={id}
+                records={serializedProvenance.data}
+                scalability={scalabilityProp}
+                width={clipping.width}
+                mode={provenanceMode}
+            />}
             <style>{`
                 .${safePanelClass} .p-dropdown-item {
                     padding: 0 !important;

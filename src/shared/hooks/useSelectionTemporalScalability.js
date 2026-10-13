@@ -36,6 +36,7 @@ export default function useSelectionTemporalScalability({
     };
 
     return {
+        width,
         enabled: view.clippingEnabled,
         showTemporalAxis: view.showTemporalAxis,
         brushRange,

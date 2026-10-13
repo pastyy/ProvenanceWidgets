@@ -39,3 +39,7 @@ export {
     findClippedSelectionBar,
     getClippedSelectionRestorePoint,
 } from "./adapters/selectionTimeline.js";
+export { resolveClippingPeriod } from "./views/clippingPeriod.js";
+export { resolveRecordTemporalView, getClippedTemporalYPositions } from "./views/recordTemporal.js";
+export { resolveRecordAggregateView } from "./views/recordAggregate.js";
+export { getClippingNotice, resolveClippingNoticePeriods } from "./views/clippingNotice.js";
