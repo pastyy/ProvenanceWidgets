@@ -15,6 +15,7 @@ import {
 } from "../../src/index.ts";
 
 import WidgetCard from "./WidgetCard.jsx";
+import SliderSmoothingControls from "./SliderSmoothingControls.jsx";
 
 const cityOptions = [
   { label: "New York", value: "New York" },
@@ -153,15 +154,29 @@ const playgroundRadioProvenance = createDemoProvenance(
   "radio-group",
   ["Mushroom", "Cheese"],
 );
+const singleSliderHistory = Array.from({ length: 54 }, (_, index) =>
+  Math.max(0, Math.min(100, Math.round(
+    48 + 25 * Math.sin(index * 0.73) + 9 * Math.sin(index * 0.19),
+  ))),
+);
+// const singleSliderHistory = [50, 25];
 const playgroundSingleSliderProvenance = createDemoProvenance(
   "single-slider",
   "single-slider",
-  [50, 25],
+  singleSliderHistory,
 );
+const rangeSliderHistory = Array.from({ length: 64 }, (_, index) => {
+  const center = 50 + 23 * Math.sin(index * 0.31);
+  const halfWidth = 10 + (index % 6) * 3;
+  return [
+    Math.max(0, Math.round(center - halfWidth)),
+    Math.min(100, Math.round(center + halfWidth)),
+  ];
+});
 const playgroundRangeSliderProvenance = createDemoProvenance(
   "range-slider",
   "range-slider",
-  [[20, 80], [0, 100]],
+  rangeSliderHistory,
 );
 const playgroundSingleSelectProvenance = createDemoProvenance(
   "single-select-dropdown",
@@ -188,6 +203,12 @@ const rangeSliderOptions = {
   tickStep: 15,
 };
 
+const sliderSmoothingMethods = {
+  savgol: { type: "savgol", window_length: 7, polyorder: 2 },
+  gaussian: { type: "gaussian", sigma: 2, truncate: 3 },
+  bspline: { type: "bspline", degree: 3, smoothing_factor: 0.1, knot_spacing: 3 },
+};
+
 const provenanceComponents = [
   "single-slider",
   "range-slider",
@@ -204,10 +225,29 @@ export default function PlaygroundPage() {
   );
   const [inputValue, setInputValue] = useState("");
   const [ingredient, setIngredient] = useState("Cheese");
-  const [singleSliderValue, setSingleSliderValue] = useState(25);
-  const [rangeSliderValue, setRangeSliderValue] = useState([0, 100]);
+  const [singleSliderValue, setSingleSliderValue] = useState(
+    () => singleSliderHistory.at(-1),
+  );
+  const [rangeSliderValue, setRangeSliderValue] = useState(
+    () => rangeSliderHistory.at(-1),
+  );
   const [city, setCity] = useState(cityOptions[0]);
   const [cities, setCities] = useState(cityOptions.slice(0, 2));
+  const [sliderSmoothingMethod, setSliderSmoothingMethod] = useState("savgol");
+  const [smoothingMethods, setSmoothingMethods] = useState(sliderSmoothingMethods);
+  const changeSmoothingParameter = (type, name, value) => {
+    setSmoothingMethods(previous => ({
+      ...previous,
+      [type]: { ...previous[type], [name]: value },
+    }));
+  };
+  const sliderAggregateSmoothing = {
+    strategy: "smoothing",
+    smoothing_options: {
+      method: smoothingMethods[sliderSmoothingMethod],
+      trigger: { type: "interaction", threshold: 10 },
+    },
+  };
 
   return (
     <ProvenanceProvider>
@@ -215,6 +255,11 @@ export default function PlaygroundPage() {
         <header className="playground-page__header">
           <p>Local component workspace</p>
           <h1>ProvenanceWidgets Playground</h1>
+          <SliderSmoothingControls
+            method={smoothingMethods[sliderSmoothingMethod]}
+            onMethodChange={setSliderSmoothingMethod}
+            onParameterChange={changeSmoothingParameter}
+          />
         </header>
 
         <div className="super-provenance-demo">
@@ -270,19 +315,22 @@ export default function PlaygroundPage() {
                 options={singleSliderOptions}
                 provenance={playgroundSingleSliderProvenance}
                 dataLabel="Single value"
-                scalability={{"temporal_view": {
-                  "strategy": "zoom_in",
-                  "zoom_in_options": {
-                    "modes": ["interactions", "interactions-values", "values"],
-                    "visibility": "all-active",
-                    "trigger": {
-                      "type": "interaction",
-                      "threshold": 10,
-                      "auto_zoom": false,
-                      "suggestion": true
+                scalability={{
+                  "temporal_view": {
+                    "strategy": "zoom_in",
+                    "zoom_in_options": {
+                      "modes": ["interactions", "interactions-values", "values"],
+                      "visibility": "all-active",
+                      "trigger": {
+                        "type": "interaction",
+                        "threshold": 10,
+                        "auto_zoom": false,
+                        "suggestion": true
+                      }
                     }
-                  }
-                }}}
+                  },
+                  "aggregate_view": sliderAggregateSmoothing
+                }}
               />
             </WidgetCard>
 
@@ -323,6 +371,7 @@ export default function PlaygroundPage() {
                 onChange={setRangeSliderValue}
                 options={rangeSliderOptions}
                 provenance={playgroundRangeSliderProvenance}
+                scalability={{ aggregate_view: sliderAggregateSmoothing }}
                 dataLabel="Range"
               />
             </WidgetCard>

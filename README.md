@@ -93,6 +93,16 @@ new period; original provenance and current values are preserved. Temporal
 axis labels keep the cumulative offset, e.g. `n=20` through `now (21)`.
 See [clipping configuration and semantics](src/shared/logic/scalability/CLIPPING.md).
 
+## Slider aggregate smoothing
+
+SingleSlider and RangeSlider can overlay Savitzky-Golay, Gaussian, or B-spline curves on their
+aggregate bars with `aggregate_view.strategy: "smoothing"`. SingleSlider
+smooths frequency by value; RangeSlider smooths interval coverage. Sampling
+and `window_length` use slider data-domain units and do not depend on rendered
+width. Temporal smoothing is not implemented yet. The playground includes a
+method selector for comparing all three algorithms on the same history.
+See [smoothing configuration and semantics](src/shared/logic/scalability/SMOOTHING.md).
+
 ## Checkbox scalability
 
 Checkbox zoom calculation, state, and UI live together in `src/widgets/CheckboxGroup.js`,
@@ -130,7 +140,7 @@ current view unchanged.
 
 Checkbox currently supports `modes: ["interactions"]` (history-range zoom).
 Numeric `values` and `rectangle-2d` dimensions do not apply to its categorical
-options and are ignored. Checkbox zoom does not implement `smoothening` or
+options and are ignored. Checkbox zoom does not implement `smoothing` or
 aggregate zoom. Aggregate clipping is supported through `scalability` as described
 above. Configure checkbox zoom using `zoom_in_options` in the central object.
 

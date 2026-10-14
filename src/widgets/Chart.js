@@ -1190,16 +1190,13 @@ const Chart = ({
             brushRange.length === 2 &&
             allSortedEntries.length > 0
         )
-            ? [
-                Math.max(0, Math.min(
+            ? [brushRange[0], brushRange[1]].map(index => {
+                const clampedIndex = Math.max(0, Math.min(
                     allSortedEntries.length - 1,
-                    brushRange[0]
-                )),
-                Math.max(0, Math.min(
-                    allSortedEntries.length - 1,
-                    brushRange[1]
-                )),
-            ]
+                    index
+                ));
+                return allSortedEntries[clampedIndex][1][0].sequenceIndex;
+            })
             : null;
         const usesContinuousDomain =
             chartData.isRangeSlider ||

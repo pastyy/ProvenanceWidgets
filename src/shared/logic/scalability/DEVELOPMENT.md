@@ -9,7 +9,7 @@ widget components.
 - `core/`: configuration normalization and public defaults.
 - `triggers/`: threshold and visibility decisions.
 - `strategies/`: strategy algorithms such as `zoomIn`, `clipping`, and
-  `smoothening`.
+  `smoothing`.
 - `views/`: view-specific orchestration for temporal and aggregate domains.
 - `adapters/`: conversion between widget data contracts and scalability input
   contracts.
@@ -54,3 +54,6 @@ Create a focused module under `strategies/<strategy>/`, define its input and
 output contract, add pure-function tests, and export it through `index.js`.
 Only then connect it from a temporal or aggregate view adapter and a widget
 renderer.
+
+Current Slider aggregate smoothing semantics and limitations are documented in
+[SMOOTHING.md](SMOOTHING.md).

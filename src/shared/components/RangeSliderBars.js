@@ -2,6 +2,7 @@ import {
     getRangeBarSegments,
     normalizeRangeBarIndex,
 } from "../logic/rangeSliderBarData.js";
+import SliderSmoothingCurve from "./SliderSmoothingCurve.js";
 
 const RangeSliderBars = ({
     provenance,
@@ -12,6 +13,8 @@ const RangeSliderBars = ({
     colorScheme,
     getBarProps,
     onRangeSelect,
+    smoothingSamples,
+    smoothingMethod,
 }) => {
     const segments = getRangeBarSegments(provenance, min, max);
     const maxCount = Math.max(1, ...segments.map(segment => segment.count));
@@ -96,6 +99,15 @@ const RangeSliderBars = ({
                     </g>
                 );
             })}
+            <SliderSmoothingCurve
+                samples={smoothingSamples}
+                method={smoothingMethod}
+                min={min}
+                max={max}
+                width={width}
+                height={height}
+                scaleCount={count => (count / maxCount) * maxBarHeight}
+            />
         </svg>
     );
 };

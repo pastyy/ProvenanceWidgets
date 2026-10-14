@@ -5,7 +5,7 @@
 
         "temporal_view": {
 
-            "strategy": "zoom_in" | "clipping" | "smoothening", // default: zoom_in
+            "strategy": "zoom_in" | "clipping" | "smoothing", // default: zoom_in
 
             "zoom_in_options":{	// takes effect only when 'strategy' is 'zoom_in', if an attribute is not set explicitly by user, then there is a default value. 
 
@@ -39,21 +39,31 @@
 
             },
 
-            "smoothening_options": {
+            "smoothing_options": {
 
-                "method": "savgol" | "gaussian" | "bspline", // default: "savgol"
-
-                "trigger": {
-
-                    "type": "on_interaction_over" | "on_time_over", // default:interaction
-
-                    "threshold": int,  // default: width / k (constant)
-
+                // Optional; defaults to { type: "savgol", window_length: 9, polyorder: 2 }.
+                // Each method.type is required; its other parameters are optional.
+                // Distance parameters use data-domain units; there is no unit option.
+                "method": {
+                    "type": "savgol",
+                    "window_length": number, // default: 9; total data-domain window width
+                    "polyorder": int // default: 2; polynomial order
+                } | {
+                    "type": "gaussian",
+                    "sigma": number, // default: 2; data-domain standard deviation
+                    "truncate": number // default: 3; support radius = truncate * sigma
+                } | {
+                    "type": "bspline",
+                    "degree": int, // default: 3; cubic spline
+                    "smoothing_factor": number, // default: 0.5; normalized [0, 1], larger = smoother
+                    "knot_spacing": number // default: 10; data-domain distance between interior knots
                 },
 
-  		        "window_unit": "pixel" | "data_domain",		// default: "pixel", when the size of the page changes, smoothening also changes.
-
-                "window_size": int,	// window size for calculating the smoothened value; default: width / k (need test to determine.)
+                // Optional; defaults to { type: "interaction", threshold: 50 }.
+                "trigger": {
+                    "type": "interaction" | "time", // optional; default: interaction
+                    "threshold": int // optional; default: 50 interactions or 3600 seconds
+                }
 
             }
 
@@ -63,7 +73,7 @@
 
         "aggregate_view": {
 
-            "strategy": "zoom_in" | "clipping" | "smoothening",
+            "strategy": "zoom_in" | "clipping" | "smoothing",
 
             "zoom_in_options": {	// by interaction times only
 
@@ -95,21 +105,31 @@
 
             },
 
-            "smoothening_options": {
+            "smoothing_options": {
 
-                "method": "savgol" | "gaussian" | "bspline", // default: "savgol"
-
-                "trigger": {
-
-                    "type": "on_interaction_over" | "on_time_over", // default:interaction
-
-                    "threshold": int,  // default: width / k (constant)
-
+                // Optional; defaults to { type: "savgol", window_length: 9, polyorder: 2 }.
+                // Each method.type is required; its other parameters are optional.
+                // Distance parameters use data-domain units; there is no unit option.
+                "method": {
+                    "type": "savgol",
+                    "window_length": number, // default: 9; total data-domain window width
+                    "polyorder": int // default: 2; polynomial order
+                } | {
+                    "type": "gaussian",
+                    "sigma": number, // default: 2; data-domain standard deviation
+                    "truncate": number // default: 3; support radius = truncate * sigma
+                } | {
+                    "type": "bspline",
+                    "degree": int, // default: 3; cubic spline
+                    "smoothing_factor": number, // default: 0.5; normalized [0, 1], larger = smoother
+                    "knot_spacing": number // default: 10; data-domain distance between interior knots
                 },
 
-  		"window_unit": "pixel" | "data_domain",		// default: "pixel", when the size of the page changes, smoothening also changes.
-
-                "window_size": int,	// window size for calculating the smoothened value; default: (need test to determine.)
+                // Optional; defaults to { type: "interaction", threshold: 50 }.
+                "trigger": {
+                    "type": "interaction" | "time", // optional; default: interaction
+                    "threshold": int // optional; default: 50 interactions or 3600 seconds
+                }
 
             },
 

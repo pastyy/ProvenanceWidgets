@@ -19,7 +19,10 @@ import useElementSize from "../shared/hooks/useElementSize.js";
 import useProvenanceTooltip from "../provenance/hooks/useProvenanceTooltip.js";
 import { generateRange } from "../shared/logic/valueMath.js";
 import Chart from "./Chart.js";
-import { resolveRecordAggregateView } from "../shared/logic/scalability/index.js";
+import {
+    resolveRecordAggregateView,
+    resolveSliderAggregateSmoothing,
+} from "../shared/logic/scalability/index.js";
 import SliderTickMarks from "../shared/components/SliderTickMarks.js";
 import { shouldCommitSliderChange } from "../shared/logic/sliderInteraction.js";
 import SingleSliderBars from "../shared/components/SingleSliderBars.js";
@@ -118,6 +121,12 @@ const Singleslider = (props) => {
         width: containerWidth,
         mode: provenanceMode,
     }), [serializedProvenance, strategy, strategyFactory, props.scalability, containerWidth, provenanceMode]);
+    const smoothingSamples = useMemo(() => resolveSliderAggregateSmoothing({
+        scalability: props.scalability,
+        records: serializedProvenance.data,
+        provenance: aggregateProvenance,
+        min, max, step,
+    }), [serializedProvenance, aggregateProvenance, props.scalability, min, max, step]);
     // Display value tracks the slider thumb position during a drag.
     // It follows intermediate onChange steps, while currentValue (from the
     // controller) only updates when provenance is actually committed.
@@ -338,6 +347,8 @@ const Singleslider = (props) => {
                         >
                             <SingleSliderBars
                                 provenance={aggregateProvenance}
+                                smoothingSamples={smoothingSamples}
+                                smoothingMethod={props.scalability?.aggregate_view?.smoothing_options?.method?.type}
                                 orientationScheme={interpolateOranges}
                                 barKeys={barKeys}
                                 min={min}

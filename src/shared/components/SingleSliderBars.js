@@ -1,5 +1,6 @@
 import { getSingleSliderBarGeometry } from "../logic/singleSliderBarGeometry.js";
 import { normalize } from "../logic/valueMath.js";
+import SliderSmoothingCurve from "./SliderSmoothingCurve.js";
 
 const SingleSliderBars = ({
     provenance,
@@ -10,6 +11,8 @@ const SingleSliderBars = ({
     height,
     orientationScheme,
     barWidth,
+    smoothingSamples,
+    smoothingMethod,
 }) => {
     const domainMin = Number(min);
     const domainMax = Number(max);
@@ -71,6 +74,15 @@ const SingleSliderBars = ({
                     />
                 );
             })}
+            <SliderSmoothingCurve
+                samples={smoothingSamples}
+                method={smoothingMethod}
+                min={domainMin}
+                max={domainMax}
+                width={width}
+                height={height}
+                scaleCount={scaleCount}
+            />
         </svg>
     );
 };
