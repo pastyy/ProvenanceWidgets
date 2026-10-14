@@ -1,3 +1,4 @@
+import CheckboxZoomAxis from "../shared/components/CheckboxZoomAxis.js";
 import ClippingNotice from "../shared/components/ClippingNotice.js";
 import {
     Children,
@@ -34,6 +35,7 @@ import {
 } from "../shared/logic/checkboxGroupValue.js";
 import { getSelectionTimeDomain } from "../shared/logic/selectionTimeline.js";
 import { resolveTemporalBrushEnabled } from "../shared/logic/sliderTemporal.js";
+import TemporalRangeSlider from "../shared/components/TemporalRangeSlider.js";
 import TemporalZoomBrush from "../shared/components/TemporalZoomBrush.js";
 import useCheckboxTemporalScalability from "../shared/hooks/useCheckboxTemporalScalability.js";
 
@@ -615,12 +617,21 @@ const CheckboxGroup = (props) => {
                             marginBottom: "12px",
                         }}
                     >
-                        <TemporalZoomBrush
+                        {clipping.zoomProps ? (
+                            <TemporalZoomBrush
                                 id={id}
                                 label={tooltipLabel}
                                 mode={provenanceMode}
                                 {...clipping.zoomProps}
-                        />
+                            />
+                        ) : (
+                            <TemporalRangeSlider
+                                id={id}
+                                label={tooltipLabel}
+                                mode={provenanceMode}
+                                {...clipping.sliderProps}
+                            />
+                        )}
                     </div>
                 )}
                 {visualize && hasProvenance && clipping.suggestionVisible && (
@@ -637,6 +648,14 @@ const CheckboxGroup = (props) => {
                     </div>
                 )}
                 {renderedChildren}
+                {visualize && hasProvenance && showTimeline && clipping.zoomedDomain && (
+                    <CheckboxZoomAxis
+                        id={id}
+                        elementRef={elementRef}
+                        domain={clipping.zoomedDomain}
+                        mode={provenanceMode}
+                    />
+                )}
             </div>
         </CheckboxGroupContext.Provider>
     );

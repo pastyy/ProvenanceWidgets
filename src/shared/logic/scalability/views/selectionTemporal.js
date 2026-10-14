@@ -11,14 +11,16 @@ function resolveClippedView(records, provenance, config, mode) {
     const display = new SelectionProvenance();
 
     // Remember the selected set only to count later selection/deselection deltas.
-    // It contributes no aggregate frequency and is not rendered as old history.
-    if (config.view === "aggregate_view") {
+    // Seed temporal intervals at the window edge; do not count the seed as a new aggregate interaction.
+    {
         const baseline = records.slice(0, cutoff + 1).findLast(record => record.kind !== "sample");
         if (baseline) {
             display.insert(baseline.value, { time: new Date(startTime), kind: "baseline" });
-            display.aggregateData.clear();
-            for (const key of ["index", "selections", "interactions", "selectionIndex", "interactionIndex"]) {
-                display.domain.set(key, [0, 0]);
+            if (config.view === "aggregate_view") {
+                display.aggregateData.clear();
+                for (const key of ["index", "selections", "interactions", "selectionIndex", "interactionIndex"]) {
+                    display.domain.set(key, [0, 0]);
+                }
             }
         }
     }
@@ -51,7 +53,7 @@ export function resolveSelectionTemporalView({
             : null,
         // Clipping replaces the display period; its brush cannot recover older periods.
         clippingEnabled: clipped,
-        showTemporalAxis: temporal.config.strategy === "zoom_in",
+        showTemporalAxis: temporal.config.strategy === "zoom_in" || temporal.config.showTimeline,
         axis: temporal.config.enabled
             ? { active: false, domain: [start, end], unit: mode === "time" ? "seconds" : "interactions" }
             : null,

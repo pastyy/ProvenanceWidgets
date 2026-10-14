@@ -58,12 +58,14 @@ export interface AggregateScalabilityZoomInOptions {
   trigger?: ScalabilityZoomTrigger<AggregateScalabilityTriggerType>;
 }
 
-/** Clears display history at each threshold; the source provenance is preserved.
+/** Keeps a rolling threshold-sized display window; source provenance is preserved.
  * Omitted/invalid thresholds use max(1, floor(widgetWidth / 10)) after layout.
  */
 export interface ScalabilityClippingOptions<
   TType extends string = TemporalScalabilityTriggerType,
 > {
+  /** Show the optional selection-widget temporal timeline; defaults to false. */
+  show_timeline?: boolean;
   /** Defaults to on_interaction_over; on_time_over uses recorded elapsed seconds. */
   trigger?: ScalabilityThresholdTrigger<TType>;
 }
@@ -113,7 +115,7 @@ export interface AggregateViewScalability {
 
 export interface ScalabilityOptions {
   temporal_view?: TemporalViewScalability;
-  /** Inherits temporal clipping when omitted, synchronizing both display resets. */
+  /** Inherits temporal clipping when omitted, synchronizing both rolling windows. */
   aggregate_view?: AggregateViewScalability;
 }
 

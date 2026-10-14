@@ -59,6 +59,9 @@ export default function useCheckboxTemporalScalability(options) {
         ...selectionView,
         showTemporalAxis: visible,
         brushRange: range,
+        zoomedDomain: visible && range[1] > range[0] && (range[0] > 0 || range[1] < 100)
+            ? range.map(percent => end * percent / 100)
+            : null,
         suggestionVisible: suggestion === key && visible,
         acceptSuggestion: () => {
             setSelection({ key, value: autoRange() });

@@ -3,7 +3,7 @@
 All seven widgets share temporal and aggregate clipping: `CheckboxGroup`, `RadioGroup`,
 `SingleSelectDropdown`, `MultiSelectDropdown`, `InputText`, `Singleslider`, and
 `Rangeslider`. By default, aggregate inherits temporal clipping so both views
-reset together using one threshold.
+slide together using one threshold.
 
 ```jsx
 const scalability = {
@@ -24,7 +24,7 @@ and threshold. An explicit `aggregate_view` overrides this inheritance and
 can use a different threshold or strategy. Aggregate-only clipping does not
 enable temporal clipping. Each widget honors its supplied configuration.
 
-## Trigger and reset behavior
+## Rolling window behavior
 
 - `type` defaults to `on_interaction_over`.
 - `threshold` is a positive integer. When omitted or invalid it defaults to
@@ -37,33 +37,51 @@ enable temporal clipping. Each widget honors its supplied configuration.
   time samples. In `mode="time"`, the existing controller's sampling advances
   that span while idle; in interaction mode it advances when history changes.
   Importing old history does not count the wall-clock gap since it was recorded.
-- A display resets **at** the threshold, then at each multiple of it. For a
-  threshold of 20, interactions 20, 40, 60, etc. clear the display. Interaction
-  21 starts the next display period; this is not a rolling window of 20 records.
-- Imported history skips completed periods in the same way. With 45 interaction
-  records and threshold 20, only interactions 41–45 contribute to that view.
+- After the threshold is exceeded, the window advances on every interaction.
+  With threshold 10, total counts 15, 16, and 17 give bounds 5–15, 6–16,
+  and 7–17. The left bound is the cutoff: at 15, the ten interactions 6–15
+  contribute to aggregate statistics; temporal selection intervals can carry
+  their existing state across the left edge.
+- Time triggers keep the latest threshold seconds of recorded history.
+- Imported history uses the same rolling window. Reaching an exact multiple
+  of the threshold no longer clears the view.
 
 ## What changes on screen
 
-Temporal clipping displays only the current period. It does not render a
-separate timeline, axis footer, or zoom brush. The clipped temporal marks and
-aggregate bars remain visible and interactive; source history is retained.
+Temporal clipping displays the current window. The timeline is hidden by
+default; temporal marks and aggregate bars remain visible and interactive.
 
-Aggregate clipping resets displayed frequencies and recency. Text suggestions,
-numeric frequencies, and range coverage use only interactions after the reset.
-For selection widgets, it counts only selection/deselection changes in the
-current period: an option that stays selected across a boundary is not counted
-as newly selected just because the view was reset. Current values stay unchanged.
+To show the checkbox timeline while its temporal view is open, use:
 
-When a widget crosses a new clipping boundary, it briefly announces
-`hide 20 interacts` (using its configured threshold), then dismisses the notice
-after three seconds. Synchronized temporal/aggregate resets announce only once.
-An initial imported history does not replay old notifications. Time triggers
-use `seconds` in the notice.
+```jsx
+<CheckboxGroup
+  temporalBrush={true}
+  scalability={{
+    temporal_view: {
+      strategy: "clipping",
+      clipping_options: {
+        show_timeline: true,
+        trigger: { type: "on_interaction_over", threshold: 10 },
+      },
+    },
+  }}
+/>
+```
 
-Both views are empty at an exact reset boundary. Original serialized
-provenance, registration, export, and global history restoration are preserved.
-Selecting a visible temporal bar resolves against the displayed period.
+`show_timeline` defaults to false. It also enables the existing selection-widget
+timeline for radio and dropdown widgets. `temporalBrush={false}` overrides it.
+For elapsed-time labels, use `mode="time"`; the trigger type still determines
+whether the window covers interactions or recorded seconds.
+
+Aggregate statistics count only interactions inside the window. Selection
+state at its left edge is retained to compute deltas, without being counted
+as a new selection. Current widget values and full source history are preserved.
+
+The notification stays visible whenever older history is hidden, including
+imported history. At 15 interactions with threshold 10, it reads
+`hide 5 interacts`; at 16 it reads `hide 6 interacts`. It disappears when clipping
+is disabled or no history is hidden. Synchronized temporal/aggregate windows
+produce one notice. Time-trigger notices use seconds.
 
 ## Implementation
 
