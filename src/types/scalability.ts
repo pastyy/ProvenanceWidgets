@@ -1,7 +1,7 @@
 export type ScalabilityStrategy =
   | "zoom_in"
   | "clipping"
-  | "smoothening";
+  | "smoothing";
 
 export type TemporalScalabilityTriggerType =
   | "on_interaction_over"
@@ -74,18 +74,52 @@ export type TemporalScalabilityClippingOptions =
 export type AggregateScalabilityClippingOptions =
   ScalabilityClippingOptions<TemporalScalabilityTriggerType>;
 
-export type ScalabilitySmootheningMethod =
-  | "savgol"
-  | "gaussian"
-  | "bspline";
+export type ScalabilitySmoothingTriggerType = "interaction" | "time";
 
-export type ScalabilityWindowUnit = "pixel" | "data_domain";
+export type ScalabilitySmoothingMethod =
+  | {
+      type: "savgol";
+      /** Total data-domain window width; defaults to 9 (positive, may be fractional).
+       * The adapter converts it to an odd sample count greater than polyorder.
+       */
+      window_length?: number;
+      /** Non-negative integer polynomial order; defaults to 2. */
+      polyorder?: number;
+    }
+  | {
+      type: "gaussian";
+      /** Positive Gaussian standard deviation in data-domain units; defaults to 2. */
+      sigma?: number;
+      /** Positive support radius in standard deviations; defaults to 3.
+       * The data-domain support radius is truncate * sigma.
+       */
+      truncate?: number;
+    }
+  | {
+      type: "bspline";
+      /** Integer spline degree in [1, 5]; defaults to 3 (cubic). */
+      degree?: number;
+      /** Normalized smoothing strength in [0, 1]; defaults to 0.5.
+       * Larger values mean stronger smoothing; not a library-specific residual bound.
+       * Slider: 0 = unpenalized B-spline fit, 1 = least-squares line.
+       */
+      smoothing_factor?: number;
+      /** Positive distance between interior knots in data-domain units; defaults to 10. */
+      knot_spacing?: number;
+    };
 
-export interface ScalabilitySmootheningOptions {
-  method?: ScalabilitySmootheningMethod;
-  trigger?: ScalabilityThresholdTrigger<TemporalScalabilityTriggerType>;
-  window_unit?: ScalabilityWindowUnit;
-  window_size?: number;
+/** Distance parameters always use the component's documented data domain.
+ * Order, degree, truncate, and smoothing_factor are dimensionless.
+ * Aggregate Slider views implement all three methods; temporal smoothing
+ * remains an API contract only.
+ */
+export interface ScalabilitySmoothingOptions {
+  /** Defaults to { type: "savgol", window_length: 9, polyorder: 2 }. */
+  method?: ScalabilitySmoothingMethod;
+  /** Defaults to interaction; threshold defaults to 50 interactions or 3600 seconds.
+   * Both views count recorded interaction events, rather than aggregate item count.
+   */
+  trigger?: ScalabilityThresholdTrigger<ScalabilitySmoothingTriggerType>;
 }
 
 export interface ScalabilityWindowOptions {
@@ -99,14 +133,14 @@ export interface TemporalViewScalability {
   strategy?: ScalabilityStrategy;
   zoom_in_options?: TemporalZoomInOptions;
   clipping_options?: TemporalScalabilityClippingOptions;
-  smoothening_options?: ScalabilitySmootheningOptions;
+  smoothing_options?: ScalabilitySmoothingOptions;
 }
 
 export interface AggregateViewScalability {
   strategy?: ScalabilityStrategy;
   zoom_in_options?: AggregateScalabilityZoomInOptions;
   clipping_options?: AggregateScalabilityClippingOptions;
-  smoothening_options?: ScalabilitySmootheningOptions;
+  smoothing_options?: ScalabilitySmoothingOptions;
   /** Applies to aggregate_view regardless of the selected strategy. */
   window_options?: ScalabilityWindowOptions;
 }

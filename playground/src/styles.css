@@ -60,6 +60,65 @@ input {
   margin-top: 20px;
 }
 
+.slider-smoothing-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 14px 20px;
+  min-width: 0;
+  margin: 20px 0 0;
+  padding: 16px;
+  border: 1px solid #ccd3da;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.slider-smoothing-controls legend {
+  padding: 0 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.slider-smoothing-controls__field {
+  display: flex;
+  flex: 1 1 180px;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  font-size: 0.85rem;
+}
+
+.slider-smoothing-controls__field input,
+.slider-smoothing-controls__field select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #aab6c2;
+  border-radius: 4px;
+  background: #ffffff;
+  color: inherit;
+  font: inherit;
+}
+
+.slider-smoothing-controls__field input:focus-visible,
+.slider-smoothing-controls__field select:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.slider-smoothing-controls__field input[aria-invalid="true"] {
+  border-color: #b42318;
+}
+
+.slider-smoothing-controls__field small,
+.slider-smoothing-controls__note {
+  color: #52606d;
+  font-size: 0.75rem;
+}
+
+.slider-smoothing-controls__note {
+  flex-basis: 100%;
+}
+
 .super-provenance-demo {
   min-width: 0;
 }

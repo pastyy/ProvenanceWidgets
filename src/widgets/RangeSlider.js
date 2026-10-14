@@ -18,7 +18,10 @@ import useWidgetRegistry from "../provenance/hooks/useWidgetRegistry.js";
 import useElementSize from "../shared/hooks/useElementSize.js";
 import useProvenanceTooltip from "../provenance/hooks/useProvenanceTooltip.js";
 import Chart from "./Chart.js";
-import { resolveRecordAggregateView } from "../shared/logic/scalability/index.js";
+import {
+    resolveRecordAggregateView,
+    resolveSliderAggregateSmoothing,
+} from "../shared/logic/scalability/index.js";
 import SliderTickMarks from "../shared/components/SliderTickMarks.js";
 import RangeSliderBars from "../shared/components/RangeSliderBars.js";
 import { shouldCommitSliderChange } from "../shared/logic/sliderInteraction.js";
@@ -117,6 +120,12 @@ const Rangeslider = (props) => {
         width: containerWidth,
         mode: provenanceMode,
     }), [serializedProvenance, strategy, strategyFactory, props.scalability, containerWidth, provenanceMode]);
+    const smoothingSamples = useMemo(() => resolveSliderAggregateSmoothing({
+        scalability: props.scalability,
+        records: serializedProvenance.data,
+        provenance: aggregateProvenance,
+        min, max, step, kind: "range",
+    }), [serializedProvenance, aggregateProvenance, props.scalability, min, max, step]);
     const [displayValue, setDisplayValue] = useState(currentValue);
     const viewPanelLayout = getSliderViewPanelLayout({
         temporalBrush,
@@ -367,6 +376,8 @@ const Rangeslider = (props) => {
                         >
                             <RangeSliderBars
                                 provenance={aggregateProvenance}
+                                smoothingSamples={smoothingSamples}
+                                smoothingMethod={props.scalability?.aggregate_view?.smoothing_options?.method?.type}
                                 colorScheme={interpolateOranges}
                                 min={min}
                                 max={max}
