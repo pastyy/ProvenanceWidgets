@@ -123,9 +123,17 @@ export interface ScalabilitySmoothingOptions {
 }
 
 export interface ScalabilityWindowOptions {
-  /** Number of aggregate items visible in the current window. */
+  /** Slider: positive integer value span in domain units (independent of step).
+   * Defaults to max - min; invalid/noninteger sizes show the full domain.
+   * Windowing requires integer min and max.
+   * Other widgets: number of aggregate items; windowing is not implemented yet.
+   */
   window_size?: number;
-  /** Zero-based index of the first aggregate item in the window. */
+  /** Slider: integer absolute value at the left edge, defaulting to min and clamped
+   * to [min, max - window_size]. Initializes scrolling and repositions when
+   * changed; user scrolling snaps to integer starts without recording history.
+   * Other widgets: zero-based item index; windowing is not implemented yet.
+   */
   window_start?: number;
 }
 

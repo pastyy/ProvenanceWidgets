@@ -16,6 +16,7 @@ import {
 
 import WidgetCard from "./WidgetCard.jsx";
 import SliderSmoothingControls from "./SliderSmoothingControls.jsx";
+import SliderWindowControls from "./SliderWindowControls.jsx";
 
 const cityOptions = [
   { label: "New York", value: "New York" },
@@ -235,6 +236,8 @@ export default function PlaygroundPage() {
   const [cities, setCities] = useState(cityOptions.slice(0, 2));
   const [sliderSmoothingMethod, setSliderSmoothingMethod] = useState("savgol");
   const [smoothingMethods, setSmoothingMethods] = useState(sliderSmoothingMethods);
+  const [sliderWindowEnabled, setSliderWindowEnabled] = useState(true);
+  const [sliderWindowOptions, setSliderWindowOptions] = useState({ window_size: 20, window_start: 30 });
   const changeSmoothingParameter = (type, name, value) => {
     setSmoothingMethods(previous => ({
       ...previous,
@@ -243,6 +246,7 @@ export default function PlaygroundPage() {
   };
   const sliderAggregateSmoothing = {
     strategy: "smoothing",
+    window_options: sliderWindowEnabled ? sliderWindowOptions : undefined,
     smoothing_options: {
       method: smoothingMethods[sliderSmoothingMethod],
       trigger: { type: "interaction", threshold: 10 },
@@ -259,6 +263,12 @@ export default function PlaygroundPage() {
             method={smoothingMethods[sliderSmoothingMethod]}
             onMethodChange={setSliderSmoothingMethod}
             onParameterChange={changeSmoothingParameter}
+          />
+          <SliderWindowControls
+            enabled={sliderWindowEnabled}
+            options={sliderWindowOptions}
+            onEnabledChange={setSliderWindowEnabled}
+            onOptionsChange={setSliderWindowOptions}
           />
         </header>
 

@@ -26,6 +26,7 @@ import {
 import SliderTickMarks from "../shared/components/SliderTickMarks.js";
 import { shouldCommitSliderChange } from "../shared/logic/sliderInteraction.js";
 import SingleSliderBars from "../shared/components/SingleSliderBars.js";
+import SliderAggregateViewport from "../shared/components/SliderAggregateViewport.js";
 import {
     formatAggregateTooltip,
     getTooltipAnchorProps,
@@ -321,7 +322,14 @@ const Singleslider = (props) => {
                 width={containerWidth}
                 mode={provenanceMode}
             />}
-            <div
+            <SliderAggregateViewport
+                scalability={props.scalability}
+                min={min}
+                max={max}
+                width={containerWidth}
+                label={tooltipLabel}
+            >
+            {({ width: contentWidth, min: windowMin, max: windowMax, labelPrecision }) => <div
                 style={{
                     position: "relative",
                     width: "100%",
@@ -334,7 +342,7 @@ const Singleslider = (props) => {
                             position: "absolute",
                             left: 0,
                             bottom: `${trackBottom + 2}px`,
-                            width: containerWidth,
+                            width: contentWidth,
                             height: 50,
                         }}
                     >
@@ -353,7 +361,7 @@ const Singleslider = (props) => {
                                 barKeys={barKeys}
                                 min={min}
                                 max={max}
-                                width={containerWidth}
+                                width={contentWidth}
                                 height={50}
                             />
                         </div>
@@ -476,11 +484,15 @@ const Singleslider = (props) => {
                         tickStep={tickStep}
                         ticksArray={ticksArray}
                         values={displayValue}
+                        labelMin={windowMin}
+                        labelMax={windowMax}
+                        labelPrecision={labelPrecision}
                         formatValue={options.translate}
                         trackBottom={trackBottom}
                     />
                 )}
-            </div>
+            </div>}
+            </SliderAggregateViewport>
 
             {visualize && isDropdownVisible && (
                 <div

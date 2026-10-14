@@ -137,9 +137,9 @@
 
             "window_options": {		// for value-wise scalability; I thinks it's applicable to any strategy, because it is not a matter of what to do when number of interaction increases, but a matter of what if thereare too many values (e.g. numerical 0-100, or 1000 options) but the space is limited. Then there should not be any loss of information but just to show it part by part. 
 
-                "window_size": int, // number of items in a scrolled window view (items: checkbox options, inputbox items, slider values, etc.); by default = total number of items
+                "window_size": int, // Slider: positive integer value span, independent of step; default: max - min. Other widgets: item count (not implemented yet).
 
-                "window_start": int // default starting index of the window; default: 0 (the first item)
+                "window_start": int // Slider: integer absolute left-edge value; default: min; clamped to [min, max - window_size]. Scrolling snaps to integers. Other widgets: starting item index (not implemented yet).
 
             }
 

@@ -47,3 +47,9 @@ export { smoothGaussian } from "./strategies/smoothing/gaussian.js";
 export { smoothBspline } from "./strategies/smoothing/bspline.js";
 export { buildSliderAggregateSamples } from "./adapters/sliderAggregate.js";
 export { resolveSliderAggregateSmoothing } from "./views/sliderAggregateSmoothing.js";
+export { resolveSliderAggregateWindowConfig } from "./core/normalizeSliderWindowConfig.js";
+export {
+    getSliderAggregateWindowLayout,
+    sliderWindowStartToScrollLeft,
+    sliderWindowScrollLeftToStart,
+} from "./views/sliderAggregateWindow.js";

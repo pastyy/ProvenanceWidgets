@@ -24,6 +24,7 @@ import {
 } from "../shared/logic/scalability/index.js";
 import SliderTickMarks from "../shared/components/SliderTickMarks.js";
 import RangeSliderBars from "../shared/components/RangeSliderBars.js";
+import SliderAggregateViewport from "../shared/components/SliderAggregateViewport.js";
 import { shouldCommitSliderChange } from "../shared/logic/sliderInteraction.js";
 import {
     callRangeSliderCallbacks,
@@ -356,7 +357,14 @@ const Rangeslider = (props) => {
                 width={containerWidth}
                 mode={provenanceMode}
             />}
-            <div
+            <SliderAggregateViewport
+                scalability={props.scalability}
+                min={min}
+                max={max}
+                width={containerWidth}
+                label={tooltipLabel}
+            >
+            {({ width: contentWidth, min: windowMin, max: windowMax, labelPrecision }) => <div
                 style={{
                     position: "relative",
                     width: "100%",
@@ -381,7 +389,7 @@ const Rangeslider = (props) => {
                                 colorScheme={interpolateOranges}
                                 min={min}
                                 max={max}
-                                width={containerWidth}
+                                width={contentWidth}
                                 height={50}
                                 onRangeSelect={applyRegisteredValue}
                                 getBarProps={(value, record) =>
@@ -446,11 +454,15 @@ const Rangeslider = (props) => {
                         tickStep={tickStep}
                         ticksArray={ticksArray}
                         values={displayValue}
+                        labelMin={windowMin}
+                        labelMax={windowMax}
+                        labelPrecision={labelPrecision}
                         formatValue={options.translate}
                         trackBottom={trackBottom}
                     />
                 )}
-            </div>
+            </div>}
+            </SliderAggregateViewport>
 
             {visualize && isDropdownVisible && (
                 <div
