@@ -39,6 +39,10 @@ const ZoomedRangeAxis = ({
     label,
     topInset = ZOOM_AXIS_TOP_SPACE,
     rightInset = ZOOM_AXIS_RIGHT_SPACE,
+    horizontalInset = HORIZONTAL_INSET,
+    axisKind,
+    integerTicks = false,
+    formatTick = value => value,
 }) => {
     if (!isValidDomain(domain)) return null;
 
@@ -47,7 +51,14 @@ const ZoomedRangeAxis = ({
     const colors = axisColors(theme);
     const horizontal = orientation === "horizontal";
     const length = Math.max(1, Number(pixelLength) || 1);
-    const ticks = buildAdaptiveSliderTicks({
+    // Keep the selected domain for positioning, but place interaction ticks
+    // only at actual integer counts within that domain.
+    const ticks = integerTicks ? buildAdaptiveSliderTicks({
+        min: Math.ceil(min),
+        max: Math.floor(max),
+        step: 1,
+        pixelLength: length,
+    }) : buildAdaptiveSliderTicks({
         min,
         max,
         step,
@@ -61,10 +72,10 @@ const ZoomedRangeAxis = ({
         : 0.5;
 
     if (horizontal) {
-        const trackLength = Math.max(1, length - (HORIZONTAL_INSET * 2));
+        const trackLength = Math.max(1, length - (horizontalInset * 2));
         return (
             <div
-                data-provenance-zoom-axis="values"
+                data-provenance-zoom-axis={axisKind ?? "values"}
                 aria-hidden="true"
                 style={{
                     position: "absolute",
@@ -83,14 +94,14 @@ const ZoomedRangeAxis = ({
                     style={{ display: "block", overflow: "visible" }}
                 >
                     <line
-                        x1={HORIZONTAL_INSET}
-                        x2={length - HORIZONTAL_INSET}
+                        x1={horizontalInset}
+                        x2={length - horizontalInset}
                         y1="8"
                         y2="8"
                         stroke={colors.line}
                     />
                     {ticks.map(tick => {
-                        const x = HORIZONTAL_INSET + (
+                        const x = horizontalInset + (
                             getRatio(tick) * trackLength
                         );
                         return (
@@ -109,7 +120,7 @@ const ZoomedRangeAxis = ({
                                     fontSize="10"
                                     textAnchor="middle"
                                 >
-                                    {tick}
+                                    {formatTick(tick)}
                                 </text>
                             </g>
                         );
@@ -171,7 +182,7 @@ const ZoomedRangeAxis = ({
                                 fontSize="10"
                                 textAnchor="start"
                             >
-                                {tick}
+                                {formatTick(tick)}
                             </text>
                         </g>
                     );

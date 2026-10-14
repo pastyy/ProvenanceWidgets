@@ -42,7 +42,7 @@ const meatOptions = [
 
 const checkboxClippingScalability = {
   temporal_view: {
-    strategy: "clipping",
+    strategy: "zoom_in",
     clipping_options: {
       trigger: { type: "on_interaction_over", threshold: 10 },
     },

@@ -22,6 +22,7 @@ export function resolveClippingConfig(scalability, { view = "temporal_view", wid
         view,
         strategy,
         enabled,
+        showTimeline: enabled && options?.clipping_options?.show_timeline === true,
         // Wait for layout when an explicit threshold is not supplied.
         ready: enabled && threshold !== null,
         triggerType: trigger.type === "on_time_over" ? "on_time_over" : "on_interaction_over",

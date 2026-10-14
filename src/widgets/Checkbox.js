@@ -272,6 +272,7 @@ const Checkbox = ({
             />
             <div
                 ref={setContainerElement}
+                data-provenance-checkbox-track={checkboxGroup?.id}
                 style={{
                     position: "relative",
                     flex: 1,
