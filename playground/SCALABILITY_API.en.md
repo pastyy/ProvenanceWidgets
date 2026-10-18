@@ -171,7 +171,7 @@ type SmoothingOptions = {
 - `trigger.type` defaults to `interaction`.
 - `trigger.threshold` defaults to `50` interaction events for `interaction` and
   `3600` seconds for `time`.
-- Savitzky-Golay defaults to `window_length: 9` and `polyorder: 2`.
+- Savitzky-Golay defaults to `window_length: 4` and `polyorder: 2`.
 - Gaussian defaults to `sigma: 2` and `truncate: 3`.
 - B-spline defaults to `degree: 3`, `smoothing_factor: 0.5`, and
   `knot_spacing: 10`.
@@ -180,7 +180,7 @@ type SmoothingOptions = {
 
 | Method parameter | Meaning | Default | Constraint |
 | --- | --- | --- | --- |
-| `savgol.window_length` | Total width of the local fitting window in data-domain units | `9` | Positive finite number; fractional widths are allowed |
+| `savgol.window_length` | Total width of the local fitting window in data-domain units | `4` | Positive finite number; fractional widths are allowed |
 | `savgol.polyorder` | Local polynomial order | `2` | Non-negative integer |
 | `gaussian.sigma` | Standard deviation in data-domain units | `2` | Positive finite number |
 | `gaussian.truncate` | Support radius in multiples of `sigma`; actual radius is `truncate * sigma` | `3` | Positive finite number |
@@ -203,6 +203,22 @@ type SmoothingOptions = {
 - Each component defines the data to smooth. These numeric methods do not mean
   smoothing category labels or text directly; the adaptation will be specified
   during that component's development.
+
+Slider temporal smoothing uses a view-specific adapter distinct from aggregate
+smoothing:
+
+- SingleSlider smooths recorded values over history. RangeSlider smooths center
+  and span, then reconstructs and clamps ordered low/high endpoints.
+- In interaction mode, smoothing distances use record-order units. In time mode,
+  they use elapsed seconds. Non-uniform time history is adapted to a uniform
+  numerical grid before applying the selected method.
+- Numerical and display sampling is capped at 2,049 points independently of pixel
+  width. The original records and provenance remain unchanged.
+- Before the trigger, the existing points, connections, tooltips, and restore
+  interactions remain active. After the trigger, a non-interactive curve with a
+  vertical recency gradient replaces those marks and hitboxes.
+- Temporal and aggregate smoothing are resolved independently; enabling either
+  view does not activate or alter the other view.
 
 ## Aggregate view
 
@@ -262,13 +278,13 @@ type AggregateClippingOptions = {
 
 Uses the same `SmoothingOptions` structure as the temporal view:
 
-- `method` defaults to `{ type: "savgol", window_length: 9, polyorder: 2 }`.
+- `method` defaults to `{ type: "savgol", window_length: 4, polyorder: 2 }`.
 - Smoothing distances use the aggregate data domain. Dimensionless parameters,
   constraints, and default rules are the same as in the Smoothing section.
 - `trigger.type` defaults to `interaction`.
 - `trigger.threshold` defaults to `50` interaction events for `interaction` and
   `3600` seconds for `time`.
-- Savitzky-Golay defaults to `window_length: 9` and `polyorder: 2`.
+- Savitzky-Golay defaults to `window_length: 4` and `polyorder: 2`.
 - Gaussian defaults to `sigma: 2` and `truncate: 3`.
 - B-spline defaults to `degree: 3`, `smoothing_factor: 0.5`, and
   `knot_spacing: 10`.
@@ -287,7 +303,7 @@ Uses the same `SmoothingOptions` structure as the temporal view:
   clamped basis and penalized least squares; `smoothing_factor: 0` is an
   unpenalized fit and `1` is the best least-squares line. Dense requested knots
   are capped to keep the system identifiable.
-- See [Slider aggregate smoothing semantics](../src/shared/logic/scalability/SMOOTHING.md).
+- See [Slider smoothing semantics](../src/shared/logic/scalability/SMOOTHING.md).
 
 ### Window options
 
@@ -342,16 +358,16 @@ integration code exists, but acceptance verification is outstanding; `Verified`
 A draft, type declaration, or shared algorithm alone does not establish widget
 integration.
 
-Initial statuses reflect inspection of the workspace on 2026-10-12. Slider
-aggregate smoothing now has focused numerical tests and desktop/mobile rendering
-checks, but remains `Implemented (unverified)` until click and keyboard acceptance
-checks are completed.
+Initial statuses reflect inspection of the workspace on 2026-10-18. Slider
+aggregate and temporal smoothing have focused numerical and SVG-rendering tests,
+but remain `Implemented (unverified)` until browser interaction and responsive
+layout acceptance checks are completed.
 
 | Component | View | clipping | zoom_in | smoothing | Notes / differences to specify |
 | --- | --- | --- | --- | --- | --- |
-| SingleSlider (exported as `Singleslider`) | temporal | Pending | Implemented (unverified) | Pending | Passes configuration to Chart for interaction, value, and 2D zoom; clipping is not integrated. |
+| SingleSlider (exported as `Singleslider`) | temporal | Pending | Implemented (unverified) | Implemented (unverified) | Smoothing replaces value-history points and connections after its own trigger; zoom behavior remains independent. |
 | SingleSlider | aggregate | Pending | Pending | Implemented (unverified) | After the configured trigger, all three smoothing methods replace bars and hitboxes with a frequency-by-value curve; window_options remain pending. |
-| RangeSlider (exported as `Rangeslider`) | temporal | Pending | Implemented (unverified) | Pending | Reuses Chart zoom configuration; specify interval endpoint and 2D selection semantics during development and acceptance. |
+| RangeSlider (exported as `Rangeslider`) | temporal | Pending | Implemented (unverified) | Implemented (unverified) | Smoothing uses center/span adaptation to preserve ordered endpoints; zoom behavior remains independent. |
 | RangeSlider | aggregate | Pending | Pending | Implemented (unverified) | After the configured trigger, all three smoothing methods replace bars and hitboxes with an interval-coverage curve; window_options remain pending. |
 | CheckboxGroup | temporal | Partial | Partial | Pending | Clipping supports only on_interaction_over in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |
 | CheckboxGroup | aggregate | Pending | Pending | Pending | Define option / selection-combination aggregation; integrate strategies and window_options. |
@@ -375,6 +391,10 @@ Code evidence for the current statuses:
   [sliderAggregateSmoothing.js](../src/shared/logic/scalability/views/sliderAggregateSmoothing.js),
   [SMOOTHING.md](../src/shared/logic/scalability/SMOOTHING.md), and
   [sliderAggregateSmoothing.test.js](../tests/sliderAggregateSmoothing.test.js).
+- Slider temporal smoothing:
+  [sliderTemporalSmoothing.js](../src/shared/logic/scalability/views/sliderTemporalSmoothing.js),
+  [SMOOTHING.md](../src/shared/logic/scalability/SMOOTHING.md), and
+  [sliderTemporalSmoothing.test.js](../tests/sliderTemporalSmoothing.test.js).
 - Strategy dispatch and current limitations for the four selection widgets:
   [selectionTemporal.js](../src/shared/logic/scalability/views/selectionTemporal.js)
   and [CLIPPING.md](../src/shared/logic/scalability/CLIPPING.md).

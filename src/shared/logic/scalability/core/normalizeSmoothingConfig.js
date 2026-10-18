@@ -30,7 +30,7 @@ export function resolveSmoothingConfig(scalability, view = "aggregate_view") {
         knot_spacing: positive(method.knot_spacing, 10),
     } : {
         type: method.type,
-        window_length: positive(method.window_length, 9),
+        window_length: positive(method.window_length, 4),
         polyorder: typeof order === "number" && Number.isInteger(order) && order >= 0
             ? order : 2,
     };

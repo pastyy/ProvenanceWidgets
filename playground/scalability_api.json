@@ -40,12 +40,12 @@
 
             "smoothing_options": {
 
-                // Optional; defaults to { type: "savgol", window_length: 9, polyorder: 2 }.
+                // Optional; defaults to { type: "savgol", window_length: 4, polyorder: 2 }.
                 // Each method.type is required; its other parameters are optional.
                 // Distance parameters use data-domain units; there is no unit option.
                 "method": {
                     "type": "savgol",
-                    "window_length": number, // default: 9; total data-domain window width
+                    "window_length": number, // default: 4; total data-domain window width
                     "polyorder": int // default: 2; polynomial order
                 } | {
                     "type": "gaussian",
@@ -105,12 +105,12 @@
 
             "smoothing_options": {
 
-                // Optional; defaults to { type: "savgol", window_length: 9, polyorder: 2 }.
+                // Optional; defaults to { type: "savgol", window_length: 4, polyorder: 2 }.
                 // Each method.type is required; its other parameters are optional.
                 // Distance parameters use data-domain units; there is no unit option.
                 "method": {
                     "type": "savgol",
-                    "window_length": number, // default: 9; total data-domain window width
+                    "window_length": number, // default: 4; total data-domain window width
                     "polyorder": int // default: 2; polynomial order
                 } | {
                     "type": "gaussian",

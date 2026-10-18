@@ -150,19 +150,19 @@ type SmoothingOptions = {
 };
 ```
 
-- `method` 默认为 `{ type: "savgol", window_length: 9, polyorder: 2 }`。
+- `method` 默认为 `{ type: "savgol", window_length: 4, polyorder: 2 }`。
 - 平滑距离统一使用 `data_domain`，不提供单位字段；阶数、`truncate` 和
   `smoothing_factor` 是无量纲参数。
 - `trigger.type` 默认 `interaction`。
 - `trigger.threshold` 在 `interaction` 下默认 `50` 次交互，在 `time` 下默认 `3600` 秒。
-- Savitzky-Golay 默认 `window_length: 9`、`polyorder: 2`。
+- Savitzky-Golay 默认 `window_length: 4`、`polyorder: 2`。
 - Gaussian 默认 `sigma: 2`、`truncate: 3`。
 - B-spline 默认 `degree: 3`、`smoothing_factor: 0.5`、`knot_spacing: 10`。
 - 提供 `method` 对象时，`type` 必填；其余算法参数均可省略，使用上述对应默认值。
 
 | 算法参数 | 含义 | 默认值 | 约束 |
 | --- | --- | --- | --- |
-| `savgol.window_length` | 局部拟合窗口的总宽度，使用数据域单位 | `9` | 正有限数，允许小数 |
+| `savgol.window_length` | 局部拟合窗口的总宽度，使用数据域单位 | `4` | 正有限数，允许小数 |
 | `savgol.polyorder` | 局部多项式阶数 | `2` | 非负整数 |
 | `gaussian.sigma` | 标准差，使用数据域单位 | `2` | 正有限数 |
 | `gaussian.truncate` | 支持半径是标准差的几倍；实际半径为 `truncate * sigma` | `3` | 正有限数 |
@@ -181,6 +181,17 @@ type SmoothingOptions = {
   aggregate 触发器不按不同聚合条目的数量计数。
 - 具体平滑的数据对象由组件定义；上述数值方法不能直接解释为对类别或文本
   本身进行平滑，适配方案在该组件开发时补充。
+
+Slider temporal smoothing 使用独立于 aggregate smoothing 的视图适配器：
+
+- SingleSlider 平滑历史中的记录值；RangeSlider 平滑 center 和 span，再重建并裁剪
+  为有序的 low/high 端点。
+- interaction 模式下，平滑距离使用历史记录顺序单位；time 模式下使用经过秒数。
+  非均匀时间历史会先适配到均匀数值网格，再应用所选算法。
+- 数值计算与显示最多使用 2049 个采样点，不依赖像素宽度，也不修改原始记录或 provenance。
+- 达到 trigger 前保留现有点、连线、tooltip 和历史恢复交互；达到 trigger 后，以带纵向
+  recency gradient 的非交互曲线替换这些 marks 和命中区域。
+- temporal 与 aggregate smoothing 独立解析；启用其中一个视图不会激活或修改另一个视图。
 
 ## Aggregate view
 
@@ -238,11 +249,11 @@ type AggregateClippingOptions = {
 
 使用与 temporal view 相同的 `SmoothingOptions` 结构：
 
-- `method` 默认为 `{ type: "savgol", window_length: 9, polyorder: 2 }`。
+- `method` 默认为 `{ type: "savgol", window_length: 4, polyorder: 2 }`。
 - 平滑距离使用聚合数据域单位；无量纲参数、约束和默认规则与 Smoothing 节相同。
 - `trigger.type` 默认 `interaction`。
 - `trigger.threshold` 在 `interaction` 下默认 `50` 次交互，在 `time` 下默认 `3600` 秒。
-- Savitzky-Golay 默认 `window_length: 9`、`polyorder: 2`。
+- Savitzky-Golay 默认 `window_length: 4`、`polyorder: 2`。
 - Gaussian 默认 `sigma: 2`、`truncate: 3`。
 - B-spline 默认 `degree: 3`、`smoothing_factor: 0.5`、`knot_spacing: 10`。
 - SingleSlider 和 RangeSlider 已实现 `savgol`、`gaussian` 和 `bspline`。达到 trigger
@@ -257,7 +268,7 @@ type AggregateClippingOptions = {
 - Gaussian 在边界对可用核权重重新归一化。B-spline 使用端点重复的样条基和带
   惩罚的最小二乘拟合；`smoothing_factor: 0` 表示不加惩罚，`1` 表示最佳拟合
   直线。过密的结点请求会受采样点数上限限制。
-- 详细规则见 [Slider aggregate smoothing 语义](../src/shared/logic/scalability/SMOOTHING.md)。
+- 详细规则见 [Slider smoothing 语义](../src/shared/logic/scalability/SMOOTHING.md)。
 
 ### Window options
 
@@ -305,15 +316,15 @@ type WindowOptions = {
 尚未完成该项验收；`已验证` = 对应组件、视图和策略已完成验证，需附验证依据。
 接口草案、类型声明或共享算法存在，不等于某个 widget 已完成接入。
 
-初始状态根据 2026-10-12 的工作区代码检查填写。Slider aggregate smoothing
-已经完成专项数值测试和桌面端/窄屏渲染检查；在点击与键盘交互验收完成前，仍标记为
+当前状态根据 2026-10-18 的工作区代码检查填写。Slider aggregate 与 temporal
+smoothing 已完成专项数值和 SVG 渲染测试；在浏览器交互与响应式布局验收完成前，仍标记为
 “已实现（待验证）”。
 
 | 组件 | 视图 | clipping | zoom_in | smoothing | 备注 / 待补充差异 |
 | --- | --- | --- | --- | --- | --- |
-| SingleSlider（导出名 `Singleslider`） | temporal | 待开发 | 已实现（待验证） | 待开发 | 已向 Chart 传递配置并接入交互、数值和二维缩放；clipping 尚未接入。 |
+| SingleSlider（导出名 `Singleslider`） | temporal | 待开发 | 已实现（待验证） | 已实现（待验证） | smoothing 在自身 trigger 后替换数值历史点和连线；zoom 行为保持独立。 |
 | SingleSlider | aggregate | 待开发 | 待开发 | 已实现（待验证） | 达到触发阈值后，三种 smoothing 方法均以数值频次曲线替换柱形图及其交互命中区域；window_options 仍待开发。 |
-| RangeSlider（导出名 `Rangeslider`） | temporal | 待开发 | 已实现（待验证） | 待开发 | 复用 Chart 的缩放配置；区间端点、二维选择等语义在开发与验收时补充。 |
+| RangeSlider（导出名 `Rangeslider`） | temporal | 待开发 | 已实现（待验证） | 已实现（待验证） | smoothing 使用 center/span 适配以保持端点有序；zoom 行为保持独立。 |
 | RangeSlider | aggregate | 待开发 | 待开发 | 已实现（待验证） | 达到触发阈值后，三种 smoothing 方法均以区间覆盖次数曲线替换柱形图及其交互命中区域；window_options 仍待开发。 |
 | CheckboxGroup | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 on_interaction_over；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |
 | CheckboxGroup | aggregate | 待开发 | 待开发 | 待开发 | 选项 / 多选组合的聚合语义待明确；策略与 window_options 待接入。 |
@@ -336,6 +347,10 @@ type WindowOptions = {
   [sliderAggregateSmoothing.js](../src/shared/logic/scalability/views/sliderAggregateSmoothing.js)、
   [SMOOTHING.md](../src/shared/logic/scalability/SMOOTHING.md)、
   [sliderAggregateSmoothing.test.js](../tests/sliderAggregateSmoothing.test.js)。
+- Slider temporal 平滑：
+  [sliderTemporalSmoothing.js](../src/shared/logic/scalability/views/sliderTemporalSmoothing.js)、
+  [SMOOTHING.md](../src/shared/logic/scalability/SMOOTHING.md)、
+  [sliderTemporalSmoothing.test.js](../tests/sliderTemporalSmoothing.test.js)。
 - 四种选择类 widget 的策略分派与现有限制：
   [selectionTemporal.js](../src/shared/logic/scalability/views/selectionTemporal.js)、
   [CLIPPING.md](../src/shared/logic/scalability/CLIPPING.md)。

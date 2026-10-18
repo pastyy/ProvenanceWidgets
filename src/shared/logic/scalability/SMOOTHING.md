@@ -1,21 +1,19 @@
-# Slider Aggregate Smoothing
+# Slider Smoothing
 
 SingleSlider and RangeSlider support Savitzky-Golay, Gaussian, and B-spline
-smoothing in the aggregate view. Before the configured trigger is reached, the
-aggregate bars, tooltips, and restore interactions behave exactly as they do
-without scalability. Once triggered, a non-interactive curve replaces the
-bars and their interaction hitboxes. The area below the curve uses a horizontal
-linear gradient to preserve the bars' recency color encoding. Smoothing never
-changes provenance or the underlying aggregate values.
+smoothing independently in their temporal and aggregate views. Smoothing is
+display-only: it never changes provenance, recorded values, or aggregate data.
+The view that reaches its configured trigger replaces its normal marks with a
+non-interactive curve; configuring one view does not activate the other.
 
 ```jsx
 scalability={{
-  aggregate_view: {
+  temporal_view: {
     strategy: "smoothing",
     smoothing_options: {
       method: {
         type: "savgol",
-        window_length: 9,
+        window_length: 4,
         polyorder: 2,
       },
       trigger: { type: "interaction", threshold: 50 },
@@ -24,7 +22,26 @@ scalability={{
 }}
 ```
 
-## Data Semantics
+Use the same structure under `aggregate_view` to smooth aggregate data.
+
+## Temporal View Semantics
+
+- SingleSlider smooths its recorded numeric value over history.
+- RangeSlider smooths center and span as separate signals, then reconstructs
+  low/high endpoints. Span is clamped to the Slider domain and reconstruction
+  guarantees `min <= low <= high <= max`.
+- In interaction mode, smoothing distances use record-order units. In time
+  mode, they use elapsed seconds from the first valid timestamp. A time series
+  with missing or decreasing timestamps remains unsmoothed.
+- Non-uniform time histories are linearly adapted to a uniform numerical grid.
+  Histories larger than 2,049 points are reduced to a 2,049-point display grid;
+  this sampling is independent of rendered pixel size.
+- Before the trigger, the existing points, straight connections, tooltips,
+  keyboard behavior, and history restore remain unchanged. After the trigger,
+  a non-interactive curve replaces the points, connections, and hitboxes. A
+  vertical gradient retains their interaction-recency colors.
+
+## Aggregate View Semantics
 
 - SingleSlider smooths interaction frequency across slider values. Values with
   no interactions contribute zero, so gaps remain part of the fitted signal.
@@ -35,28 +52,29 @@ scalability={{
   pixel width. Numerical work is capped at 2,049 samples. When a larger domain
   must be reduced, SingleSlider averages value-frequency bins and RangeSlider
   averages coverage over each reduced bin.
+- Before the trigger, aggregate bars, tooltips, and restore interactions remain
+  unchanged. After the trigger, a non-interactive curve replaces the bars and
+  hitboxes. Its horizontal gradient retains the bars' recency colors.
 
 ## Savitzky-Golay Rules
 
 `window_length` is a positive width in the slider's data-domain units, not a
 pixel width. It is converted to the nearest usable odd number of samples and
 expanded when necessary so it is greater than `polyorder`. The defaults are
-`window_length: 9` and `polyorder: 2`.
+`window_length: 4` and `polyorder: 2`.
 
 Each point is evaluated from a local least-squares polynomial. At the domain
 boundaries, the full window shifts inward and evaluates the polynomial at the
 boundary point instead of padding or dropping samples. Histories too short for
-the configured polynomial remain unsmoothed. Negative fitted counts are
-clamped to zero before rendering, and the curve is confined to the bar chart's
-vertical extent.
+the configured polynomial remain unsmoothed. Aggregate negative estimates are
+clamped to zero. Temporal estimates are clamped to the Slider domain, and
+RangeSlider spans are additionally clamped to a valid range.
 
-The curve uses the same x and count scales as the bars and has no pointer
-events. Once it is displayed, bar hover, keyboard selection, and history
-restore are unavailable because the bars and their hitboxes are not rendered.
-The gradient is also non-interactive. SingleSlider places color stops at its
-recorded values; RangeSlider places them at aggregate segment centers. Each
-stop uses the same normalized interaction index and color scheme as its former
-bar, and SVG interpolates colors horizontally between stops.
+Aggregate curves use the same x and count scales as the bars. SingleSlider
+places gradient color stops at recorded values; RangeSlider places them at
+aggregate segment centers. Temporal curves use the existing value and temporal
+scales with vertical color stops. All smoothing paths and gradients ignore
+pointer events.
 
 ## Gaussian Rules
 
@@ -106,14 +124,14 @@ bound. Negative estimates are clamped at display adaptation, just as for Savgol.
   timestamps and requires at least one interaction record.
 - The defaults are 50 interactions or 3,600 recorded seconds. The curve appears
   when the metric is greater than or equal to the threshold.
-- All three methods are implemented for aggregate Slider views. Temporal
-  smoothing remains unimplemented. Unknown methods never fall back silently
-  to Savitzky-Golay.
+- All three methods are implemented independently for temporal and aggregate
+  Slider views. Unknown methods never fall back silently to Savitzky-Golay.
 
-Focused numerical and SVG-rendering verification (including pre-trigger bars,
-post-trigger removal of bars and hitboxes, and recency gradient fills for every
-method):
+Focused numerical and SVG-rendering verification covers aggregate pre-trigger
+bars, post-trigger bar/hitbox replacement, temporal single/range paths, bounded
+sampling, ordered RangeSlider endpoints, and recency gradients for every method:
 
 ```bash
-node --test tests/sliderAggregateSmoothing.test.js tests/sliderAggregateSmoothingRender.test.js
+node --test tests/sliderAggregateSmoothing.test.js tests/sliderAggregateSmoothingRender.test.js \
+  tests/sliderTemporalSmoothing.test.js tests/sliderTemporalSmoothingRender.test.js
 ```

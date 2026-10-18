@@ -46,7 +46,7 @@ function fittingWeights(fit, evaluationIndex) {
         sum + column[index] * coefficients[degree], 0));
 }
 
-export function smoothSavgol(samples, { window_length = 9, polyorder = 2 } = {}) {
+export function smoothSavgol(samples, { window_length = 4, polyorder = 2 } = {}) {
     if (samples.length < 2) return samples.map(sample => ({ ...sample }));
     const spacing = samples[1].value - samples[0].value;
     if (!(spacing > 0) || !Number.isInteger(polyorder) || polyorder < 0) {

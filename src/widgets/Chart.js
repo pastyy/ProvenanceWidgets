@@ -33,6 +33,7 @@ import {
     temporalTriggerMetric,
     resolveRecordTemporalView,
     getClippedTemporalYPositions,
+    resolveSliderTemporalSmoothing,
 } from "../shared/logic/scalability/index.js";
 import {
     buildInputTextTemporalEntries,
@@ -46,6 +47,7 @@ import ZoomedRangeAxis, {
     ZOOM_AXIS_RIGHT_SPACE,
     ZOOM_AXIS_TOP_SPACE,
 } from '../shared/components/ZoomedRangeAxis.js';
+import SliderTemporalSmoothingCurve from '../shared/components/SliderTemporalSmoothingCurve.js';
 import {
     RectangleDerivedChart,
     useRectangle2D,
@@ -1193,6 +1195,22 @@ const Chart = ({
             : baseMaxIndex + 1;
         const minIndex = usesContinuousDomain ? domainMin : 0;
         const rangeSpan = Math.max(valueDomainMax - valueDomainMin, 1e-9);
+        const temporalSmoothing = chartData.isSingleSlider || chartData.isRangeSlider
+            ? resolveSliderTemporalSmoothing({
+                scalability,
+                entries: sortedEntries,
+                mode: chartData.mode ?? mode,
+                range: chartData.isRangeSlider,
+                min: domainMin,
+                max: domainMax,
+            })
+            : { active: false, method: "savgol", samples: [] };
+        const temporalSmoothingStops = temporalSmoothing.samples.map((sample, index) => ({
+            offset: sample.offset,
+            color: d3.interpolateOranges(
+                0.3 + ((index / (temporalSmoothing.samples.length - 1 || 1)) * 0.7)
+            ),
+        }));
         const temporalSliderConnections = buildTemporalSliderConnections({
             entries: sortedEntries,
             yPositions: temporalYPositions,
@@ -1629,7 +1647,19 @@ const Chart = ({
                             height={temporalPlotHeight}
                             style={{ position: 'absolute', top: 0, left: '6px', width: 'calc(100% - 12px)', height: `${temporalPlotHeight}px`, overflow: 'visible', pointerEvents: 'none', zIndex: 0 }}
                         >
-                            {temporalSliderConnections.map(connection => (
+                            {temporalSmoothing.active ? (
+                                <SliderTemporalSmoothingCurve
+                                    samples={temporalSmoothing.samples}
+                                    method={temporalSmoothing.method}
+                                    min={valueDomainMin}
+                                    max={valueDomainMax}
+                                    width={Math.max(valueBrushWidth - 12, 1)}
+                                    height={temporalPlotHeight}
+                                    range={chartData.isRangeSlider}
+                                    recencyStops={temporalSmoothingStops}
+                                    gradientKey={`${target}-temporal`}
+                                />
+                            ) : temporalSliderConnections.map(connection => (
                                 <line
                                     key={`${connection.endpoint}-${connection.fromIndex}`}
                                     data-provenance-temporal-line={connection.endpoint}
@@ -1647,7 +1677,7 @@ const Chart = ({
                               position: 'relative',
                               height: `${temporalPlotHeight}px`,
                          }}>
-                              {sortedEntries.map(([label, records], index) => {
+                              {!temporalSmoothing.active && sortedEntries.map(([label, records], index) => {
                                   const totalRows = sortedEntries.length;
                                   const relativeIndex = index / (totalRows - 1 || 1);
                                   const color = d3.interpolateOranges(0.3 + (relativeIndex * 0.7));

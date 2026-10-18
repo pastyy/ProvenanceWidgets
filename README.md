@@ -93,17 +93,20 @@ new period; original provenance and current values are preserved. Temporal
 axis labels keep the cumulative offset, e.g. `n=20` through `now (21)`.
 See [clipping configuration and semantics](src/shared/logic/scalability/CLIPPING.md).
 
-## Slider aggregate smoothing
+## Slider smoothing
 
 SingleSlider and RangeSlider can replace their aggregate bars with Savitzky-Golay,
 Gaussian, or B-spline curves after the configured trigger is reached by using
 `aggregate_view.strategy: "smoothing"`. Before the trigger, the original bars
 and their interactions remain unchanged. After the trigger, a horizontal
 linear-gradient fill below the curve retains the bars' recency colors. SingleSlider
-smooths frequency by value; RangeSlider smooths interval coverage. Sampling
-and `window_length` use slider data-domain units and do not depend on rendered
-width. Temporal smoothing is not implemented yet. The playground includes a
-method selector for comparing all three algorithms on the same history.
+smooths frequency by value; RangeSlider smooths interval coverage. Temporal
+smoothing replaces the value-over-history marks with a non-interactive recency
+gradient curve: SingleSlider smooths values, while RangeSlider smooths center
+and span to keep its endpoints ordered. Interaction mode uses record-order
+units and time mode uses elapsed seconds. Both views cap numerical work at
+2,049 samples and never mutate provenance. Savitzky-Golay `window_length`
+defaults to `4` in the active view's data-domain units.
 See [smoothing configuration and semantics](src/shared/logic/scalability/SMOOTHING.md).
 
 ## Checkbox scalability

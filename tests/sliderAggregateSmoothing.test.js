@@ -58,7 +58,7 @@ test("too few samples retain original data; even requested windows become odd", 
 test("normalization preserves decimal distances and gives documented defaults", () => {
     assert.deepEqual(resolveSmoothingConfig({ aggregate_view: { strategy: "smoothing" } }), {
         enabled: true,
-        method: { type: "savgol", window_length: 9, polyorder: 2 },
+        method: { type: "savgol", window_length: 4, polyorder: 2 },
         trigger: { type: "interaction", threshold: 50 },
     });
     const config = resolveSmoothingConfig(settings({ type: "savgol", window_length: 0.5, polyorder: 0 }, { type: "time" }));
@@ -66,7 +66,7 @@ test("normalization preserves decimal distances and gives documented defaults", 
     assert.equal(config.method.polyorder, 0);
     assert.equal(config.trigger.threshold, 3600);
     const invalid = resolveSmoothingConfig(settings({ type: "savgol", window_length: -1, polyorder: 1.5 }, { threshold: NaN }));
-    assert.equal(invalid.method.window_length, 9);
+    assert.equal(invalid.method.window_length, 4);
     assert.equal(invalid.method.polyorder, 2);
     assert.equal(invalid.trigger.threshold, 50);
 });

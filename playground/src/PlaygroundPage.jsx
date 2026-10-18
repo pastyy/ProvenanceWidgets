@@ -153,12 +153,12 @@ const playgroundRadioProvenance = createDemoProvenance(
   "radio-group",
   ["Mushroom", "Cheese"],
 );
-// const singleSliderHistory = Array.from({ length: 54 }, (_, index) =>
-//   Math.max(0, Math.min(100, Math.round(
-//     48 + 25 * Math.sin(index * 0.73) + 9 * Math.sin(index * 0.19),
-//   ))),
-// );
-const singleSliderHistory = [50, 25];
+const singleSliderHistory = Array.from({ length: 54 }, (_, index) =>
+  Math.max(0, Math.min(100, Math.round(
+    48 + 25 * Math.sin(index * 0.73) + 9 * Math.sin(index * 0.19),
+  ))),
+);
+// const singleSliderHistory = [50, 25];
 const playgroundSingleSliderProvenance = createDemoProvenance(
   "single-slider",
   "single-slider",
@@ -203,11 +203,11 @@ const rangeSliderOptions = {
 };
 
 const sliderAggregateSmoothing = {
-  strategy: "smoothing",
-  window_options: { window_size: 100, window_start: 0 },
-  smoothing_options: {
-    method: { type: "savgol", window_length: 4, polyorder: 2 },
-    trigger: { type: "interaction", threshold: 10 },
+  "strategy": "smoothing",
+  "window_options": { "window_size": 100, "window_start": 0 },
+  "smoothing_options": {
+    "method": { "type": "savgol", "window_length": 4, "polyorder": 2 },
+    "trigger": { "type": "time", "threshold": 1000 },
   },
 };
 
@@ -298,7 +298,11 @@ export default function PlaygroundPage() {
                 dataLabel="Single value"
                 scalability={{
                   "temporal_view": {
-                    "strategy": "zoom_in",
+                    "strategy": "smoothing",
+                    "smoothing_options": {
+                      "method": { "type": "savgol", "window_length": 4, "polyorder": 2 },
+                      "trigger": { "type": "interaction", "threshold": 20 }
+                    },
                     "zoom_in_options": {
                       "modes": ["interactions", "interactions-values", "values"],
                       "visibility": "all-active",

@@ -55,5 +55,5 @@ output contract, add pure-function tests, and export it through `index.js`.
 Only then connect it from a temporal or aggregate view adapter and a widget
 renderer.
 
-Current Slider aggregate smoothing semantics and limitations are documented in
+Current Slider temporal and aggregate smoothing semantics are documented in
 [SMOOTHING.md](SMOOTHING.md).
