@@ -1,9 +1,11 @@
 # Slider Aggregate Smoothing
 
 SingleSlider and RangeSlider support Savitzky-Golay, Gaussian, and B-spline
-smoothing in the aggregate view. The result is a non-interactive curve drawn over the existing aggregate
-bars; smoothing never changes provenance, bar values, tooltips, or restore
-behavior.
+smoothing in the aggregate view. Before the configured trigger is reached, the
+aggregate bars, tooltips, and restore interactions behave exactly as they do
+without scalability. Once triggered, a non-interactive curve replaces the
+bars and their interaction hitboxes. Smoothing never changes provenance or
+the underlying aggregate values.
 
 ```jsx
 scalability={{
@@ -47,9 +49,9 @@ the configured polynomial remain unsmoothed. Negative fitted counts are
 clamped to zero before rendering, and the curve is confined to the bar chart's
 vertical extent.
 
-The curve uses the same x and count scales as the bars. It has no pointer
-events, so bar hover, keyboard selection, and history restore behavior remain
-available.
+The curve uses the same x and count scales as the bars and has no pointer
+events. Once it is displayed, bar hover, keyboard selection, and history
+restore are unavailable because the bars and their hitboxes are not rendered.
 
 ## Gaussian Rules
 
@@ -103,8 +105,8 @@ bound. Negative estimates are clamped at display adaptation, just as for Savgol.
   smoothing remains unimplemented. Unknown methods never fall back silently
   to Savitzky-Golay.
 
-Focused numerical and SVG-rendering verification (including unchanged bars and
-restore hitboxes for every method):
+Focused numerical and SVG-rendering verification (including pre-trigger bars
+and post-trigger removal of bars and restore hitboxes for every method):
 
 ```bash
 node --test tests/sliderAggregateSmoothing.test.js tests/sliderAggregateSmoothingRender.test.js

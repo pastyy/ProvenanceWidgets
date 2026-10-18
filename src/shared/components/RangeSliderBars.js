@@ -16,6 +16,7 @@ const RangeSliderBars = ({
     smoothingSamples,
     smoothingMethod,
 }) => {
+    const smoothingActive = smoothingSamples?.length > 0;
     const segments = getRangeBarSegments(provenance, min, max);
     const maxCount = Math.max(1, ...segments.map(segment => segment.count));
     const latestIndex = provenance?.domain?.get('index')?.[1] ?? 0;
@@ -33,7 +34,7 @@ const RangeSliderBars = ({
             preserveAspectRatio="none"
             style={{ display: 'block', overflow: 'visible', pointerEvents: 'none' }}
         >
-            {segments.map(segment => {
+            {!smoothingActive && segments.map(segment => {
                 const barHeight = (segment.count / maxCount) * maxBarHeight;
                 const isLatest = segment.index === latestIndex;
 

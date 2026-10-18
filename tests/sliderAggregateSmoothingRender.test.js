@@ -20,7 +20,7 @@ async function loadComponent(relativePath) {
 const SingleSliderBars = await loadComponent("../src/shared/components/SingleSliderBars.js");
 const RangeSliderBars = await loadComponent("../src/shared/components/RangeSliderBars.js");
 
-test("all methods render finite overlays using both bar components without changing bars or hitboxes", () => {
+test("all methods replace bars and hitboxes only after smoothing is triggered", () => {
     for (const kind of ["single", "range"]) {
         const provenance = kind === "single" ? new NumericProvenance(0, 20) : new RangedProvenance(0, 20);
         const values = kind === "single" ? [5, 10, 10] : [[2, 8], [5, 15], [5, 15]];
@@ -45,12 +45,14 @@ test("all methods render finite overlays using both bar components without chang
             assert.match(markup, new RegExp(`data-provenance-smoothing="${type}"`));
             assert.match(markup, /pointer-events="none" aria-hidden="true"/);
             assert.doesNotMatch(markup, /NaN|Infinity/);
-            assert.equal(markup.replace(/<path\b[^>]*><\/path>/g, ""), barsOnly);
+            assert.doesNotMatch(markup, /<rect\b/);
+            assert.doesNotMatch(markup, /data-provenance-aggregate-range=/);
             const gated = resolveSliderAggregateSmoothing({
                 scalability: { aggregate_view: { ...scalability.aggregate_view,
                     smoothing_options: { method: { type }, trigger: { threshold: 4 } } } },
                 provenance, records, kind, min: 0, max: 20,
             });
+            assert.equal(gated.length, 0);
             assert.equal(render({ smoothingSamples: gated, smoothingMethod: type }), barsOnly);
         }
     }

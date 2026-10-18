@@ -272,8 +272,9 @@ Uses the same `SmoothingOptions` structure as the temporal view:
 - Gaussian defaults to `sigma: 2` and `truncate: 3`.
 - B-spline defaults to `degree: 3`, `smoothing_factor: 0.5`, and
   `knot_spacing: 10`.
-- SingleSlider and RangeSlider implement `savgol`, `gaussian`, and `bspline`. The smoothed
-  curve is overlaid on the existing bars and uses the same x and count scales.
+- SingleSlider and RangeSlider implement `savgol`, `gaussian`, and `bspline`. Before the
+  trigger, bars and their interactions are unchanged. After the trigger, the smoothed
+  curve replaces the bars and their hitboxes and uses the same x and count scales.
   Unsupported methods do not fall back to Savitzky-Golay.
 - SingleSlider smooths frequency by numeric value, including zero-frequency
   values. RangeSlider smooths interval coverage, not endpoint frequencies.
@@ -347,9 +348,9 @@ checks are completed.
 | Component | View | clipping | zoom_in | smoothing | Notes / differences to specify |
 | --- | --- | --- | --- | --- | --- |
 | SingleSlider (exported as `Singleslider`) | temporal | Pending | Implemented (unverified) | Pending | Passes configuration to Chart for interaction, value, and 2D zoom; clipping is not integrated. |
-| SingleSlider | aggregate | Pending | Pending | Implemented (unverified) | All three smoothing methods overlay frequency by value after their configured trigger; window_options remain pending. |
+| SingleSlider | aggregate | Pending | Pending | Implemented (unverified) | After the configured trigger, all three smoothing methods replace bars and hitboxes with a frequency-by-value curve; window_options remain pending. |
 | RangeSlider (exported as `Rangeslider`) | temporal | Pending | Implemented (unverified) | Pending | Reuses Chart zoom configuration; specify interval endpoint and 2D selection semantics during development and acceptance. |
-| RangeSlider | aggregate | Pending | Pending | Implemented (unverified) | All three smoothing methods overlay interval-coverage counts after their configured trigger; window_options remain pending. |
+| RangeSlider | aggregate | Pending | Pending | Implemented (unverified) | After the configured trigger, all three smoothing methods replace bars and hitboxes with an interval-coverage curve; window_options remain pending. |
 | CheckboxGroup | temporal | Partial | Partial | Pending | Clipping supports only on_interaction_over in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |
 | CheckboxGroup | aggregate | Pending | Pending | Pending | Define option / selection-combination aggregation; integrate strategies and window_options. |
 | RadioGroup | temporal | Partial | Partial | Pending | Clipping supports only on_interaction_over in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |

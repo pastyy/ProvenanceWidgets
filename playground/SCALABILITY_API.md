@@ -245,8 +245,9 @@ type AggregateClippingOptions = {
 - Savitzky-Golay 默认 `window_length: 9`、`polyorder: 2`。
 - Gaussian 默认 `sigma: 2`、`truncate: 3`。
 - B-spline 默认 `degree: 3`、`smoothing_factor: 0.5`、`knot_spacing: 10`。
-- SingleSlider 和 RangeSlider 已实现 `savgol`、`gaussian` 和 `bspline`。平滑曲线直接叠加在原有
-  柱形图上，并与柱形图共用 x 轴和计数比例尺；不支持的方法不会静默回退为
+- SingleSlider 和 RangeSlider 已实现 `savgol`、`gaussian` 和 `bspline`。达到 trigger
+  之前，柱形图及其交互保持不变；达到 trigger 后，平滑曲线替换柱形图及其交互命中区域，
+  并与柱形图共用 x 轴和计数比例尺；不支持的方法不会静默回退为
   Savitzky-Golay。
 - SingleSlider 平滑数值频次，未发生交互的数值按零频次参与拟合；RangeSlider
   平滑历史区间的覆盖次数，而不是分别平滑低、高端点的频次。
@@ -310,9 +311,9 @@ type WindowOptions = {
 | 组件 | 视图 | clipping | zoom_in | smoothing | 备注 / 待补充差异 |
 | --- | --- | --- | --- | --- | --- |
 | SingleSlider（导出名 `Singleslider`） | temporal | 待开发 | 已实现（待验证） | 待开发 | 已向 Chart 传递配置并接入交互、数值和二维缩放；clipping 尚未接入。 |
-| SingleSlider | aggregate | 待开发 | 待开发 | 已实现（待验证） | 三种 smoothing 方法均在达到触发阈值后叠加数值频次曲线；window_options 仍待开发。 |
+| SingleSlider | aggregate | 待开发 | 待开发 | 已实现（待验证） | 达到触发阈值后，三种 smoothing 方法均以数值频次曲线替换柱形图及其交互命中区域；window_options 仍待开发。 |
 | RangeSlider（导出名 `Rangeslider`） | temporal | 待开发 | 已实现（待验证） | 待开发 | 复用 Chart 的缩放配置；区间端点、二维选择等语义在开发与验收时补充。 |
-| RangeSlider | aggregate | 待开发 | 待开发 | 已实现（待验证） | 三种 smoothing 方法均在达到触发阈值后叠加区间覆盖次数曲线；window_options 仍待开发。 |
+| RangeSlider | aggregate | 待开发 | 待开发 | 已实现（待验证） | 达到触发阈值后，三种 smoothing 方法均以区间覆盖次数曲线替换柱形图及其交互命中区域；window_options 仍待开发。 |
 | CheckboxGroup | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 on_interaction_over；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |
 | CheckboxGroup | aggregate | 待开发 | 待开发 | 待开发 | 选项 / 多选组合的聚合语义待明确；策略与 window_options 待接入。 |
 | RadioGroup | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 on_interaction_over；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |

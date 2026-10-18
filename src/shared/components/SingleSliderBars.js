@@ -14,6 +14,7 @@ const SingleSliderBars = ({
     smoothingSamples,
     smoothingMethod,
 }) => {
+    const smoothingActive = smoothingSamples?.length > 0;
     const domainMin = Number(min);
     const domainMax = Number(max);
     const countDomain = provenance.domain?.get("count") ?? [0, 1];
@@ -47,7 +48,7 @@ const SingleSliderBars = ({
             style={{ overflow: "visible" }}
             aria-hidden="true"
         >
-            {visibleKeys.map(key => {
+            {!smoothingActive && visibleKeys.map(key => {
                 const record = provenance.aggregateData.get(key);
                 const barHeight = scaleCount(record?.count);
                 const geometry = getSingleSliderBarGeometry({

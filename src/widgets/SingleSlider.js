@@ -128,6 +128,7 @@ const Singleslider = (props) => {
         provenance: aggregateProvenance,
         min, max, step,
     }), [serializedProvenance, aggregateProvenance, props.scalability, min, max, step]);
+    const smoothingActive = smoothingSamples.length > 0;
     // Display value tracks the slider thumb position during a drag.
     // It follows intermediate onChange steps, while currentValue (from the
     // controller) only updates when provenance is actually committed.
@@ -372,7 +373,7 @@ const Singleslider = (props) => {
                                 pointerEvents: "none",
                             }}
                         >
-                            {barKeys.map(key => {
+                            {!smoothingActive && barKeys.map(key => {
                                 const record = aggregateProvenance.aggregateData?.get(key);
                                 if (!record) return null;
                                 const centerPercent = max === min

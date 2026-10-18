@@ -42,7 +42,7 @@ const meatOptions = [
 
 const checkboxClippingScalability = {
   temporal_view: {
-    strategy: "clipping",
+    strategy: "zoom_in",
     clipping_options: {
       trigger: { type: "on_interaction_over", threshold: 10 },
     },
@@ -155,12 +155,12 @@ const playgroundRadioProvenance = createDemoProvenance(
   "radio-group",
   ["Mushroom", "Cheese"],
 );
-const singleSliderHistory = Array.from({ length: 54 }, (_, index) =>
-  Math.max(0, Math.min(100, Math.round(
-    48 + 25 * Math.sin(index * 0.73) + 9 * Math.sin(index * 0.19),
-  ))),
-);
-// const singleSliderHistory = [50, 25];
+// const singleSliderHistory = Array.from({ length: 54 }, (_, index) =>
+//   Math.max(0, Math.min(100, Math.round(
+//     48 + 25 * Math.sin(index * 0.73) + 9 * Math.sin(index * 0.19),
+//   ))),
+// );
+const singleSliderHistory = [50, 25];
 const playgroundSingleSliderProvenance = createDemoProvenance(
   "single-slider",
   "single-slider",
@@ -237,7 +237,7 @@ export default function PlaygroundPage() {
   const [sliderSmoothingMethod, setSliderSmoothingMethod] = useState("savgol");
   const [smoothingMethods, setSmoothingMethods] = useState(sliderSmoothingMethods);
   const [sliderWindowEnabled, setSliderWindowEnabled] = useState(true);
-  const [sliderWindowOptions, setSliderWindowOptions] = useState({ window_size: 20, window_start: 30 });
+  const [sliderWindowOptions, setSliderWindowOptions] = useState({ window_size: 100, window_start: 0 });
   const changeSmoothingParameter = (type, name, value) => {
     setSmoothingMethods(previous => ({
       ...previous,
