@@ -15,8 +15,6 @@ import {
 } from "../../src/index.ts";
 
 import WidgetCard from "./WidgetCard.jsx";
-import SliderSmoothingControls from "./SliderSmoothingControls.jsx";
-import SliderWindowControls from "./SliderWindowControls.jsx";
 
 const cityOptions = [
   { label: "New York", value: "New York" },
@@ -204,10 +202,13 @@ const rangeSliderOptions = {
   tickStep: 15,
 };
 
-const sliderSmoothingMethods = {
-  savgol: { type: "savgol", window_length: 4, polyorder: 2 },
-  gaussian: { type: "gaussian", sigma: 2, truncate: 3 },
-  bspline: { type: "bspline", degree: 3, smoothing_factor: 0.1, knot_spacing: 3 },
+const sliderAggregateSmoothing = {
+  strategy: "smoothing",
+  window_options: { window_size: 100, window_start: 0 },
+  smoothing_options: {
+    method: { type: "savgol", window_length: 4, polyorder: 2 },
+    trigger: { type: "interaction", threshold: 10 },
+  },
 };
 
 const provenanceComponents = [
@@ -234,42 +235,12 @@ export default function PlaygroundPage() {
   );
   const [city, setCity] = useState(cityOptions[0]);
   const [cities, setCities] = useState(cityOptions.slice(0, 2));
-  const [sliderSmoothingMethod, setSliderSmoothingMethod] = useState("savgol");
-  const [smoothingMethods, setSmoothingMethods] = useState(sliderSmoothingMethods);
-  const [sliderWindowEnabled, setSliderWindowEnabled] = useState(true);
-  const [sliderWindowOptions, setSliderWindowOptions] = useState({ window_size: 100, window_start: 0 });
-  const changeSmoothingParameter = (type, name, value) => {
-    setSmoothingMethods(previous => ({
-      ...previous,
-      [type]: { ...previous[type], [name]: value },
-    }));
-  };
-  const sliderAggregateSmoothing = {
-    strategy: "smoothing",
-    window_options: sliderWindowEnabled ? sliderWindowOptions : undefined,
-    smoothing_options: {
-      method: smoothingMethods[sliderSmoothingMethod],
-      trigger: { type: "interaction", threshold: 10 },
-    },
-  };
-
   return (
     <ProvenanceProvider>
       <main className="playground-page">
         <header className="playground-page__header">
           <p>Local component workspace</p>
           <h1>ProvenanceWidgets Playground</h1>
-          <SliderSmoothingControls
-            method={smoothingMethods[sliderSmoothingMethod]}
-            onMethodChange={setSliderSmoothingMethod}
-            onParameterChange={changeSmoothingParameter}
-          />
-          <SliderWindowControls
-            enabled={sliderWindowEnabled}
-            options={sliderWindowOptions}
-            onEnabledChange={setSliderWindowEnabled}
-            onOptionsChange={setSliderWindowOptions}
-          />
         </header>
 
         <div className="super-provenance-demo">
