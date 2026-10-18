@@ -77,7 +77,19 @@ Aggregate statistics count only interactions inside the window. Selection
 state at its left edge is retained to compute deltas, without being counted
 as a new selection. Current widget values and full source history are preserved.
 
-The notification stays visible whenever older history is hidden, including
+Checkbox groups show a red dot at the bottom-right of the footprint icon only
+when `temporal_view.strategy` is explicitly `"clipping"` and the currently
+displayed view clips history. Groups configured for `zoom_in` never show this
+badge, including their initial aggregate view, even with an aggregate clipping
+override. The dot overlays the footprint’s bottom-right corner and intercepts pointer
+events so it does not trigger the footprint view toggle or its help tooltip.
+Clicking it acknowledges the current clipping and hides the dot, while opening
+a compact pale-red popup showing
+`90 interaction hidden` with the current hidden interaction count. Clicking anywhere else, pressing Escape, or waiting seven seconds closes it. The dot reappears when the clipping window advances
+again. It also disappears when clipping is
+disabled or no history is hidden. The timeline behavior is unchanged.
+
+For other widgets, the notification stays visible whenever older history is hidden, including
 imported history. At 15 interactions with threshold 10, it reads
 `hide 5 interacts`; at 16 it reads `hide 6 interacts`. It disappears when clipping
 is disabled or no history is hidden. Synchronized temporal/aggregate windows

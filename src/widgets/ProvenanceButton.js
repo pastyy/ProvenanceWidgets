@@ -34,6 +34,23 @@ const ProvenanceButton = ({ target }) => {
     const [widgetColors] = useWidgetColors()
     const { registrations } = useWidgetRegistry();
     const buttonRef = useRef(null);
+    const [acknowledgedClip, setAcknowledgedClip] = useState(null);
+    const [clippingPopupOpen, setClippingPopupOpen] = useState(false);
+    const [overClippingBadge, setOverClippingBadge] = useState(false);
+
+    useEffect(() => {
+        if (!clippingPopupOpen) return undefined;
+        const dismiss = () => {
+            setClippingPopupOpen(false);
+            setOverClippingBadge(false);
+        };
+        const timer = window.setTimeout(dismiss, 7000);
+        document.addEventListener('pointerdown', dismiss, true);
+        return () => {
+            window.clearTimeout(timer);
+            document.removeEventListener('pointerdown', dismiss, true);
+        };
+    }, [clippingPopupOpen]);
 
     const borderColor = widgetColors[target] || null;
     const haloColor = '#71e7fb';
@@ -70,6 +87,17 @@ const ProvenanceButton = ({ target }) => {
     const viewTooltip = getProvenanceButtonTooltip(buttonState);
     const safeTarget = String(target ?? "widget")
         .replace(/[^a-zA-Z0-9_-]/g, "-");
+    const clippingMessage = registration?.type === "checkbox-group"
+        ? registration.clippingMessage
+        : null;
+    const clippingRevision = registration?.clippingRevision;
+    const hasUnreadClip = Boolean(clippingMessage) && acknowledgedClip !== clippingRevision;
+    useEffect(() => {
+        setClippingPopupOpen(false);
+        setOverClippingBadge(false);
+        if (!clippingMessage) setAcknowledgedClip(null);
+    }, [target, clippingMessage, clippingRevision]);
+    const clippingTooltipId = `provenance-clipping-tooltip-${safeTarget}`;
     const viewTooltipId = `provenance-view-tooltip-${safeTarget}`;
     const viewTooltipLabel = viewTooltip
         ? [
@@ -182,6 +210,7 @@ const ProvenanceButton = ({ target }) => {
 
     const wrapperStyle = {
         display: "inline-block",
+        position: "relative",
         ...(borderColor ? { 
             border: `2px solid ${borderColor}`,
             borderRadius: "4px",
@@ -203,42 +232,105 @@ const ProvenanceButton = ({ target }) => {
                 }
             `}</style>
             <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                <div
-                    style={wrapperStyle}
-                    data-tooltip-id={viewTooltipId}
-                    data-tooltip-place="right"
-                    data-tooltip-delay-show={
-                        PROVENANCE_BUTTON_TOOLTIP_DELAY_MS
-                    }
-                    aria-label={viewTooltipLabel}
-                >
-                    <Button 
-                        ref={buttonRef} 
-                        className="provenance-button"
-                        aria-label={`Toggle provenance view for ${target}`}
-                        data-provenance-state={buttonState}
-                        data-tooltip-id={(!isSelectionGroup && !isDropdown) ? "open-tooltip-" + target : undefined}
-                        onClick={handleToggle} 
-                        disabled={isDisabled}
-                        style={buttonStyle} 
-                        text 
-                        icon={(options) => (
-                            <img 
-                                width={18} // Reduced icon size
-                                height={18} 
-                                src={getIcon()} 
-                                style={{
-                                    filter: open ? 'brightness(0)' : 'none'
-                                }}
-                            />
-                        )} 
-                    />
+                <div style={{ position: 'relative' }}>
+                    <div
+                        style={wrapperStyle}
+                        data-tooltip-id={clippingMessage ? undefined : viewTooltipId}
+                        data-tooltip-place="right"
+                        data-tooltip-delay-show={
+                            PROVENANCE_BUTTON_TOOLTIP_DELAY_MS
+                        }
+                        aria-label={viewTooltipLabel}
+                    >
+                        <Button
+                            ref={buttonRef}
+                            className="provenance-button"
+                            data-tooltip-place="right"
+                            data-tooltip-delay-show={PROVENANCE_BUTTON_TOOLTIP_DELAY_MS}
+                            aria-label={`Toggle provenance view for ${target}`}
+                            data-provenance-state={buttonState}
+                            data-tooltip-id={(!isSelectionGroup && !isDropdown) ? "open-tooltip-" + target : clippingMessage ? viewTooltipId : undefined}
+                            onClick={handleToggle}
+                            disabled={isDisabled}
+                            style={buttonStyle}
+                            text
+                            icon={(options) => (
+                                <img
+                                    width={18} // Reduced icon size
+                                    height={18}
+                                    src={getIcon()}
+                                    style={{
+                                        filter: open ? 'brightness(0)' : 'none'
+                                    }}
+                                />
+                            )}
+                        />
+                    </div>
+                    {clippingMessage && (hasUnreadClip || clippingPopupOpen) && (
+                        <button
+                            type="button"
+                            aria-label={clippingMessage}
+                            aria-expanded={clippingPopupOpen}
+                            tabIndex={hasUnreadClip ? 0 : -1}
+                            onPointerDown={event => event.stopPropagation()}
+                            onFocus={() => setOverClippingBadge(true)}
+                            onBlur={() => setOverClippingBadge(false)}
+                            onMouseEnter={() => setOverClippingBadge(true)}
+                            onMouseLeave={() => setOverClippingBadge(false)}
+                            onClick={event => {
+                                event.stopPropagation();
+                                setAcknowledgedClip(clippingRevision);
+                                setClippingPopupOpen(true);
+                            }}
+                            data-provenance-clipping-notice={target}
+                            data-provenance-chart-target={target}
+                            data-tooltip-id={clippingTooltipId}
+                            data-tooltip-content={clippingMessage}
+                            style={{
+                                position: 'absolute', right: -5, bottom: -5,
+                                width: 18, height: 18, padding: 4, borderRadius: '50%',
+                                background: hasUnreadClip ? '#fa5151' : 'transparent',
+                                backgroundClip: 'content-box', border: 0,
+                                boxSizing: 'border-box', cursor: 'pointer', zIndex: 2,
+                                pointerEvents: hasUnreadClip ? 'auto' : 'none',
+                            }}
+                        />
+                    )}
                 </div>
+
+                {clippingMessage && typeof document !== 'undefined' && createPortal(
+                    <Tooltip
+                        id={clippingTooltipId}
+                        openOnClick
+                        isOpen={clippingPopupOpen}
+                        setIsOpen={setClippingPopupOpen}
+                        globalCloseEvents={{ escape: true, clickOutsideAnchor: true }}
+                        place="right"
+                        positionStrategy="fixed"
+                        delayShow={0}
+                        opacity={1}
+                        arrowColor="#fff1f2"
+                        style={{
+                            ...footprintTooltipStyle,
+                            width: 'max-content',
+                            minWidth: 0,
+                            padding: '5px 8px',
+                            fontSize: '12px',
+                            lineHeight: 1.3,
+                            whiteSpace: 'nowrap',
+                            backgroundColor: '#fff1f2',
+                            color: '#9f1239',
+                            border: '1px solid #fecdd3',
+                        }}
+                    />,
+                    document.body
+                )}
 
                 {viewTooltip && typeof document !== 'undefined' &&
                     createPortal(
                         <Tooltip
                             id={viewTooltipId}
+                            hidden={overClippingBadge || clippingPopupOpen}
                             events={['hover']}
                             delayShow={PROVENANCE_BUTTON_TOOLTIP_DELAY_MS}
                             delayHide={0}

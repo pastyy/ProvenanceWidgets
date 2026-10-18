@@ -17,3 +17,13 @@ export function getClippingNotice(periods) {
     }
     return messages.size ? [...messages].join(" · ") : null;
 }
+
+/** Checkbox badges report hidden interactions, including time-based clipping. */
+export function getClippingBadgeMessage(periods) {
+    const counts = new Set(periods
+        .filter(period => period.config.strategy === "clipping" && period.config.ready && period.boundary > 0)
+        .map(period => period.startCount));
+    return counts.size
+        ? [...counts].map(count => `${count} interaction hidden`).join(" · ")
+        : null;
+}

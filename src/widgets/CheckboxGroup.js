@@ -1,5 +1,5 @@
 import CheckboxZoomAxis from "../shared/components/CheckboxZoomAxis.js";
-import ClippingNotice from "../shared/components/ClippingNotice.js";
+import { getClippingBadgeMessage, resolveClippingNoticePeriods } from "../shared/logic/scalability/views/clippingNotice.js";
 import {
     Children,
     isValidElement,
@@ -208,6 +208,26 @@ const CheckboxGroup = (props) => {
         temporalBrush,
         elementRef,
     });
+    const { message: clippingMessage, revision: clippingRevision } = useMemo(() => {
+        // The badge belongs to the group's clipping strategy, not an
+        // aggregate-only override while the group is configured for zoom-in.
+        if (props.scalability?.temporal_view?.strategy !== "clipping") {
+            return { message: null, revision: null };
+        }
+        const periods = resolveClippingNoticePeriods({
+            records: serializedProvenance.data,
+            scalability: props.scalability,
+            width: clipping.width,
+            mode: provenanceMode,
+        });
+        const activePeriod = periods.find(period => period.config.view === (
+            showTimeline ? "temporal_view" : "aggregate_view"
+        ));
+        return {
+            message: getClippingBadgeMessage([activePeriod]),
+            revision: activePeriod.resetKey,
+        };
+    }, [serializedProvenance.data, props.scalability, clipping.width, provenanceMode, showTimeline]);
     const [selection, setSelection] = useState(
         () => Array.isArray(currentValue) ? currentValue : []
     );
@@ -404,6 +424,8 @@ const CheckboxGroup = (props) => {
             visualize,
             mode: provenanceMode,
             rendersOwnTemporalHeader: true,
+            clippingMessage,
+            clippingRevision,
             focus: () => {
                 elementRef.current?.scrollIntoView?.({
                     behavior: "smooth",
@@ -431,6 +453,8 @@ const CheckboxGroup = (props) => {
         strategy,
         id,
         applyRegisteredValue,
+        clippingMessage,
+        clippingRevision,
         registerWidget,
         notifyWidget,
         visualize,
@@ -597,13 +621,6 @@ const CheckboxGroup = (props) => {
                 className={className ?? styleClass}
                 style={style}
             >
-                {visualize && <ClippingNotice
-                    id={id}
-                    records={serializedProvenance.data}
-                    scalability={props.scalability}
-                    width={clipping.width}
-                    mode={provenanceMode}
-                />}
                 {visualize &&
                     hasProvenance &&
                     showTimeline &&
