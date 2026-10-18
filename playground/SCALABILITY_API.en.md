@@ -99,7 +99,6 @@ type TemporalZoomInOptions = {
     type?: "interaction" | "time";
     threshold?: number;
     auto_zoom?: boolean;
-    suggestion?: boolean;
   };
 };
 ```
@@ -117,8 +116,6 @@ type TemporalZoomInOptions = {
   `time`, it is seconds and defaults to `3600`.
 - `auto_zoom` controls whether reaching the threshold automatically zooms
   the view and defaults to `false`.
-- `suggestion` is meaningful only when automatic zoom is disabled. It controls a
-  zoom suggestion with a confirmation button and defaults to `false`.
 
 ### Clipping
 
@@ -234,7 +231,6 @@ type AggregateZoomInOptions = {
     threshold?: number;
     tool_visible_before_trigger?: boolean;
     auto_zoom_on_trigger?: boolean;
-    suggestion_on?: boolean;
   };
 };
 ```
@@ -245,8 +241,8 @@ type AggregateZoomInOptions = {
   exceeds the threshold. Here, range is `max(interactionCount) - min(interactionCount)`,
   not the numeric range of a RangeSlider.
 - The draft does not define a default threshold; the current provisional default is `10`.
-- `tool_visible_before_trigger`, `auto_zoom_on_trigger`, and `suggestion_on` default to
-  `true`, `false`, and `false`, respectively, as in temporal zoom-in.
+- `tool_visible_before_trigger` and `auto_zoom_on_trigger` default to `true` and
+  `false`, respectively, as in temporal zoom-in.
 
 ### Aggregate clipping
 

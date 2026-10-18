@@ -23,16 +23,12 @@ const getEntryTimestamp = entry => getRecordTime(entry?.[1]?.[0]);
 /** Shared checkbox/slider policy; renderers retain their own range algorithms. */
 export const resolveTemporalZoomActions = ({
     entries = [], trigger = {}, previousMetric = 0, enabled = true,
-    accepted = false, alreadyAutoZoomed = false, suggestionHandled = false,
-    suggestionVisible = false,
+    alreadyAutoZoomed = false,
 } = {}) => {
     const crossed = enabled && hasTemporalZoomTriggerCrossed({ entries, trigger, previousMetric });
     const shouldAutoZoom = crossed && entries.length > 1 && !alreadyAutoZoomed &&
-        (trigger.auto_zoom === true || accepted);
-    const shouldSuggest = crossed && !shouldAutoZoom && !suggestionHandled &&
-        !suggestionVisible && !accepted && trigger.auto_zoom !== true &&
-        trigger.suggestion === true;
-    return { crossed, shouldAutoZoom, shouldSuggest };
+        trigger.auto_zoom === true;
+    return { crossed, shouldAutoZoom };
 };
 
 /** Return the trailing interaction range covered by an auto-zoom trigger. */

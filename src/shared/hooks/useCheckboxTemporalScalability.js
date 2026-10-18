@@ -17,7 +17,6 @@ export default function useCheckboxTemporalScalability(options) {
     const metric = temporalTriggerMetric(entries, config.trigger.type);
     const key = JSON.stringify([id, mode, temporalBrush, config]);
     const [selection, setSelection] = useState(null);
-    const [suggestion, setSuggestion] = useState(null);
     const previous = useRef(null);
     const timeDomain = getSelectionTimeDomain(records);
     // Checkbox supplies maxIndex = domainMax + 1 to its temporal bars.
@@ -41,17 +40,13 @@ export default function useCheckboxTemporalScalability(options) {
             entries, trigger: config.trigger, enabled: enabled && config.visibility !== "off",
             previousMetric: reset ? 0 : prior.metric,
             alreadyAutoZoomed: !reset && prior.autoZoomed,
-            suggestionHandled: !reset && prior.handled,
         });
         if (reset) {
             setSelection(null);
-            setSuggestion(null);
         }
         if (actions.shouldAutoZoom) setSelection({ key, value: autoRange() });
-        if (actions.shouldSuggest) setSuggestion(key);
         previous.current = { key, metric,
-            autoZoomed: actions.shouldAutoZoom || (!reset && prior.autoZoomed),
-            handled: actions.shouldSuggest || (!reset && prior.handled) };
+            autoZoomed: actions.shouldAutoZoom || (!reset && prior.autoZoomed) };
     }, [key, metric]);
 
     if (!config.enabled) return selectionView;
@@ -62,12 +57,6 @@ export default function useCheckboxTemporalScalability(options) {
         zoomedDomain: visible && range[1] > range[0] && (range[0] > 0 || range[1] < 100)
             ? range.map(percent => end * percent / 100)
             : null,
-        suggestionVisible: suggestion === key && visible,
-        acceptSuggestion: () => {
-            setSelection({ key, value: autoRange() });
-            setSuggestion(null);
-        },
-        dismissSuggestion: () => setSuggestion(null),
         zoomProps: {
             domain: [0, end], value: range,
             onChange: value => setSelection({ key, value: normalizeSelectionBrushRange(value) }),

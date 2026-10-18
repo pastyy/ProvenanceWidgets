@@ -21,7 +21,6 @@
 
                     "auto_zoom": true | false,	// whether automatically shows zoomed-in view when the threshold is reached; default: false
 
-                    "suggestion": true | false 		// takes effect when auto_zoom is false; whether to suggest switching to the zoomed-in view; default: false
 
                 }
 
@@ -87,7 +86,6 @@
 
                     "auto_zoom_on_trigger": true | false,	
 
-                    "suggestion_on": true | false 	
 
                 }
 

@@ -113,12 +113,11 @@ and trigger helpers through `src/shared/logic/scalability/index.js`.
 `src/types/scalability.ts`, with the same field names as sliders. Edit parameters
 there for the existing zoom path. Explicit `clipping` configurations supplied
 through `scalability` use the shared selection implementation instead.
-The configuration is shared, while each group maintains independent brush and
-suggestion state. The playground is not required by the library.
+The configuration is shared, while each group maintains independent brush state.
+The playground is not required by the library.
 
 For example, `threshold: 20` uses blocks of 20 for checkbox zoom.
-`auto_zoom: false` keeps the full history visible until the user
-brushes or accepts a suggestion.
+`auto_zoom: false` keeps the full history visible until the user brushes.
 
 In interaction mode, checkbox zoom keeps older history in a compressed region
 of the brush axis. With threshold 20, automatic zoom compresses completed
@@ -129,13 +128,9 @@ the block size. This preserves the existing checkbox history zoom behavior.
 `visibility` controls brush visibility before the threshold (`all-active`, `after-trigger`, or `off`).
 `auto_zoom` controls automatic focus and axis compression. When false,
 reaching the threshold leaves both the full history and the uncompressed axis
-unchanged. Manual brushing selects a range on that axis; accepting a suggestion
-activates the compressed axis and focuses the current block. Set `suggestion`
-to true to offer that suggestion. `time` measures the recorded history
-span in seconds and zooms to recent history without interaction-block compression.
-Suggestions appear even while the checkbox history view is closed; accepting
-one opens that view and applies the zoom. Dismissing a suggestion leaves the
-current view unchanged.
+unchanged. Manual brushing selects a range on that axis. `time` measures the
+recorded history span in seconds and zooms to recent history without
+interaction-block compression.
 `temporalBrush={false}` disables the zoom tool and automatic zoom.
 
 Checkbox currently supports `modes: ["interactions"]` (history-range zoom).

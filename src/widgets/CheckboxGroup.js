@@ -634,19 +634,6 @@ const CheckboxGroup = (props) => {
                         )}
                     </div>
                 )}
-                {visualize && hasProvenance && clipping.suggestionVisible && (
-                    <div role="status" aria-label="Zoom suggestion" style={{ marginLeft: "32px", marginBottom: "12px" }}>
-                        <span>Zoom in to recent interactions?</span>{" "}
-                        <button type="button" onClick={() => {
-                            clipping.acceptSuggestion();
-                            setShowTimeline(true);
-                            window.dispatchEvent(new CustomEvent("provenance-timeline-visibility", {
-                                detail: { target: id, open: true },
-                            }));
-                        }}>Zoom in</button>{" "}
-                        <button type="button" onClick={clipping.dismissSuggestion}>Dismiss</button>
-                    </div>
-                )}
                 {renderedChildren}
                 {visualize && hasProvenance && showTimeline && clipping.zoomedDomain && (
                     <CheckboxZoomAxis

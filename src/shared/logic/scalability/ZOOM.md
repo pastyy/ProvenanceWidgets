@@ -15,7 +15,6 @@ scalability={{
         type: "interaction",
         threshold: 50,
         auto_zoom: false,
-        suggestion: false,
       },
     },
   },
@@ -31,8 +30,8 @@ resize cursors as the slider brushes.
 
 Manual zoom is available immediately by default. There are no threshold-sized
 compressed blocks and no automatic reset when another block is reached.
-Explicit `visibility: "after-trigger"`, `trigger.auto_zoom`, and
-`trigger.suggestion` use the same shared trigger policy as sliders.
+Explicit `visibility: "after-trigger"` and `trigger.auto_zoom` use the same
+shared trigger policy as sliders.
 `visibility: "off"` disables the brush and displays the full history.
 Interaction triggers default to 50; time triggers default to 3600 seconds.
 Changing temporal zoom does not filter aggregate statistics.

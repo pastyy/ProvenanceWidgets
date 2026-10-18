@@ -37,8 +37,6 @@ export interface ScalabilityZoomTrigger<
   tool_visible_before_trigger?: boolean;
   /** Whether zooming happens automatically at the threshold. */
   auto_zoom_on_trigger?: boolean;
-  /** Whether to show a confirmation suggestion when auto zoom is disabled. */
-  suggestion_on?: boolean;
 }
 
 export interface TemporalZoomInOptions {
@@ -49,8 +47,6 @@ export interface TemporalZoomInOptions {
   trigger?: ScalabilityThresholdTrigger<TemporalZoomTriggerType> & {
     /** Whether zooming happens automatically at the threshold. */
     auto_zoom?: boolean;
-    /** Whether to show a confirmation suggestion when auto zoom is disabled. */
-    suggestion?: boolean;
   };
 }
 
@@ -181,7 +177,6 @@ export const DEFAULT_CHECKBOX_SCALABILITY: CheckboxScalability = {
         type: "interaction",
         threshold: 50,
         auto_zoom: false,
-        suggestion: false,
       },
     },
   },

@@ -87,7 +87,6 @@ type TemporalZoomInOptions = {
     type?: "interaction" | "time";
     threshold?: number;
     auto_zoom?: boolean;
-    suggestion?: boolean;
   };
 };
 ```
@@ -103,8 +102,6 @@ type TemporalZoomInOptions = {
 - `trigger.threshold` 在 `interaction` 下表示交互次数，默认 `50`；在 `time`
   下表示秒数，默认 `3600`。
 - `auto_zoom` 表示达到阈值时是否自动放大，默认 `false`。
-- `suggestion` 仅在不自动放大时有意义；表示是否显示带确认按钮的放大建议，
-  默认 `false`。
 
 ### Clipping
 
@@ -211,7 +208,6 @@ type AggregateZoomInOptions = {
     threshold?: number;
     tool_visible_before_trigger?: boolean;
     auto_zoom_on_trigger?: boolean;
-    suggestion_on?: boolean;
   };
 };
 ```
@@ -221,8 +217,8 @@ type AggregateZoomInOptions = {
 - `on_range_over`：聚合交互次数的统计范围超过阈值，其中 range 定义为
   `max(interactionCount) - min(interactionCount)`，不是 RangeSlider 的数值范围。
 - `threshold` 未在 JSON 中给出默认值，暂定为 `10`。
-- `tool_visible_before_trigger`、`auto_zoom_on_trigger`、`suggestion_on` 的
-  默认行为与 temporal zoom-in 相同，分别为 `true`、`false`、`false`。
+- `tool_visible_before_trigger`、`auto_zoom_on_trigger` 的默认行为与 temporal
+  zoom-in 相同，分别为 `true`、`false`。
 
 ### Aggregate clipping
 

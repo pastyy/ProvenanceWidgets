@@ -53,7 +53,6 @@ export const resolveTemporalZoomIn = scalability => {
                 defaultThreshold
             ),
             auto_zoom: options.trigger?.auto_zoom === true,
-            suggestion: options.trigger?.suggestion === true,
         },
     };
 };
