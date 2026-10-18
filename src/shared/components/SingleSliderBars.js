@@ -13,6 +13,7 @@ const SingleSliderBars = ({
     barWidth,
     smoothingSamples,
     smoothingMethod,
+    smoothingGradientKey,
 }) => {
     const smoothingActive = smoothingSamples?.length > 0;
     const domainMin = Number(min);
@@ -31,6 +32,13 @@ const SingleSliderBars = ({
             provenance.aggregateData?.get(recent)?.index ?? -Infinity;
         return keyIndex > recentIndex ? key : recent;
     }, null);
+    const recencyStops = visibleKeys.map(key => ({
+        offset: (Number(key) - domainMin) / (domainMax - domainMin),
+        color: orientationScheme(normalize(
+            provenance.aggregateData.get(key)?.index,
+            colorDomain
+        )),
+    }));
 
     const scaleCount = count => {
         if (countEnd <= countStart) return 0;
@@ -83,6 +91,8 @@ const SingleSliderBars = ({
                 width={width}
                 height={height}
                 scaleCount={scaleCount}
+                recencyStops={recencyStops}
+                gradientKey={smoothingGradientKey}
             />
         </svg>
     );

@@ -205,7 +205,7 @@ const rangeSliderOptions = {
 };
 
 const sliderSmoothingMethods = {
-  savgol: { type: "savgol", window_length: 7, polyorder: 2 },
+  savgol: { type: "savgol", window_length: 4, polyorder: 2 },
   gaussian: { type: "gaussian", sigma: 2, truncate: 3 },
   bspline: { type: "bspline", degree: 3, smoothing_factor: 0.1, knot_spacing: 3 },
 };

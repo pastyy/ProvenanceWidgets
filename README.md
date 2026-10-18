@@ -98,7 +98,8 @@ See [clipping configuration and semantics](src/shared/logic/scalability/CLIPPING
 SingleSlider and RangeSlider can replace their aggregate bars with Savitzky-Golay,
 Gaussian, or B-spline curves after the configured trigger is reached by using
 `aggregate_view.strategy: "smoothing"`. Before the trigger, the original bars
-and their interactions remain unchanged. SingleSlider
+and their interactions remain unchanged. After the trigger, a horizontal
+linear-gradient fill below the curve retains the bars' recency colors. SingleSlider
 smooths frequency by value; RangeSlider smooths interval coverage. Sampling
 and `window_length` use slider data-domain units and do not depend on rendered
 width. Temporal smoothing is not implemented yet. The playground includes a

@@ -26,11 +26,13 @@ test("all methods replace bars and hitboxes only after smoothing is triggered", 
         const values = kind === "single" ? [5, 10, 10] : [[2, 8], [5, 15], [5, 15]];
         values.forEach(value => provenance.insert(value));
         const records = values.map(value => ({ value, kind: "interaction" }));
+        const recencyColor = value => `rgb(${Math.round(value * 255)},0,0)`;
         const props = {
             provenance, min: 0, max: 20, width: 320, height: 50,
             barKeys: Array.from({ length: 21 }, (_, index) => index),
-            barWidth: 8, orientationScheme: () => "orange", colorScheme: () => "orange",
+            barWidth: 8, orientationScheme: recencyColor, colorScheme: recencyColor,
             onRangeSelect: () => {},
+            smoothingGradientKey: `${kind}-test`,
         };
         const Component = kind === "single" ? SingleSliderBars : RangeSliderBars;
         const render = extra => renderToStaticMarkup(createElement(Component, { ...props, ...extra }));
@@ -43,17 +45,29 @@ test("all methods replace bars and hitboxes only after smoothing is triggered", 
             });
             const markup = render({ smoothingSamples: samples, smoothingMethod: type });
             assert.match(markup, new RegExp(`data-provenance-smoothing="${type}"`));
+            assert.match(markup, new RegExp(`data-provenance-smoothing-gradient="${type}"`));
+            assert.match(markup, new RegExp(`data-provenance-smoothing-fill="${type}"`));
+            assert.match(markup, new RegExp(`fill="url\\(#slider-smoothing-gradient-${kind}-test\\)"`));
             assert.match(markup, /pointer-events="none" aria-hidden="true"/);
             assert.doesNotMatch(markup, /NaN|Infinity/);
             assert.doesNotMatch(markup, /<rect\b/);
             assert.doesNotMatch(markup, /data-provenance-aggregate-range=/);
+            const stops = [...markup.matchAll(/<stop offset="([^"]+)" stop-color="([^"]+)"/g)];
+            assert.ok(stops.length >= 2);
+            assert.ok(new Set(stops.map(([, , color]) => color)).size > 1);
+            const offsets = stops.map(([, offset]) => Number.parseFloat(offset));
+            assert.deepEqual(offsets, [...offsets].sort((a, b) => a - b));
+            assert.ok(offsets.every(offset => offset >= 0 && offset <= 100));
             const gated = resolveSliderAggregateSmoothing({
                 scalability: { aggregate_view: { ...scalability.aggregate_view,
                     smoothing_options: { method: { type }, trigger: { threshold: 4 } } } },
                 provenance, records, kind, min: 0, max: 20,
             });
             assert.equal(gated.length, 0);
-            assert.equal(render({ smoothingSamples: gated, smoothingMethod: type }), barsOnly);
+            const gatedMarkup = render({ smoothingSamples: gated, smoothingMethod: type });
+            assert.equal(gatedMarkup, barsOnly);
+            assert.doesNotMatch(gatedMarkup, /data-provenance-smoothing-gradient=/);
+            assert.match(gatedMarkup, /<rect\b/);
         }
     }
 });

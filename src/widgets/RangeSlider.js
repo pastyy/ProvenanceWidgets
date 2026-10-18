@@ -386,6 +386,7 @@ const Rangeslider = (props) => {
                                 provenance={aggregateProvenance}
                                 smoothingSamples={smoothingSamples}
                                 smoothingMethod={props.scalability?.aggregate_view?.smoothing_options?.method?.type}
+                                smoothingGradientKey={`${props.id}-range`}
                                 colorScheme={interpolateOranges}
                                 min={min}
                                 max={max}

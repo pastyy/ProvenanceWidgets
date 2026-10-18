@@ -358,6 +358,7 @@ const Singleslider = (props) => {
                                 provenance={aggregateProvenance}
                                 smoothingSamples={smoothingSamples}
                                 smoothingMethod={props.scalability?.aggregate_view?.smoothing_options?.method?.type}
+                                smoothingGradientKey={`${props.id}-single`}
                                 orientationScheme={interpolateOranges}
                                 barKeys={barKeys}
                                 min={min}

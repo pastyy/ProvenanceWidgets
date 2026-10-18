@@ -247,7 +247,8 @@ type AggregateClippingOptions = {
 - B-spline 默认 `degree: 3`、`smoothing_factor: 0.5`、`knot_spacing: 10`。
 - SingleSlider 和 RangeSlider 已实现 `savgol`、`gaussian` 和 `bspline`。达到 trigger
   之前，柱形图及其交互保持不变；达到 trigger 后，平滑曲线替换柱形图及其交互命中区域，
-  并与柱形图共用 x 轴和计数比例尺；不支持的方法不会静默回退为
+  曲线下方通过横向 linear gradient 延续原柱形图的 recency 颜色编码，并与柱形图共用
+  x 轴和计数比例尺；不支持的方法不会静默回退为
   Savitzky-Golay。
 - SingleSlider 平滑数值频次，未发生交互的数值按零频次参与拟合；RangeSlider
   平滑历史区间的覆盖次数，而不是分别平滑低、高端点的频次。

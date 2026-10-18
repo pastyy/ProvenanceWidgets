@@ -15,6 +15,7 @@ const RangeSliderBars = ({
     onRangeSelect,
     smoothingSamples,
     smoothingMethod,
+    smoothingGradientKey,
 }) => {
     const smoothingActive = smoothingSamples?.length > 0;
     const segments = getRangeBarSegments(provenance, min, max);
@@ -23,6 +24,10 @@ const RangeSliderBars = ({
     const indexDomain = provenance?.domain?.get('index') ?? [0, latestIndex];
     const maxBarHeight = height * 0.8;
     const x = value => ((value - min) / (max - min)) * width;
+    const recencyStops = segments.map(segment => ({
+        offset: (((segment.low + segment.high) / 2) - min) / (max - min),
+        color: colorScheme(normalizeRangeBarIndex(segment.index, indexDomain)),
+    }));
 
     return (
         <svg
@@ -108,6 +113,8 @@ const RangeSliderBars = ({
                 width={width}
                 height={height}
                 scaleCount={count => (count / maxCount) * maxBarHeight}
+                recencyStops={recencyStops}
+                gradientKey={smoothingGradientKey}
             />
         </svg>
     );

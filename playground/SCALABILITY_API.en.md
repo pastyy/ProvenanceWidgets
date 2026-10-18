@@ -165,7 +165,7 @@ type SmoothingOptions = {
 };
 ```
 
-- `method` defaults to `{ type: "savgol", window_length: 9, polyorder: 2 }`.
+- `method` defaults to `{ type: "savgol", window_length: 4, polyorder: 2 }`.
 - Smoothing distances always use `data_domain`; no unit field is exposed.
   Order, degree, `truncate`, and `smoothing_factor` are dimensionless.
 - `trigger.type` defaults to `interaction`.
@@ -275,6 +275,8 @@ Uses the same `SmoothingOptions` structure as the temporal view:
 - SingleSlider and RangeSlider implement `savgol`, `gaussian`, and `bspline`. Before the
   trigger, bars and their interactions are unchanged. After the trigger, the smoothed
   curve replaces the bars and their hitboxes and uses the same x and count scales.
+  A horizontal linear-gradient fill below the curve carries the same normalized
+  interaction-recency colors as the bars.
   Unsupported methods do not fall back to Savitzky-Golay.
 - SingleSlider smooths frequency by numeric value, including zero-frequency
   values. RangeSlider smooths interval coverage, not endpoint frequencies.
