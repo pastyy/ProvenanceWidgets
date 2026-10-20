@@ -46,14 +46,12 @@ const checkboxScalability = {
       trigger: { type: "interaction", threshold: 10 },
     },
     clipping_options: {
-      show_timeline: false,
       trigger: { type: "on_interaction_over", threshold: 10 },
     },
   },
   aggregate_view: {
     strategy: "clipping",
     clipping_options: {
-      show_timeline: false,
       trigger: { type: "on_interaction_over", threshold: 10 },
     },
   },
@@ -61,20 +59,18 @@ const checkboxScalability = {
 
 const radioScalability = {
   temporal_view: {
-    strategy: "zoom_in",
+    strategy: "clipping",
     zoom_in_options: {
       visibility: "all-active",
       trigger: { type: "interaction", threshold: 10 },
     },
     clipping_options: {
-      show_timeline: false,
       trigger: { type: "on_interaction_over", threshold: 10 },
     },
   },
   aggregate_view: {
     strategy: "clipping",
     clipping_options: {
-      show_timeline: false,
       trigger: { type: "on_interaction_over", threshold: 10 },
     },
   },
@@ -82,20 +78,18 @@ const radioScalability = {
 
 const singleSelectScalability = {
   temporal_view: {
-    strategy: "zoom_in",
+    strategy: "clipping",
     zoom_in_options: {
       visibility: "all-active",
       trigger: { type: "interaction", threshold: 10 },
     },
     clipping_options: {
-      show_timeline: false,
       trigger: { type: "on_interaction_over", threshold: 10 },
     },
   },
   aggregate_view: {
     strategy: "clipping",
     clipping_options: {
-      show_timeline: false,
       trigger: { type: "on_interaction_over", threshold: 10 },
     },
   },
@@ -103,20 +97,18 @@ const singleSelectScalability = {
 
 const multiSelectScalability = {
   temporal_view: {
-    strategy: "zoom_in",
+    strategy: "clipping",
     zoom_in_options: {
       visibility: "all-active",
       trigger: { type: "interaction", threshold: 10 },
     },
     clipping_options: {
-      show_timeline: false,
       trigger: { type: "on_interaction_over", threshold: 10 },
     },
   },
   aggregate_view: {
     strategy: "clipping",
     clipping_options: {
-      show_timeline: false,
       trigger: { type: "on_interaction_over", threshold: 10 },
     },
   },

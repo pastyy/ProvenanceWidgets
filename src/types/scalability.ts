@@ -60,8 +60,6 @@ export interface AggregateScalabilityZoomInOptions {
 export interface ScalabilityClippingOptions<
   TType extends string = TemporalScalabilityTriggerType,
 > {
-  /** Show the optional selection-widget temporal timeline; defaults to false. */
-  show_timeline?: boolean;
   /** Defaults to on_interaction_over; on_time_over uses recorded elapsed seconds. */
   trigger?: ScalabilityThresholdTrigger<TType>;
 }

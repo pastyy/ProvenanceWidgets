@@ -2,8 +2,7 @@
 
 All seven widgets share temporal and aggregate clipping: `CheckboxGroup`, `RadioGroup`,
 `SingleSelectDropdown`, `MultiSelectDropdown`, `InputText`, `Singleslider`, and
-`Rangeslider`. By default, aggregate inherits temporal clipping so both views
-slide together using one threshold.
+`Rangeslider`. Temporal and aggregate views are configured independently.
 
 ```jsx
 const scalability = {
@@ -18,11 +17,10 @@ const scalability = {
 <RadioGroup scalability={scalability} {...props} />
 ```
 
-Each widget can receive its own object. If `aggregate_view` is omitted,
-it inherits `temporal_view` when that view uses clipping, including its trigger
-and threshold. An explicit `aggregate_view` overrides this inheritance and
-can use a different threshold or strategy. Aggregate-only clipping does not
-enable temporal clipping. Each widget honors its supplied configuration.
+Each widget can receive its own object. Each view uses only its own configuration;
+configure `aggregate_view` explicitly to clip aggregate history. An omitted view
+uses its default behavior. Neither view inherits the other's strategy, trigger,
+or threshold.
 
 ## Rolling window behavior
 
@@ -48,28 +46,8 @@ enable temporal clipping. Each widget honors its supplied configuration.
 
 ## What changes on screen
 
-Temporal clipping displays the current window. The timeline is hidden by
-default; temporal marks and aggregate bars remain visible and interactive.
-
-To show the checkbox timeline while its temporal view is open, use:
-
-```jsx
-<CheckboxGroup
-  temporalBrush={true}
-  scalability={{
-    temporal_view: {
-      strategy: "clipping",
-      clipping_options: {
-        show_timeline: true,
-        trigger: { type: "on_interaction_over", threshold: 10 },
-      },
-    },
-  }}
-/>
-```
-
-`show_timeline` defaults to false. It also enables the existing selection-widget
-timeline for radio and dropdown widgets. `temporalBrush={false}` overrides it.
+Temporal clipping displays the current window without the legacy selection-widget
+timeline. Temporal marks and aggregate bars remain visible and interactive.
 For elapsed-time labels, use `mode="time"`; the trigger type still determines
 whether the window covers interactions or recorded seconds.
 

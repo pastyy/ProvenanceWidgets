@@ -6,8 +6,8 @@
   trigger/strategy types.
 
 All seven widgets accept temporal and aggregate clipping through `scalability`.
-When `aggregate_view` is omitted, it inherits temporal clipping so both views
-slide within the same threshold-sized window. Explicit aggregate settings override inheritance. See
+Each view must configure its own strategy, trigger, and threshold. An omitted
+view uses its default behavior and does not inherit the other view. See
 [clipping behavior and defaults](../shared/logic/scalability/CLIPPING.md).
 Single and range sliders support `aggregate_view.window_options` for a scrollable
 value span, using an absolute value as the window start. See

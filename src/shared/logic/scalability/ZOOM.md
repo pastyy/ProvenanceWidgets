@@ -37,8 +37,7 @@ Interaction triggers default to 50; time triggers default to 3600 seconds.
 Changing temporal zoom does not filter aggregate statistics.
 
 Clipping is a different strategy: it renders the clipped temporal and aggregate
-views with the timeline hidden by default. Clipping can opt into the selection
-widget timeline with `clipping_options.show_timeline: true`. See [clipping](./CLIPPING.md).
+views without the legacy selection-widget timeline. See [clipping](./CLIPPING.md).
 
 After a non-empty zoom selection, a small selected-range axis appears below
 all checkbox rows. Its bounds follow the brush and its ticks align with the

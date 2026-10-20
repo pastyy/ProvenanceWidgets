@@ -21,10 +21,11 @@ test('aggregate clipping remains visible with temporal zoom and follows the acti
     assert.equal(resolve(scalability, false, records.slice(0, 11)), '1 interaction hidden');
     assert.equal(resolve(scalability, false, []), null);
 });
-test('temporal-only and inherited clipping use the displayed view', () => {
+test('temporal-only clipping does not affect the aggregate view', () => {
     assert.equal(resolve({ temporal_view: clipping, aggregate_view: { strategy: 'zoom_in' } }, false), null);
     assert.equal(resolve({ temporal_view: clipping, aggregate_view: { strategy: 'zoom_in' } }, true), '6 interactions hidden');
-    assert.equal(resolve({ temporal_view: clipping }, false), '6 interactions hidden');
+    assert.equal(resolve({ temporal_view: clipping }, false), null);
+    assert.equal(resolve({ temporal_view: clipping }, true), '6 interactions hidden');
     assert.equal(resolve({}, false), null);
 });
 test('time clipping reports hidden interactions, not elapsed seconds', () => {

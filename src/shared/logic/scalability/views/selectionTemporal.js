@@ -53,7 +53,7 @@ export function resolveSelectionTemporalView({
             : null,
         // Clipping replaces the display period; its brush cannot recover older periods.
         clippingEnabled: clipped,
-        showTemporalAxis: temporal.config.strategy === "zoom_in" || temporal.config.showTimeline,
+        showTemporalAxis: temporal.config.strategy === "zoom_in",
         axis: temporal.config.enabled
             ? { active: false, domain: [start, end], unit: mode === "time" ? "seconds" : "interactions" }
             : null,
