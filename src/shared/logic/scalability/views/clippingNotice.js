@@ -24,6 +24,6 @@ export function getClippingBadgeMessage(periods) {
         .filter(period => period.config.strategy === "clipping" && period.config.ready && period.boundary > 0)
         .map(period => period.startCount));
     return counts.size
-        ? [...counts].map(count => `${count} interaction hidden`).join(" · ")
+        ? [...counts].map(count => `${count} interaction${count === 1 ? "" : "s"} hidden`).join(" · ")
         : null;
 }

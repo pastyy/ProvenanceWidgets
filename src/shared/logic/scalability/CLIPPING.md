@@ -83,11 +83,13 @@ displayed view clips history. Groups configured for `zoom_in` never show this
 badge, including their initial aggregate view, even with an aggregate clipping
 override. The dot overlays the footprint’s bottom-right corner and intercepts pointer
 events so it does not trigger the footprint view toggle or its help tooltip.
-Clicking it acknowledges the current clipping and hides the dot, while opening
-a compact pale-red popup showing
-`90 interaction hidden` with the current hidden interaction count. Clicking anywhere else, pressing Escape, or waiting seven seconds closes it. The dot reappears when the clipping window advances
-again. It also disappears when clipping is
-disabled or no history is hidden. The timeline behavior is unchanged.
+The dot stays visible while history is hidden, including after clicking it and
+after subsequent interactions. Hovering over or focusing it opens a compact pale-red tooltip showing
+`1 interaction hidden` or `117 interactions hidden` with the current hidden count.
+The tooltip closes when the dot is no longer hovered or focused. While it is
+hovered or focused, the footprint button’s aggregate/temporal tooltip is suppressed. The dot disappears when clipping is disabled or no history is hidden.
+With threshold 10, the first ten interactions show no dot; the eleventh hides
+one interaction and shows the dot. The timeline behavior is unchanged.
 
 For other widgets, the notification stays visible whenever older history is hidden, including
 imported history. At 15 interactions with threshold 10, it reads

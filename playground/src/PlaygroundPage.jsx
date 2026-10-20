@@ -38,12 +38,79 @@ const meatOptions = [
   { label: "Lamb", value: "Lamb" },
 ];
 
-const checkboxClippingScalability = {
+const checkboxScalability = {
   temporal_view: {
     strategy: "zoom_in",
     zoom_in_options: {
       visibility: "all-active",
       trigger: { type: "interaction", threshold: 10 },
+    },
+    clipping_options: {
+      show_timeline: false,
+      trigger: { type: "on_interaction_over", threshold: 10 },
+    },
+  },
+  aggregate_view: {
+    strategy: "clipping",
+    clipping_options: {
+      show_timeline: false,
+      trigger: { type: "on_interaction_over", threshold: 10 },
+    },
+  },
+};
+
+const radioScalability = {
+  temporal_view: {
+    strategy: "zoom_in",
+    zoom_in_options: {
+      visibility: "all-active",
+      trigger: { type: "interaction", threshold: 10 },
+    },
+    clipping_options: {
+      show_timeline: false,
+      trigger: { type: "on_interaction_over", threshold: 10 },
+    },
+  },
+  aggregate_view: {
+    strategy: "clipping",
+    clipping_options: {
+      show_timeline: false,
+      trigger: { type: "on_interaction_over", threshold: 10 },
+    },
+  },
+};
+
+const singleSelectScalability = {
+  temporal_view: {
+    strategy: "zoom_in",
+    zoom_in_options: {
+      visibility: "all-active",
+      trigger: { type: "interaction", threshold: 10 },
+    },
+    clipping_options: {
+      show_timeline: false,
+      trigger: { type: "on_interaction_over", threshold: 10 },
+    },
+  },
+  aggregate_view: {
+    strategy: "clipping",
+    clipping_options: {
+      show_timeline: false,
+      trigger: { type: "on_interaction_over", threshold: 10 },
+    },
+  },
+};
+
+const multiSelectScalability = {
+  temporal_view: {
+    strategy: "zoom_in",
+    zoom_in_options: {
+      visibility: "all-active",
+      trigger: { type: "interaction", threshold: 10 },
+    },
+    clipping_options: {
+      show_timeline: false,
+      trigger: { type: "on_interaction_over", threshold: 10 },
     },
   },
   aggregate_view: {
@@ -265,7 +332,7 @@ export default function PlaygroundPage() {
                 optionLabel="label"
                 optionValue="value"
                 provenance={playgroundCheckboxProvenance}
-                scalability={checkboxClippingScalability}
+                scalability={checkboxScalability}
                 selected={checkboxSelection}
                 onSelectedChange={setCheckboxSelection}
                 dataLabel="Meat"
@@ -292,6 +359,7 @@ export default function PlaygroundPage() {
                 selected={ingredient}
                 onSelectedChange={setIngredient}
                 provenance={playgroundRadioProvenance}
+                scalability={radioScalability}
                 dataLabel="Pizza topping"
               />
             </WidgetCard>
@@ -335,6 +403,7 @@ export default function PlaygroundPage() {
                 selected={city}
                 onSelectedChange={setCity}
                 provenance={playgroundSingleSelectProvenance}
+                scalability={singleSelectScalability}
                 filter
                 showClear
                 dataLabel="City"
@@ -350,6 +419,7 @@ export default function PlaygroundPage() {
                 selected={cities}
                 onSelectedChange={setCities}
                 provenance={playgroundMultiSelectProvenance}
+                scalability={multiSelectScalability}
                 filter
                 showClear
                 dataLabel="Cities"

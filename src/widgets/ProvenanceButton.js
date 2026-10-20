@@ -34,23 +34,9 @@ const ProvenanceButton = ({ target }) => {
     const [widgetColors] = useWidgetColors()
     const { registrations } = useWidgetRegistry();
     const buttonRef = useRef(null);
-    const [acknowledgedClip, setAcknowledgedClip] = useState(null);
-    const [clippingPopupOpen, setClippingPopupOpen] = useState(false);
     const [overClippingBadge, setOverClippingBadge] = useState(false);
-
-    useEffect(() => {
-        if (!clippingPopupOpen) return undefined;
-        const dismiss = () => {
-            setClippingPopupOpen(false);
-            setOverClippingBadge(false);
-        };
-        const timer = window.setTimeout(dismiss, 7000);
-        document.addEventListener('pointerdown', dismiss, true);
-        return () => {
-            window.clearTimeout(timer);
-            document.removeEventListener('pointerdown', dismiss, true);
-        };
-    }, [clippingPopupOpen]);
+    const [clippingBadgeFocused, setClippingBadgeFocused] = useState(false);
+    const clippingPopupOpen = overClippingBadge || clippingBadgeFocused;
 
     const borderColor = widgetColors[target] || null;
     const haloColor = '#71e7fb';
@@ -90,13 +76,11 @@ const ProvenanceButton = ({ target }) => {
     const clippingMessage = registration?.type === "checkbox-group"
         ? registration.clippingMessage
         : null;
-    const clippingRevision = registration?.clippingRevision;
-    const hasUnreadClip = Boolean(clippingMessage) && acknowledgedClip !== clippingRevision;
+    const hasClippedHistory = Boolean(clippingMessage);
     useEffect(() => {
-        setClippingPopupOpen(false);
+        setClippingBadgeFocused(false);
         setOverClippingBadge(false);
-        if (!clippingMessage) setAcknowledgedClip(null);
-    }, [target, clippingMessage, clippingRevision]);
+    }, [target, hasClippedHistory]);
     const clippingTooltipId = `provenance-clipping-tooltip-${safeTarget}`;
     const viewTooltipId = `provenance-view-tooltip-${safeTarget}`;
     const viewTooltipLabel = viewTooltip
@@ -266,21 +250,18 @@ const ProvenanceButton = ({ target }) => {
                             )}
                         />
                     </div>
-                    {clippingMessage && (hasUnreadClip || clippingPopupOpen) && (
+                    {hasClippedHistory && (
                         <button
                             type="button"
                             aria-label={clippingMessage}
                             aria-expanded={clippingPopupOpen}
-                            tabIndex={hasUnreadClip ? 0 : -1}
                             onPointerDown={event => event.stopPropagation()}
-                            onFocus={() => setOverClippingBadge(true)}
-                            onBlur={() => setOverClippingBadge(false)}
+                            onFocus={() => setClippingBadgeFocused(true)}
+                            onBlur={() => setClippingBadgeFocused(false)}
                             onMouseEnter={() => setOverClippingBadge(true)}
                             onMouseLeave={() => setOverClippingBadge(false)}
                             onClick={event => {
                                 event.stopPropagation();
-                                setAcknowledgedClip(clippingRevision);
-                                setClippingPopupOpen(true);
                             }}
                             data-provenance-clipping-notice={target}
                             data-provenance-chart-target={target}
@@ -289,10 +270,10 @@ const ProvenanceButton = ({ target }) => {
                             style={{
                                 position: 'absolute', right: -5, bottom: -5,
                                 width: 18, height: 18, padding: 4, borderRadius: '50%',
-                                background: hasUnreadClip ? '#fa5151' : 'transparent',
+                                background: '#fa5151',
                                 backgroundClip: 'content-box', border: 0,
                                 boxSizing: 'border-box', cursor: 'pointer', zIndex: 2,
-                                pointerEvents: hasUnreadClip ? 'auto' : 'none',
+                                pointerEvents: 'auto',
                             }}
                         />
                     )}
@@ -301,10 +282,7 @@ const ProvenanceButton = ({ target }) => {
                 {clippingMessage && typeof document !== 'undefined' && createPortal(
                     <Tooltip
                         id={clippingTooltipId}
-                        openOnClick
                         isOpen={clippingPopupOpen}
-                        setIsOpen={setClippingPopupOpen}
-                        globalCloseEvents={{ escape: true, clickOutsideAnchor: true }}
                         place="right"
                         positionStrategy="fixed"
                         delayShow={0}
@@ -330,7 +308,7 @@ const ProvenanceButton = ({ target }) => {
                     createPortal(
                         <Tooltip
                             id={viewTooltipId}
-                            hidden={overClippingBadge || clippingPopupOpen}
+                            hidden={clippingPopupOpen}
                             events={['hover']}
                             delayShow={PROVENANCE_BUTTON_TOOLTIP_DELAY_MS}
                             delayHide={0}
