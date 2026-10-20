@@ -50,12 +50,16 @@ Temporal clipping displays the current window without the legacy selection-widge
 timeline. Temporal marks and aggregate bars remain visible and interactive.
 For elapsed-time labels, use `mode="time"`; the trigger type still determines
 whether the window covers interactions or recorded seconds.
+SingleSlider and RangeSlider keep read-only interaction/time and value axes while
+clipping is active. The interaction axis uses regular ticks for the currently
+visible interaction range; clipping does not expose a zoom brush.
 
 Aggregate statistics count only interactions inside the window. Selection
 state at its left edge is retained to compute deltas, without being counted
 as a new selection. Current widget values and full source history are preserved.
 
-Checkbox, radio, single-select and multi-select groups show a contrasting dot
+Checkbox, radio, single-select, multi-select, single-slider, and range-slider
+widgets show a contrasting dot
 at the footprint icon's bottom-right whenever the **displayed view** clips older
 history. Aggregate clipping works independently of temporal zoom. Switching to
 an unclipped view hides the dot. The dot uses the same bright yellow (`#FFD600`) for every widget, with a
@@ -66,13 +70,13 @@ help tooltip while hovered or focused. With threshold 10, the eleventh
 interaction shows `1 interaction hidden`.
 
 All four categorical widgets share the checkbox linear drag-selection zoom
-brush, trigger behavior, and selected-range axis.
+brush, trigger behavior, and selected-range axis. Sliders retain their existing
+value-history points and aggregate bars, limited to the active rolling window.
 
-For sliders and text input, the notification stays visible whenever older history is hidden, including
-imported history. At 15 interactions with threshold 10, it reads
-`hide 5 interacts`; at 16 it reads `hide 6 interacts`. It disappears when clipping
-is disabled or no history is hidden. Synchronized temporal/aggregate windows
-produce one notice. Time-trigger notices use seconds.
+Text input retains its inline clipping notice. It stays visible whenever older
+history is hidden, including imported history. At 15 interactions with threshold
+10, it reads `hide 5 interacts`; at 16 it reads `hide 6 interacts`. It disappears
+when clipping is disabled or no history is hidden.
 
 ## Implementation
 
@@ -82,6 +86,8 @@ produce one notice. Time-trigger notices use seconds.
 - `views/recordTemporal.js`: text/numeric temporal records and axis positions.
 - `views/recordAggregate.js`: text/numeric frequencies for the current period.
 - `views/selectionTemporal.js`: display projections for aggregate and temporal.
+- `shared/hooks/useClippingBadge.js`: active-view badge message for categorical
+  widgets and sliders.
 - `shared/hooks/useSelectionTemporalScalability.js`: width measurement and brush
   state shared by all four widgets.
 

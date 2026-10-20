@@ -365,10 +365,10 @@ layout acceptance checks are completed.
 
 | Component | View | clipping | zoom_in | smoothing | Notes / differences to specify |
 | --- | --- | --- | --- | --- | --- |
-| SingleSlider (exported as `Singleslider`) | temporal | Pending | Implemented (unverified) | Implemented (unverified) | Smoothing replaces value-history points and connections after its own trigger; zoom behavior remains independent. |
-| SingleSlider | aggregate | Pending | Pending | Implemented (unverified) | After the configured trigger, all three smoothing methods replace bars and hitboxes with a frequency-by-value curve; window_options remain pending. |
-| RangeSlider (exported as `Rangeslider`) | temporal | Pending | Implemented (unverified) | Implemented (unverified) | Smoothing uses center/span adaptation to preserve ordered endpoints; zoom behavior remains independent. |
-| RangeSlider | aggregate | Pending | Pending | Implemented (unverified) | After the configured trigger, all three smoothing methods replace bars and hitboxes with an interval-coverage curve; window_options remain pending. |
+| SingleSlider (exported as `Singleslider`) | temporal | Verified | Implemented (unverified) | Implemented (unverified) | Clipping keeps the latest interaction/time window and reports the hidden count on the footprint button. |
+| SingleSlider | aggregate | Verified | Pending | Implemented (unverified) | Clipping rebuilds value frequencies from only the active window; window_options remain independent. |
+| RangeSlider (exported as `Rangeslider`) | temporal | Verified | Implemented (unverified) | Implemented (unverified) | Clipping keeps the latest range-history points; smoothing preserves ordered endpoints. |
+| RangeSlider | aggregate | Verified | Pending | Implemented (unverified) | Clipping rebuilds interval coverage from only the active window; window_options remain independent. |
 | CheckboxGroup | temporal | Partial | Partial | Pending | Clipping supports only on_interaction_over in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |
 | CheckboxGroup | aggregate | Pending | Pending | Pending | Define option / selection-combination aggregation; integrate strategies and window_options. |
 | RadioGroup | temporal | Partial | Partial | Pending | Clipping supports only on_interaction_over in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |

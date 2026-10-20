@@ -81,16 +81,18 @@ npm pack --dry-run
 npm publish --access public
 ```
 
-## Selection clipping
+## Display clipping
 
-CheckboxGroup, RadioGroup, SingleSelectDropdown, and MultiSelectDropdown share
-clipping for both `temporal_view` and `aggregate_view`. Each view uses
+CheckboxGroup, RadioGroup, SingleSelectDropdown, MultiSelectDropdown,
+SingleSlider, and RangeSlider share clipping for both `temporal_view` and
+`aggregate_view`. Each view uses
 `strategy: "clipping"` and `clipping_options.trigger`, supporting
 `on_interaction_over` (default) and `on_time_over` (recorded elapsed seconds).
 The default threshold is `max(1, floor(widgetWidth / 10))`.
-At each threshold boundary, the view clears its displayed history and starts a
-new period; original provenance and current values are preserved. Temporal
-axis labels keep the cumulative offset, e.g. `n=20` through `now (21)`.
+After the threshold is exceeded, the view displays a rolling window containing
+the latest threshold-sized period; original provenance and current values are
+preserved. A yellow dot on the active provenance footprint reports how many
+interactions are hidden. Temporal and aggregate configurations are independent.
 See [clipping configuration and semantics](src/shared/logic/scalability/CLIPPING.md).
 
 ## Slider smoothing

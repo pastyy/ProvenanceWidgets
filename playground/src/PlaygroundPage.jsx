@@ -269,12 +269,18 @@ const rangeSliderOptions = {
   tickStep: 15,
 };
 
-const sliderAggregateSmoothing = {
-  "strategy": "smoothing",
-  "window_options": { "window_size": 100, "window_start": 0 },
-  "smoothing_options": {
-    "method": { "type": "savgol", "window_length": 4, "polyorder": 2 },
-    "trigger": { "type": "time", "threshold": 1000 },
+const sliderClipping = {
+  temporal_view: {
+    strategy: "clipping",
+    clipping_options: {
+      trigger: { type: "on_interaction_over", threshold: 20 },
+    },
+  },
+  aggregate_view: {
+    strategy: "clipping",
+    clipping_options: {
+      trigger: { type: "on_interaction_over", threshold: 10 },
+    },
   },
 };
 
@@ -364,25 +370,7 @@ export default function PlaygroundPage() {
                 options={singleSliderOptions}
                 provenance={playgroundSingleSliderProvenance}
                 dataLabel="Single value"
-                scalability={{
-                  "temporal_view": {
-                    "strategy": "smoothing",
-                    "smoothing_options": {
-                      "method": { "type": "savgol", "window_length": 4, "polyorder": 2 },
-                      "trigger": { "type": "interaction", "threshold": 20 }
-                    },
-                    "zoom_in_options": {
-                      "modes": ["interactions", "interactions-values", "values"],
-                      "visibility": "all-active",
-                      "trigger": {
-                        "type": "interaction",
-                        "threshold": 10,
-                        "auto_zoom": false
-                      }
-                    }
-                  },
-                  "aggregate_view": sliderAggregateSmoothing
-                }}
+                scalability={sliderClipping}
               />
             </WidgetCard>
 
@@ -425,7 +413,7 @@ export default function PlaygroundPage() {
                 onChange={setRangeSliderValue}
                 options={rangeSliderOptions}
                 provenance={playgroundRangeSliderProvenance}
-                scalability={{ aggregate_view: sliderAggregateSmoothing }}
+                scalability={sliderClipping}
                 dataLabel="Range"
               />
             </WidgetCard>

@@ -1,4 +1,3 @@
-import ClippingNotice from "../shared/components/ClippingNotice.js";
 import { Slider as Slider_ } from "primereact/slider/slider.esm.js";
 import {
     useCallback,
@@ -16,6 +15,7 @@ import useProvenanceController from "../provenance/hooks/useProvenanceController
 import useRevertedValue from "../provenance/hooks/useRevertedValue.js";
 import useWidgetRegistry from "../provenance/hooks/useWidgetRegistry.js";
 import useElementSize from "../shared/hooks/useElementSize.js";
+import useClippingBadge from "../shared/hooks/useClippingBadge.js";
 import useProvenanceTooltip from "../provenance/hooks/useProvenanceTooltip.js";
 import { generateRange } from "../shared/logic/valueMath.js";
 import Chart from "./Chart.js";
@@ -129,6 +129,16 @@ const Singleslider = (props) => {
         min, max, step,
     }), [serializedProvenance, aggregateProvenance, props.scalability, min, max, step]);
     const smoothingActive = smoothingSamples.length > 0;
+    const {
+        message: clippingMessage,
+        revision: clippingRevision,
+    } = useClippingBadge({
+        records: serializedProvenance.data,
+        scalability: props.scalability,
+        width: containerWidth,
+        mode: provenanceMode,
+        showTimeline: isDropdownVisible,
+    });
     // Display value tracks the slider thumb position during a drag.
     // It follows intermediate onChange steps, while currentValue (from the
     // controller) only updates when provenance is actually committed.
@@ -224,6 +234,8 @@ const Singleslider = (props) => {
             setValue: applyRegisteredValue,
             visualize,
             mode: provenanceMode,
+            clippingMessage,
+            clippingRevision,
             focus: () => {
                 const element = elementRef.current;
                 element?.scrollIntoView?.({
@@ -258,6 +270,8 @@ const Singleslider = (props) => {
         notifyWidget,
         visualize,
         provenanceMode,
+        clippingMessage,
+        clippingRevision,
     ]);
 
     useEffect(() => {
@@ -316,13 +330,6 @@ const Singleslider = (props) => {
                 position: "relative",
             }}
         >
-            {visualize && <ClippingNotice
-                id={props.id}
-                records={serializedProvenance.data}
-                scalability={props.scalability}
-                width={containerWidth}
-                mode={provenanceMode}
-            />}
             <SliderAggregateViewport
                 scalability={props.scalability}
                 min={min}

@@ -152,7 +152,7 @@ export interface AggregateViewScalability {
 
 export interface ScalabilityOptions {
   temporal_view?: TemporalViewScalability;
-  /** Inherits temporal clipping when omitted, synchronizing both rolling windows. */
+  /** Configured independently from temporal_view; omitted views keep their default strategy. */
   aggregate_view?: AggregateViewScalability;
 }
 

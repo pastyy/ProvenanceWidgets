@@ -61,7 +61,6 @@ const INPUT_TEXT_TEMPORAL_HEIGHT = 440;
 
 const TemporalBrush = ({
     height = TEMPORAL_BRUSH_HEIGHT,
-    clipping,
     interactionLabels,
     interactive = true,
     mode,
@@ -170,10 +169,7 @@ const TemporalBrush = ({
     }, [interactive, positionsKey, syncRevision]);
 
     const tickStride = Math.max(1, Math.ceil(entryCount / 8));
-    const ticks = clipping?.enabled ? [
-        { position: 8, index: "start", label: clipping.startLabel },
-        { position: height - 8, index: "now", label: clipping.nowLabel },
-    ] : positions
+    const ticks = positions
         .map((position, index) => ({ position, index, label: mode === "time" ? undefined : interactionLabels?.[index] }))
         .filter(({ index }) => (
             mode === "time"
@@ -1078,10 +1074,10 @@ const Chart = ({
                 visibility: temporalZoom.visibility,
                 trigger: temporalZoom.trigger,
             });
-        const showInteractionAxis = !clipping.enabled &&
+        const showInteractionAxis =
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
             normalizeTemporalBrush(temporalBrush);
-        const showValueAxis = !clipping.enabled &&
+        const showValueAxis =
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
             normalizeTemporalBrush(temporalBrush);
         const reserveValueZoomAxisSpace =
@@ -1336,7 +1332,6 @@ const Chart = ({
             >
                 {!clipping.enabled && (inputTextBrushEnabled ? (
                     <TemporalBrush
-                        clipping={clipping}
                         interactive={inputTextBrushEnabled}
                         range={brushRange}
                         syncRevision={brushSyncRevision}

@@ -1,4 +1,3 @@
-import ClippingNotice from "../shared/components/ClippingNotice.js";
 import { Slider as Slider_ } from "primereact/slider/slider.esm.js";
 import {
     useCallback,
@@ -16,6 +15,7 @@ import useProvenanceController from "../provenance/hooks/useProvenanceController
 import useRevertedValue from "../provenance/hooks/useRevertedValue.js";
 import useWidgetRegistry from "../provenance/hooks/useWidgetRegistry.js";
 import useElementSize from "../shared/hooks/useElementSize.js";
+import useClippingBadge from "../shared/hooks/useClippingBadge.js";
 import useProvenanceTooltip from "../provenance/hooks/useProvenanceTooltip.js";
 import Chart from "./Chart.js";
 import {
@@ -127,6 +127,16 @@ const Rangeslider = (props) => {
         provenance: aggregateProvenance,
         min, max, step, kind: "range",
     }), [serializedProvenance, aggregateProvenance, props.scalability, min, max, step]);
+    const {
+        message: clippingMessage,
+        revision: clippingRevision,
+    } = useClippingBadge({
+        records: serializedProvenance.data,
+        scalability: props.scalability,
+        width: containerWidth,
+        mode: provenanceMode,
+        showTimeline: isDropdownVisible,
+    });
     const [displayValue, setDisplayValue] = useState(currentValue);
     const viewPanelLayout = getSliderViewPanelLayout({
         temporalBrush,
@@ -251,6 +261,8 @@ const Rangeslider = (props) => {
             setValue: applyRegisteredValue,
             visualize,
             mode: provenanceMode,
+            clippingMessage,
+            clippingRevision,
             focus: () => {
                 const element = elementRef.current;
                 element?.scrollIntoView?.({
@@ -285,6 +297,8 @@ const Rangeslider = (props) => {
         notifyWidget,
         visualize,
         provenanceMode,
+        clippingMessage,
+        clippingRevision,
     ]);
 
     useEffect(() => {
@@ -350,13 +364,6 @@ const Rangeslider = (props) => {
                 position: "relative",
             }}
         >
-            {visualize && <ClippingNotice
-                id={props.id}
-                records={serializedProvenance.data}
-                scalability={props.scalability}
-                width={containerWidth}
-                mode={provenanceMode}
-            />}
             <SliderAggregateViewport
                 scalability={props.scalability}
                 min={min}

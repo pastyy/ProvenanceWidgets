@@ -322,10 +322,10 @@ smoothing 已完成专项数值和 SVG 渲染测试；在浏览器交互与响�
 
 | 组件 | 视图 | clipping | zoom_in | smoothing | 备注 / 待补充差异 |
 | --- | --- | --- | --- | --- | --- |
-| SingleSlider（导出名 `Singleslider`） | temporal | 待开发 | 已实现（待验证） | 已实现（待验证） | smoothing 在自身 trigger 后替换数值历史点和连线；zoom 行为保持独立。 |
-| SingleSlider | aggregate | 待开发 | 待开发 | 已实现（待验证） | 达到触发阈值后，三种 smoothing 方法均以数值频次曲线替换柱形图及其交互命中区域；window_options 仍待开发。 |
-| RangeSlider（导出名 `Rangeslider`） | temporal | 待开发 | 已实现（待验证） | 已实现（待验证） | smoothing 使用 center/span 适配以保持端点有序；zoom 行为保持独立。 |
-| RangeSlider | aggregate | 待开发 | 待开发 | 已实现（待验证） | 达到触发阈值后，三种 smoothing 方法均以区间覆盖次数曲线替换柱形图及其交互命中区域；window_options 仍待开发。 |
+| SingleSlider（导出名 `Singleslider`） | temporal | 已验证 | 已实现（待验证） | 已实现（待验证） | clipping 保留最近的交互/时间窗口，并在 footprint 按钮显示隐藏数量。 |
+| SingleSlider | aggregate | 已验证 | 待开发 | 已实现（待验证） | clipping 仅使用窗口内记录重建数值频次；window_options 保持独立。 |
+| RangeSlider（导出名 `Rangeslider`） | temporal | 已验证 | 已实现（待验证） | 已实现（待验证） | clipping 保留最近的区间历史点；smoothing 保持端点有序。 |
+| RangeSlider | aggregate | 已验证 | 待开发 | 已实现（待验证） | clipping 仅使用窗口内区间重建覆盖次数；window_options 保持独立。 |
 | CheckboxGroup | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 on_interaction_over；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |
 | CheckboxGroup | aggregate | 待开发 | 待开发 | 待开发 | 选项 / 多选组合的聚合语义待明确；策略与 window_options 待接入。 |
 | RadioGroup | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 on_interaction_over；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |

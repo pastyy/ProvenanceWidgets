@@ -74,9 +74,7 @@ const ProvenanceButton = ({ target }) => {
     const viewTooltip = getProvenanceButtonTooltip(buttonState);
     const safeTarget = String(target ?? "widget")
         .replace(/[^a-zA-Z0-9_-]/g, "-");
-    const clippingMessage = ["checkbox-group", "radio-group", "dropdown", "multiselect"].includes(registration?.type)
-        ? registration.clippingMessage
-        : null;
+    const clippingMessage = registration?.clippingMessage ?? null;
     const hasClippedHistory = Boolean(clippingMessage);
     useEffect(() => {
         setClippingBadgeFocused(false);

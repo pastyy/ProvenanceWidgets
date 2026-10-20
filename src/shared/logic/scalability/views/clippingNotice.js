@@ -18,7 +18,7 @@ export function getClippingNotice(periods) {
     return messages.size ? [...messages].join(" · ") : null;
 }
 
-/** Checkbox badges report hidden interactions, including time-based clipping. */
+/** Footprint badges report hidden interactions, including time-based clipping. */
 export function getClippingBadgeMessage(periods) {
     const counts = new Set(periods
         .filter(period => period.config.strategy === "clipping" && period.config.ready && period.boundary > 0)
