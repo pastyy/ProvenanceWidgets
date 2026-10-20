@@ -1,5 +1,5 @@
 import CheckboxZoomAxis from "../shared/components/CheckboxZoomAxis.js";
-import { getClippingBadgeMessage, resolveClippingNoticePeriods } from "../shared/logic/scalability/views/clippingNotice.js";
+import useClippingBadge from "../shared/hooks/useClippingBadge.js";
 import {
     Children,
     isValidElement,
@@ -208,26 +208,10 @@ const CheckboxGroup = (props) => {
         temporalBrush,
         elementRef,
     });
-    const { message: clippingMessage, revision: clippingRevision } = useMemo(() => {
-        // The badge belongs to the group's clipping strategy, not an
-        // aggregate-only override while the group is configured for zoom-in.
-        if (props.scalability?.temporal_view?.strategy !== "clipping") {
-            return { message: null, revision: null };
-        }
-        const periods = resolveClippingNoticePeriods({
-            records: serializedProvenance.data,
-            scalability: props.scalability,
-            width: clipping.width,
-            mode: provenanceMode,
-        });
-        const activePeriod = periods.find(period => period.config.view === (
-            showTimeline ? "temporal_view" : "aggregate_view"
-        ));
-        return {
-            message: getClippingBadgeMessage([activePeriod]),
-            revision: activePeriod.resetKey,
-        };
-    }, [serializedProvenance.data, props.scalability, clipping.width, provenanceMode, showTimeline]);
+    const { message: clippingMessage, revision: clippingRevision } = useClippingBadge({
+        records: serializedProvenance.data, scalability: props.scalability,
+        width: clipping.width, mode: provenanceMode, showTimeline,
+    });
     const [selection, setSelection] = useState(
         () => Array.isArray(currentValue) ? currentValue : []
     );

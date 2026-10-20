@@ -1,3 +1,4 @@
+import { getClippingBadgeColor } from "../shared/logic/clippingBadgeColor.js";
 import { Button } from 'primereact/button/button.esm.js';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -73,7 +74,7 @@ const ProvenanceButton = ({ target }) => {
     const viewTooltip = getProvenanceButtonTooltip(buttonState);
     const safeTarget = String(target ?? "widget")
         .replace(/[^a-zA-Z0-9_-]/g, "-");
-    const clippingMessage = registration?.type === "checkbox-group"
+    const clippingMessage = ["checkbox-group", "radio-group", "dropdown", "multiselect"].includes(registration?.type)
         ? registration.clippingMessage
         : null;
     const hasClippedHistory = Boolean(clippingMessage);
@@ -269,9 +270,9 @@ const ProvenanceButton = ({ target }) => {
                             data-tooltip-content={clippingMessage}
                             style={{
                                 position: 'absolute', right: -5, bottom: -5,
-                                width: 18, height: 18, padding: 4, borderRadius: '50%',
-                                background: '#fa5151',
-                                backgroundClip: 'content-box', border: 0,
+                                width: 16, height: 16, padding: 0, borderRadius: '50%',
+                                background: getClippingBadgeColor(),
+                                border: '2px solid #fff',
                                 boxSizing: 'border-box', cursor: 'pointer', zIndex: 2,
                                 pointerEvents: 'auto',
                             }}
@@ -287,7 +288,7 @@ const ProvenanceButton = ({ target }) => {
                         positionStrategy="fixed"
                         delayShow={0}
                         opacity={1}
-                        arrowColor="#fff1f2"
+                        arrowColor="#fff"
                         style={{
                             ...footprintTooltipStyle,
                             width: 'max-content',
@@ -296,9 +297,9 @@ const ProvenanceButton = ({ target }) => {
                             fontSize: '12px',
                             lineHeight: 1.3,
                             whiteSpace: 'nowrap',
-                            backgroundColor: '#fff1f2',
-                            color: '#9f1239',
-                            border: '1px solid #fecdd3',
+                            backgroundColor: '#fff',
+                            color: '#243746',
+                            border: '1px solid #adb5bd',
                         }}
                     />,
                     document.body

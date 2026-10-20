@@ -77,21 +77,20 @@ Aggregate statistics count only interactions inside the window. Selection
 state at its left edge is retained to compute deltas, without being counted
 as a new selection. Current widget values and full source history are preserved.
 
-Checkbox groups show a red dot at the bottom-right of the footprint icon only
-when `temporal_view.strategy` is explicitly `"clipping"` and the currently
-displayed view clips history. Groups configured for `zoom_in` never show this
-badge, including their initial aggregate view, even with an aggregate clipping
-override. The dot overlays the footprint’s bottom-right corner and intercepts pointer
-events so it does not trigger the footprint view toggle or its help tooltip.
-The dot stays visible while history is hidden, including after clicking it and
-after subsequent interactions. Hovering over or focusing it opens a compact pale-red tooltip showing
-`1 interaction hidden` or `117 interactions hidden` with the current hidden count.
-The tooltip closes when the dot is no longer hovered or focused. While it is
-hovered or focused, the footprint button’s aggregate/temporal tooltip is suppressed. The dot disappears when clipping is disabled or no history is hidden.
-With threshold 10, the first ten interactions show no dot; the eleventh hides
-one interaction and shows the dot. The timeline behavior is unchanged.
+Checkbox, radio, single-select and multi-select groups show a contrasting dot
+at the footprint icon's bottom-right whenever the **displayed view** clips older
+history. Aggregate clipping works independently of temporal zoom. Switching to
+an unclipped view hides the dot. The dot uses the same bright yellow (`#FFD600`) for every widget, with a
+2px white border and no dark outer outline or shadow.
+Hovering or focusing it shows the hidden interaction count. The dot remains
+visible after clicking, does not toggle views, and suppresses the footprint
+help tooltip while hovered or focused. With threshold 10, the eleventh
+interaction shows `1 interaction hidden`.
 
-For other widgets, the notification stays visible whenever older history is hidden, including
+All four categorical widgets share the checkbox linear drag-selection zoom
+brush, trigger behavior, and selected-range axis.
+
+For sliders and text input, the notification stays visible whenever older history is hidden, including
 imported history. At 15 interactions with threshold 10, it reads
 `hide 5 interacts`; at 16 it reads `hide 6 interacts`. It disappears when clipping
 is disabled or no history is hidden. Synchronized temporal/aggregate windows

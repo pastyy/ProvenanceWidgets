@@ -1,4 +1,6 @@
-import ClippingNotice from "../shared/components/ClippingNotice.js";
+import useClippingBadge from "../shared/hooks/useClippingBadge.js";
+import TemporalZoomBrush from "../shared/components/TemporalZoomBrush.js";
+import CheckboxZoomAxis from "../shared/components/CheckboxZoomAxis.js";
 import {
     Children,
     isValidElement,
@@ -33,7 +35,7 @@ import {
 import { getSelectionTimeDomain } from "../shared/logic/selectionTimeline.js";
 import { resolveTemporalBrushEnabled } from "../shared/logic/sliderTemporal.js";
 import TemporalRangeSlider from "../shared/components/TemporalRangeSlider.js";
-import useSelectionTemporalScalability from "../shared/hooks/useSelectionTemporalScalability.js";
+import useCategoricalTemporalScalability from "../shared/hooks/useCategoricalTemporalScalability.js";
 
 export { useRadioGroup };
 
@@ -187,6 +189,21 @@ const RadioGroup = (props) => {
     const [selection, setSelection] = useState(currentValue ?? null);
     const currentValueRef = useRef(currentValue);
     const selectionRef = useRef(selection);
+    const clipping = useCategoricalTemporalScalability({
+        id,
+        widget: "radio-group",
+        mode: provenanceMode,
+        provenance: strategy,
+        scalability: props.scalability,
+        records: serializedProvenance.data,
+        elementRef,
+        temporalBrush,
+    });
+    const { message: clippingMessage, revision: clippingRevision } = useClippingBadge({
+        records: serializedProvenance.data, scalability: props.scalability,
+        width: clipping.width, mode: provenanceMode, showTimeline,
+    });
+
     const serializedProvenanceRef = useRef(serializedProvenance);
     currentValueRef.current = currentValue;
     selectionRef.current = selection;
@@ -362,6 +379,8 @@ const RadioGroup = (props) => {
             elementRef,
             getValue: () => selectionRef.current,
             setValue: applyRegisteredValue,
+            clippingMessage,
+            clippingRevision,
             visualize,
             mode: provenanceMode,
             rendersOwnTemporalHeader: true,
@@ -394,6 +413,8 @@ const RadioGroup = (props) => {
         applyRegisteredValue,
         registerWidget,
         notifyWidget,
+        clippingMessage,
+        clippingRevision,
         visualize,
         provenanceMode,
     ]);
@@ -488,15 +509,7 @@ const RadioGroup = (props) => {
         })
         : children;
 
-    const clipping = useSelectionTemporalScalability({
-        id,
-        widget: "radio-group",
-        mode: provenanceMode,
-        provenance: strategy,
-        scalability: props.scalability,
-        records: serializedProvenance.data,
-        elementRef,
-    });
+
 
     const contextValue = useMemo(
         () => ({
@@ -552,13 +565,6 @@ const RadioGroup = (props) => {
                 className={className ?? styleClass}
                 style={style}
             >
-                {visualize && <ClippingNotice
-                    id={id}
-                    records={serializedProvenance.data}
-                    scalability={props.scalability}
-                    width={clipping.width}
-                    mode={provenanceMode}
-                />}
                 {visualize && hasProvenance && showTimeline && temporalBrush && clipping.showTemporalAxis && (
                     <div
                         data-timeline-axis={id}
@@ -568,7 +574,14 @@ const RadioGroup = (props) => {
                             marginBottom: "12px",
                         }}
                     >
-                        {temporalBrush && clipping.showTemporalAxis && (
+                        {clipping.zoomProps ? (
+                            <TemporalZoomBrush
+                                id={id}
+                                label={tooltipLabel}
+                                mode={provenanceMode}
+                                {...clipping.zoomProps}
+                            />
+                        ) : (
                             <TemporalRangeSlider
                                 id={id}
                                 label={tooltipLabel}
@@ -579,6 +592,9 @@ const RadioGroup = (props) => {
                     </div>
                 )}
                 {renderedChildren}
+                {visualize && hasProvenance && showTimeline && clipping.zoomedDomain && (
+                    <CheckboxZoomAxis id={id} elementRef={elementRef} domain={clipping.zoomedDomain} mode={provenanceMode} />
+                )}
             </div>
         </RadioGroupContext.Provider>
     );

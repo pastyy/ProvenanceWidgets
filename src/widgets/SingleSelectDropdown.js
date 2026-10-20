@@ -1,4 +1,6 @@
-import ClippingNotice from "../shared/components/ClippingNotice.js";
+import useClippingBadge from "../shared/hooks/useClippingBadge.js";
+import TemporalZoomBrush from "../shared/components/TemporalZoomBrush.js";
+import CheckboxZoomAxis from "../shared/components/CheckboxZoomAxis.js";
 import { Dropdown as Dropdown_ } from "primereact/dropdown/dropdown.esm.js";
 import {
     useCallback,
@@ -43,7 +45,7 @@ import {
 import { getSelectionTimeDomain } from "../shared/logic/selectionTimeline.js";
 import { resolveTemporalBrushEnabled } from "../shared/logic/sliderTemporal.js";
 import TemporalRangeSlider from "../shared/components/TemporalRangeSlider.js";
-import useSelectionTemporalScalability from "../shared/hooks/useSelectionTemporalScalability.js";
+import useCategoricalTemporalScalability from "../shared/hooks/useCategoricalTemporalScalability.js";
 
 const SingleSelectItem = ({
     children,
@@ -181,7 +183,7 @@ const SingleSelectItem = ({
             {visualize &&
                 showTimeline &&
                 timelineData && (
-                    <div
+                    <div data-provenance-selection-track={"dropdown"}
                         style={{
                             position: "absolute",
                             inset: 0,
@@ -334,15 +336,7 @@ const SingleSelectDropdown = (props) => {
             props.onProvenanceChange ?? props.provenanceChange,
         strategyFactory,
     });
-    const clipping = useSelectionTemporalScalability({
-        id,
-        widget: "select",
-        mode: provenanceMode,
-        provenance: strategy,
-        scalability: scalabilityProp,
-        records: serializedProvenance.data,
-        elementRef,
-    });
+
     const [selection, setSelection] = useState(() =>
         provenanceValueToSingleSelect(
             currentValue,
@@ -352,6 +346,21 @@ const SingleSelectDropdown = (props) => {
     );
     const currentValueRef = useRef(currentValue);
     const selectionRef = useRef(selection);
+    const clipping = useCategoricalTemporalScalability({
+        id,
+        widget: "select",
+        mode: provenanceMode,
+        provenance: strategy,
+        scalability: scalabilityProp,
+        records: serializedProvenance.data,
+        elementRef,
+        temporalBrush,
+    });
+    const { message: clippingMessage, revision: clippingRevision } = useClippingBadge({
+        records: serializedProvenance.data, scalability: scalabilityProp,
+        width: clipping.width, mode: provenanceMode, showTimeline,
+    });
+
     const serializedProvenanceRef = useRef(serializedProvenance);
     currentValueRef.current = currentValue;
     selectionRef.current = selection;
@@ -491,6 +500,8 @@ const SingleSelectDropdown = (props) => {
             elementRef,
             getValue: () => selectionRef.current,
             setValue: applyRegisteredValue,
+            clippingMessage,
+            clippingRevision,
             visualize,
             mode: provenanceMode,
             focus: () => {
@@ -525,6 +536,8 @@ const SingleSelectDropdown = (props) => {
         applyRegisteredValue,
         registerWidget,
         notifyWidget,
+        clippingMessage,
+        clippingRevision,
         visualize,
         provenanceMode,
     ]);
@@ -658,13 +671,6 @@ const SingleSelectDropdown = (props) => {
                 position: "relative",
             }}
         >
-            {visualize && <ClippingNotice
-                id={id}
-                records={serializedProvenance.data}
-                scalability={scalabilityProp}
-                width={clipping.width}
-                mode={provenanceMode}
-            />}
             <style>{`
                 .${safePanelClass} .p-dropdown-item {
                     padding: 0 !important;
@@ -768,13 +774,29 @@ const SingleSelectDropdown = (props) => {
                                     backgroundColor: "#fff",
                                 }}
                             >
-                                {temporalBrush && clipping.showTemporalAxis && (
+                                {clipping.zoomProps ? (
+                                    <TemporalZoomBrush
+                                        id={id}
+                                        label={tooltipLabel}
+                                        mode={provenanceMode}
+                                        {...clipping.zoomProps}
+                                    />
+                                ) : (
                                     <TemporalRangeSlider
                                         id={id}
                                         label={tooltipLabel}
                                         mode={provenanceMode}
                                         placement="footer"
                                         {...clipping.sliderProps}
+                                    />
+                                )}
+                                {clipping.zoomedDomain && (
+                                    <CheckboxZoomAxis
+                                        id={id}
+                                        elementRef={elementRef}
+                                        domain={clipping.zoomedDomain}
+                                        mode={provenanceMode}
+                                        panel
                                     />
                                 )}
                             </div>

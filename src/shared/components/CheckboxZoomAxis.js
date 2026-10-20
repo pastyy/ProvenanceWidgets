@@ -2,16 +2,18 @@ import { useLayoutEffect, useRef, useState } from "react";
 import ZoomedRangeAxis from "./ZoomedRangeAxis.js";
 
 /** Align the selected-domain axis with the actual checkbox history tracks. */
-export default function CheckboxZoomAxis({ id, elementRef, domain, mode }) {
+export default function CheckboxZoomAxis({ id, elementRef, domain, mode, panel = false }) {
     const footerRef = useRef(null);
     const [layout, setLayout] = useState({ left: 0, width: 0 });
     useLayoutEffect(() => {
-        const group = elementRef.current;
+        const group = panel
+            ? footerRef.current?.closest(".p-dropdown-panel, .p-multiselect-panel")
+            : elementRef.current;
         const footer = footerRef.current;
         if (!group || !footer) return undefined;
         const measure = () => {
-            const track = [...group.querySelectorAll("[data-provenance-checkbox-track]")]
-                .find(element => element.getAttribute("data-provenance-checkbox-track") === id);
+            const track = [...group.querySelectorAll("[data-provenance-selection-track], [data-provenance-checkbox-track]")]
+                .find(element => panel || (element.getAttribute("data-provenance-selection-track") ?? element.getAttribute("data-provenance-checkbox-track")) === id);
             if (!track) {
                 setLayout({ left: 0, width: 0 });
                 return;
@@ -25,9 +27,9 @@ export default function CheckboxZoomAxis({ id, elementRef, domain, mode }) {
         if (typeof ResizeObserver === "undefined") return undefined;
         const observer = new ResizeObserver(measure);
         observer.observe(group);
-        group.querySelectorAll("[data-provenance-checkbox-track]").forEach(track => observer.observe(track));
+        group.querySelectorAll("[data-provenance-selection-track], [data-provenance-checkbox-track]").forEach(track => observer.observe(track));
         return () => observer.disconnect();
-    }, [elementRef, id]);
+    }, [elementRef, id, panel]);
 
     return (
         <div ref={footerRef} data-provenance-zoom-footer={id}

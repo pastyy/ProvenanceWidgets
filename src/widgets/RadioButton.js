@@ -231,7 +231,7 @@ const Radiobutton = ({
                 {visualize &&
                     showTimeline &&
                     timelineData && (
-                        <div
+                        <div data-provenance-selection-track={radioGroup?.id}
                             style={{
                                 position: "absolute",
                                 inset: 0,
