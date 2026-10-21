@@ -4,8 +4,8 @@ export type ScalabilityStrategy =
   | "smoothing";
 
 export type TemporalScalabilityTriggerType =
-  | "on_interaction_over"
-  | "on_time_over";
+  | "interaction"
+  | "time";
 
 export type AggregateScalabilityTriggerType =
   | TemporalScalabilityTriggerType
@@ -60,7 +60,7 @@ export interface AggregateScalabilityZoomInOptions {
 export interface ScalabilityClippingOptions<
   TType extends string = TemporalScalabilityTriggerType,
 > {
-  /** Defaults to on_interaction_over; on_time_over uses recorded elapsed seconds. */
+  /** Defaults to interaction; time uses recorded elapsed seconds. */
   trigger?: ScalabilityThresholdTrigger<TType>;
 }
 

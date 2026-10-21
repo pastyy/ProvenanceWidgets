@@ -46,13 +46,13 @@ const checkboxScalability = {
       trigger: { type: "interaction", threshold: 10 },
     },
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
   aggregate_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
 };
@@ -65,13 +65,13 @@ const radioScalability = {
       trigger: { type: "interaction", threshold: 10 },
     },
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
   aggregate_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
 };
@@ -84,13 +84,13 @@ const singleSelectScalability = {
       trigger: { type: "interaction", threshold: 10 },
     },
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
   aggregate_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
 };
@@ -103,13 +103,13 @@ const multiSelectScalability = {
       trigger: { type: "interaction", threshold: 10 },
     },
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
   aggregate_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
 };
@@ -273,13 +273,13 @@ const sliderClipping = {
   temporal_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 20 },
+      trigger: { type: "interaction", threshold: 20 },
     },
   },
   aggregate_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
 };

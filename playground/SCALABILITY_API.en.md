@@ -124,15 +124,15 @@ Used when `strategy === "clipping"`:
 ```ts
 type ClippingOptions = {
   trigger?: {
-    type?: "on_interaction_over" | "on_time_over";
+    type?: "interaction" | "time";
     threshold?: number;
   };
 };
 ```
 
-- `trigger.type` defaults to `on_interaction_over`.
-- The threshold unit follows the trigger type. For `on_interaction_over`, it is an
-  interaction count and defaults to `50`. For `on_time_over`, it is seconds and
+- `trigger.type` defaults to `interaction`.
+- The threshold unit follows the trigger type. For `interaction`, it is an
+  interaction count and defaults to `50`. For `time`, it is seconds and
   defaults to `3600`.
 
 ### Smoothing
@@ -243,7 +243,7 @@ type AggregateViewScalability = {
 ```ts
 type AggregateZoomInOptions = {
   trigger?: {
-    type?: "on_interaction_over" | "on_time_over" | "on_range_over";
+    type?: "interaction" | "time" | "on_range_over";
     threshold?: number;
     tool_visible_before_trigger?: boolean;
     auto_zoom_on_trigger?: boolean;
@@ -251,8 +251,8 @@ type AggregateZoomInOptions = {
 };
 ```
 
-- `on_interaction_over` triggers when aggregate interaction count exceeds the threshold.
-- `on_time_over` triggers after the specified time.
+- `interaction` triggers when aggregate interaction count exceeds the threshold.
+- `time` triggers after the specified time.
 - `on_range_over` triggers when the statistical range of aggregate interaction counts
   exceeds the threshold. Here, range is `max(interactionCount) - min(interactionCount)`,
   not the numeric range of a RangeSlider.
@@ -265,13 +265,13 @@ type AggregateZoomInOptions = {
 ```ts
 type AggregateClippingOptions = {
   trigger?: {
-    type?: "on_interaction_over" | "on_time_over";
+    type?: "interaction" | "time";
     threshold?: number;
   };
 };
 ```
 
-- `trigger.type` defaults to `on_interaction_over`.
+- `trigger.type` defaults to `interaction`.
 - No threshold default is defined in the draft; the current provisional default is `10`.
 
 ### Aggregate smoothing
@@ -369,15 +369,15 @@ layout acceptance checks are completed.
 | SingleSlider | aggregate | Verified | Pending | Implemented (unverified) | Clipping rebuilds value frequencies from only the active window; window_options remain independent. |
 | RangeSlider (exported as `Rangeslider`) | temporal | Verified | Implemented (unverified) | Implemented (unverified) | Clipping keeps the latest range-history points; smoothing preserves ordered endpoints. |
 | RangeSlider | aggregate | Verified | Pending | Implemented (unverified) | Clipping rebuilds interval coverage from only the active window; window_options remain independent. |
-| CheckboxGroup | temporal | Partial | Partial | Pending | Clipping supports only on_interaction_over in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |
+| CheckboxGroup | temporal | Partial | Partial | Pending | Clipping supports only interaction in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |
 | CheckboxGroup | aggregate | Pending | Pending | Pending | Define option / selection-combination aggregation; integrate strategies and window_options. |
-| RadioGroup | temporal | Partial | Partial | Pending | Clipping supports only on_interaction_over in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |
+| RadioGroup | temporal | Partial | Partial | Pending | Clipping supports only interaction in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |
 | RadioGroup | aggregate | Pending | Pending | Pending | Aggregation by option; strategies and window_options await integration. |
 | InputText | temporal | Pending | Pending | Pending | Does not pass scalability to Chart; define zoom and smoothing semantics for text values. |
 | InputText | aggregate | Pending | Pending | Pending | Define text aggregation; develop strategies and window_options. |
-| SingleSelectDropdown | temporal | Partial | Partial | Pending | Clipping supports only on_interaction_over in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |
+| SingleSelectDropdown | temporal | Partial | Partial | Pending | Clipping supports only interaction in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |
 | SingleSelectDropdown | aggregate | Pending | Pending | Pending | Aggregation by option; strategies and window_options await integration. |
-| MultiSelectDropdown | temporal | Partial | Partial | Pending | Clipping supports only on_interaction_over in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |
+| MultiSelectDropdown | temporal | Partial | Partial | Pending | Clipping supports only interaction in interaction mode; existing zoom_in retains the basic brush without reading zoom_in_options. |
 | MultiSelectDropdown | aggregate | Pending | Pending | Pending | Define option / selection-combination aggregation; integrate strategies and window_options. |
 | SuperProvenanceWidget | temporal | Pending | Pending | Pending | No scalability integration; define events and states across components and coordination with child widgets. |
 | SuperProvenanceWidget | aggregate | Pending | Pending | Pending | Define aggregation across components; develop strategies and window_options. |

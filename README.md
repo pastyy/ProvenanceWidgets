@@ -87,7 +87,7 @@ CheckboxGroup, RadioGroup, SingleSelectDropdown, MultiSelectDropdown,
 SingleSlider, and RangeSlider share clipping for both `temporal_view` and
 `aggregate_view`. Each view uses
 `strategy: "clipping"` and `clipping_options.trigger`, supporting
-`on_interaction_over` (default) and `on_time_over` (recorded elapsed seconds).
+`interaction` (default) and `time` (recorded elapsed seconds).
 The default threshold is `max(1, floor(widgetWidth / 10))`.
 After the threshold is exceeded, the view displays a rolling window containing
 the latest threshold-sized period; original provenance and current values are

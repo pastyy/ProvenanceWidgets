@@ -110,15 +110,15 @@ type TemporalZoomInOptions = {
 ```ts
 type ClippingOptions = {
   trigger?: {
-    type?: "on_interaction_over" | "on_time_over";
+    type?: "interaction" | "time";
     threshold?: number;
   };
 };
 ```
 
-- `trigger.type` 默认 `on_interaction_over`。
-- `threshold` 的单位由 `type` 决定；在 `on_interaction_over` 下表示交互次数，
-  默认 `50`；在 `on_time_over` 下表示秒数，默认 `3600`。
+- `trigger.type` 默认 `interaction`。
+- `threshold` 的单位由 `type` 决定；在 `interaction` 下表示交互次数，
+  默认 `50`；在 `time` 下表示秒数，默认 `3600`。
 
 ### Smoothing
 
@@ -215,7 +215,7 @@ type AggregateViewScalability = {
 ```ts
 type AggregateZoomInOptions = {
   trigger?: {
-    type?: "on_interaction_over" | "on_time_over" | "on_range_over";
+    type?: "interaction" | "time" | "on_range_over";
     threshold?: number;
     tool_visible_before_trigger?: boolean;
     auto_zoom_on_trigger?: boolean;
@@ -223,8 +223,8 @@ type AggregateZoomInOptions = {
 };
 ```
 
-- `on_interaction_over`：聚合交互次数超过阈值。
-- `on_time_over`：经过指定时间。
+- `interaction`：聚合交互次数超过阈值。
+- `time`：经过指定时间。
 - `on_range_over`：聚合交互次数的统计范围超过阈值，其中 range 定义为
   `max(interactionCount) - min(interactionCount)`，不是 RangeSlider 的数值范围。
 - `threshold` 未在 JSON 中给出默认值，暂定为 `10`。
@@ -236,13 +236,13 @@ type AggregateZoomInOptions = {
 ```ts
 type AggregateClippingOptions = {
   trigger?: {
-    type?: "on_interaction_over" | "on_time_over";
+    type?: "interaction" | "time";
     threshold?: number;
   };
 };
 ```
 
-- `trigger.type` 默认 `on_interaction_over`。
+- `trigger.type` 默认 `interaction`。
 - `threshold` 未定义默认值，暂定为 `10`。
 
 ### Aggregate smoothing
@@ -326,15 +326,15 @@ smoothing 已完成专项数值和 SVG 渲染测试；在浏览器交互与响�
 | SingleSlider | aggregate | 已验证 | 待开发 | 已实现（待验证） | clipping 仅使用窗口内记录重建数值频次；window_options 保持独立。 |
 | RangeSlider（导出名 `Rangeslider`） | temporal | 已验证 | 已实现（待验证） | 已实现（待验证） | clipping 保留最近的区间历史点；smoothing 保持端点有序。 |
 | RangeSlider | aggregate | 已验证 | 待开发 | 已实现（待验证） | clipping 仅使用窗口内区间重建覆盖次数；window_options 保持独立。 |
-| CheckboxGroup | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 on_interaction_over；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |
+| CheckboxGroup | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 interaction；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |
 | CheckboxGroup | aggregate | 待开发 | 待开发 | 待开发 | 选项 / 多选组合的聚合语义待明确；策略与 window_options 待接入。 |
-| RadioGroup | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 on_interaction_over；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |
+| RadioGroup | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 interaction；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |
 | RadioGroup | aggregate | 待开发 | 待开发 | 待开发 | 按选项聚合；策略与 window_options 待接入。 |
 | InputText | temporal | 待开发 | 待开发 | 待开发 | 尚未向 Chart 传递 scalability；文本值的缩放与平滑语义待明确。 |
 | InputText | aggregate | 待开发 | 待开发 | 待开发 | 文本聚合口径、策略与 window_options 待开发。 |
-| SingleSelectDropdown | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 on_interaction_over；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |
+| SingleSelectDropdown | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 interaction；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |
 | SingleSelectDropdown | aggregate | 待开发 | 待开发 | 待开发 | 按选项聚合；策略与 window_options 待接入。 |
-| MultiSelectDropdown | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 on_interaction_over；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |
+| MultiSelectDropdown | temporal | 部分实现 | 部分实现 | 待开发 | clipping 仅支持 interaction 模式的 interaction；现有 zoom_in 仅保留基础 brush，尚未读取 zoom_in_options。 |
 | MultiSelectDropdown | aggregate | 待开发 | 待开发 | 待开发 | 选项 / 多选组合的聚合语义待明确；策略与 window_options 待接入。 |
 | SuperProvenanceWidget | temporal | 待开发 | 待开发 | 待开发 | 尚未接入 scalability；跨组件事件、状态及与子 widget 的联动规则待明确。 |
 | SuperProvenanceWidget | aggregate | 待开发 | 待开发 | 待开发 | 跨组件聚合口径、策略与 window_options 待开发。 |

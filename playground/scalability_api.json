@@ -30,7 +30,7 @@
 
                 "trigger": {
 
-                    "type": "on_interaction_over" | "on_time_over", // default:interaction
+                    "type": "interaction" | "time", // default:interaction
 
                 	"threshold": int,  // default: width / k (constant)
 
@@ -78,7 +78,7 @@
 
                 "trigger": {
 
-                    "type": "on_interaction_over" | "on_time_over" | "on_range_over", 	// range (not from range slider, but statistic term `range`): max interaction times - min interaction times (in order to see the interaction times more clearly even when there is a really high value next to it. For example, option A: 100 interactions, option B: 3 interactions, option C: 2 interactions. By zooming in and focusing on the range 0-10, we can clearly see the difference between option C and B, otherwise they are both too small because there is a 100. )           
+                    "type": "interaction" | "time" | "on_range_over", 	// range (not from range slider, but statistic term `range`): max interaction times - min interaction times (in order to see the interaction times more clearly even when there is a really high value next to it. For example, option A: 100 interactions, option B: 3 interactions, option C: 2 interactions. By zooming in and focusing on the range 0-10, we can clearly see the difference between option C and B, otherwise they are both too small because there is a 100. )
 
                    "threshold": int, 
 
@@ -95,7 +95,7 @@
 
                 "trigger": {
 
-                    "type": "on_interaction_over" | "on_time_over"                     
+                    "type": "interaction" | "time"
 
                 	"threshold": int
 
