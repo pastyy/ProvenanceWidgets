@@ -15,23 +15,23 @@ const resolve = (scalability, showTimeline, data = records) => resolveActiveClip
 
 test('aggregate clipping remains visible with temporal zoom and follows the active view', () => {
     const scalability = { temporal_view: { strategy: 'zoom_in' }, aggregate_view: clipping };
-    assert.equal(resolve(scalability, false), '6 interactions hidden');
+    assert.equal(resolve(scalability, false), '6 records hidden');
     assert.equal(resolve(scalability, true), null);
-    assert.equal(resolve(scalability, false, records.slice(0, 10)), null);
-    assert.equal(resolve(scalability, false, records.slice(0, 11)), '1 interaction hidden');
-    assert.equal(resolve(scalability, false, []), null);
+    assert.equal(resolve(scalability, false, records.slice(0, 10)), 'No hidden records');
+    assert.equal(resolve(scalability, false, records.slice(0, 11)), '1 record hidden');
+    assert.equal(resolve(scalability, false, []), 'No hidden records');
 });
 test('temporal-only clipping does not affect the aggregate view', () => {
     assert.equal(resolve({ temporal_view: clipping, aggregate_view: { strategy: 'zoom_in' } }, false), null);
-    assert.equal(resolve({ temporal_view: clipping, aggregate_view: { strategy: 'zoom_in' } }, true), '6 interactions hidden');
+    assert.equal(resolve({ temporal_view: clipping, aggregate_view: { strategy: 'zoom_in' } }, true), '6 records hidden');
     assert.equal(resolve({ temporal_view: clipping }, false), null);
-    assert.equal(resolve({ temporal_view: clipping }, true), '6 interactions hidden');
+    assert.equal(resolve({ temporal_view: clipping }, true), '6 records hidden');
     assert.equal(resolve({}, false), null);
 });
 test('time clipping reports hidden interactions, not elapsed seconds', () => {
     assert.equal(resolve({ aggregate_view: { strategy: 'clipping', clipping_options: {
         trigger: { type: 'on_time_over', threshold: 10 },
-    } } }, false), '6 interactions hidden');
+    } } }, false), '6 records hidden');
 });
 test('badge color stays yellow across all widget colors', () => {
     assert.equal(getClippingBadgeColor('#ffffff'), '#FFD600');

@@ -59,24 +59,27 @@ state at its left edge is retained to compute deltas, without being counted
 as a new selection. Current widget values and full source history are preserved.
 
 Checkbox, radio, single-select, multi-select, single-slider, and range-slider
-widgets show a contrasting dot
-at the footprint icon's bottom-right whenever the **displayed view** clips older
-history. Aggregate clipping works independently of temporal zoom. Switching to
-an unclipped view hides the dot. The dot uses the same bright yellow (`#FFD600`) for every widget, with a
-2px white border and no dark outer outline or shadow.
-Hovering or focusing it shows the hidden interaction count. The dot remains
-visible after clicking, does not toggle views, and suppresses the footprint
-help tooltip while hovered or focused. With threshold 10, the eleventh
-interaction shows `1 interaction hidden`.
+widgets show an outlined eye
+at the footprint icon's bottom-right when the **displayed view** uses clipping.
+The 16px yellow (`#FFD600`) circular badge has a 2px white border and an 11px
+white eye outline. The eye has a slash while records are hidden; otherwise it is open.
+Aggregate clipping works independently of temporal zoom. Switching to a view
+without clipping hides the badge.
+Hovering over the yellow circle shows `No hidden records`, `1 record hidden`, or
+`N records hidden`. The badge remains visible after clicking, does not toggle
+views, and suppresses the footprint help tooltip while hovered. The bubble
+hides immediately when the pointer leaves the circle, including after a click.
+Time-based clipping also reports the number of hidden records.
 
 All four categorical widgets share the checkbox linear drag-selection zoom
 brush, trigger behavior, and selected-range axis. Sliders retain their existing
 value-history points and aggregate bars, limited to the active rolling window.
 
-Text input retains its inline clipping notice. It stays visible whenever older
-history is hidden, including imported history. At 15 interactions with threshold
-10, it reads `hide 5 interacts`; at 16 it reads `hide 6 interacts`. It disappears
-when clipping is disabled or no history is hidden.
+For text input, the notification stays visible whenever older history is hidden, including
+imported history. At 15 interactions with threshold 10, it reads
+`hide 5 interactions`; at 16 it reads `hide 6 interactions`. It disappears when clipping
+is disabled or no history is hidden. Synchronized temporal/aggregate windows
+produce one notice. Time-trigger notices use seconds.
 
 ## Implementation
 

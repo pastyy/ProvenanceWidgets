@@ -1,4 +1,4 @@
-import { styleZoomBrush } from "../shared/components/brushAppearance.js";
+import { rectangleZoomStyle, styleZoomBrush } from "../shared/components/brushAppearance.js";
 import {
     useCallback,
     useEffect,
@@ -305,7 +305,8 @@ const TemporalValueBrush = ({
         };
         const brush = d3
             .brushX()
-            .extent([[0, 0], [width, Math.max(1, height - 8)]])
+            // Leave the caption below the brush, as on the vertical axis.
+            .extent([[0, 0], [width, Math.max(1, height - 32)]])
             .on("start", () => onInteractionStart?.())
             .on("brush", updateRange)
             .on("end", event => {
@@ -1891,9 +1892,7 @@ const Chart = ({
                                       top: `${rectangleSelection.top}px`,
                                       width: `${rectangleSelection.width}px`,
                                       height: `${rectangleSelection.height}px`,
-                                      boxSizing: "border-box",
-                                      border: "2px solid #17a2b8",
-                                      backgroundColor: "rgba(113, 231, 251, 0.12)",
+                                      ...rectangleZoomStyle,
                                       pointerEvents: "none",
                                       zIndex: 4,
                                   }}
