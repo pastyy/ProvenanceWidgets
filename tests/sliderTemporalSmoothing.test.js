@@ -29,7 +29,7 @@ const entries = (values, timestamps = []) => values.map((value, index) => [
 ]);
 
 test("single Slider temporal smoothing is independent from aggregate smoothing", () => {
-    const source = entries([0, 10, 0, 10, 0]);
+    const source = entries([0, 10, 0, 10, 0, 10, 0, 10, 0]);
     const before = structuredClone(source);
     const temporal = resolveSliderTemporalSmoothing({
         scalability: temporalSettings(),
@@ -55,6 +55,20 @@ test("single Slider temporal smoothing is independent from aggregate smoothing",
         min: 0,
         max: 10,
     }), []);
+});
+
+test("temporal Savgol maps window_size 3 and degree 1 to a three-point average", () => {
+    const source = entries([0, 0, 0, 0, 9, 0, 0, 0, 0]);
+    const result = resolveSliderTemporalSmoothing({
+        scalability: temporalSettings({ type: "savgol", window_size: 3, degree: 1 }),
+        entries: source,
+        min: 0,
+        max: 10,
+    });
+    assert.equal(result.active, true);
+    for (const index of [3, 4, 5]) {
+        assert.ok(Math.abs(result.samples[index].value - 3) < 1e-9);
+    }
 });
 
 test("RangeSlider smooths center and span while preserving valid ordered endpoints", () => {

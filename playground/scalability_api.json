@@ -40,13 +40,13 @@
 
             "smoothing_options": {
 
-                // Optional; defaults to { type: "savgol", window_length: 4, polyorder: 2 }.
+                // Optional; defaults to { type: "savgol", window_size: 5, degree: 3 }.
                 // Each method.type is required; its other parameters are optional.
                 // Distance parameters use data-domain units; there is no unit option.
                 "method": {
                     "type": "savgol",
-                    "window_length": number, // default: 4; total data-domain window width
-                    "polyorder": int // default: 2; polynomial order
+                    "window_size": int, // default: 5; odd >= 3; full grid sample window = 2*M+1
+                    "degree": int // default: 3; coefficient count = N+1; >= 1 and < window_size
                 } | {
                     "type": "gaussian",
                     "sigma": number, // default: 2; data-domain standard deviation
@@ -105,13 +105,13 @@
 
             "smoothing_options": {
 
-                // Optional; defaults to { type: "savgol", window_length: 4, polyorder: 2 }.
+                // Optional; defaults to { type: "savgol", window_size: 5, degree: 3 }.
                 // Each method.type is required; its other parameters are optional.
                 // Distance parameters use data-domain units; there is no unit option.
                 "method": {
                     "type": "savgol",
-                    "window_length": number, // default: 4; total data-domain window width
-                    "polyorder": int // default: 2; polynomial order
+                    "window_size": int, // default: 5; odd >= 3; full grid sample window = 2*M+1
+                    "degree": int // default: 3; coefficient count = N+1; >= 1 and < window_size
                 } | {
                     "type": "gaussian",
                     "sigma": number, // default: 2; data-domain standard deviation

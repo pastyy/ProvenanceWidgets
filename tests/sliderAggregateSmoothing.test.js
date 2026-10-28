@@ -20,11 +20,11 @@ const history = values => values.map((value, index) => ({
 const near = (actual, expected, tolerance = 1e-9) =>
     assert.ok(Math.abs(actual - expected) < tolerance, `${actual} != ${expected}`);
 
-test("Savgol reproduces quadratic signals, including one-sided boundary fits", () => {
+test("Savgol degree 3 reproduces quadratic signals", () => {
     const samples = Array.from({ length: 21 }, (_, value) => ({
         value: value / 2, count: 3 + 2 * value + value ** 2,
     }));
-    const output = smoothSavgol(samples, { window_length: 4.5, polyorder: 2 });
+    const output = smoothSavgol(samples, { window_size: 9, degree: 3 });
     output.forEach((sample, index) => near(sample.count, samples[index].count));
     assert.notEqual(output[0], samples[0]);
 });
@@ -33,41 +33,62 @@ test("Savgol uses the known five-point quadratic kernel, rather than a moving av
     const samples = Array.from({ length: 11 }, (_, value) => ({
         value, count: value === 5 ? 1 : 0,
     }));
-    const output = smoothSavgol(samples, { window_length: 5, polyorder: 2 });
+    const output = smoothSavgol(samples, { window_size: 5, degree: 3 });
     [-3 / 35, 12 / 35, 17 / 35, 12 / 35, -3 / 35].forEach((weight, offset) =>
         near(output[offset + 3].count, weight));
 });
 
-test("domain window scales with the grid, not pixels, and supports fractional domains", () => {
+test("Savgol window_size counts samples independently of data-domain spacing", () => {
     const samples = Array.from({ length: 21 }, (_, value) => ({
         value: value / 10, count: value === 10 ? 1 : 0,
     }));
-    const output = smoothSavgol(samples, { window_length: 0.5, polyorder: 2 });
+    const output = smoothSavgol(samples, { window_size: 5, degree: 3 });
     near(output[10].count, 17 / 35);
     assert.deepEqual(output.map(sample => sample.value), samples.map(sample => sample.value));
+    const scaled = smoothSavgol(samples.map(sample => ({ ...sample, value: sample.value * 100 })), { window_size: 5, degree: 3 });
+    assert.deepEqual(scaled.map(sample => sample.count), output.map(sample => sample.count));
 });
 
-test("too few samples retain original data; even requested windows become odd", () => {
+test("Savgol retains short histories and rejects invalid windows without resizing", () => {
     const samples = [{ value: 0, count: 2 }, { value: 1, count: 5 }];
     assert.deepEqual(smoothSavgol(samples), samples);
     assert.deepEqual(smoothSavgol([]), []);
     const larger = Array.from({ length: 11 }, (_, value) => ({ value, count: value === 5 ? 1 : 0 }));
-    near(smoothSavgol(larger, { window_length: 4, polyorder: 2 })[5].count, 17 / 35);
+    near(smoothSavgol(larger)[5].count, 17 / 35);
+    for (const method of [
+        { window_size: 13, degree: 3 }, { window_size: 3, degree: 3 },
+        { window_size: 5, degree: 6 }, { window_size: 1 }, { window_size: 4 },
+        { window_size: 3.5 }, { degree: 0 }, { degree: 1.5 },
+    ]) {
+        assert.deepEqual(smoothSavgol(larger, method), larger);
+    }
 });
 
-test("normalization preserves decimal distances and gives documented defaults", () => {
+test("Savgol preserves the library's asymmetric boundary samples and input data", () => {
+    const counts = [9, 1, 8, 0, 6, 2, 7, 3, 5];
+    const samples = counts.map((count, value) => ({ value, count }));
+    const before = structuredClone(samples);
+    const output = smoothSavgol(samples, { window_size: 5, degree: 3 });
+    assert.deepEqual(output.slice(0, 3), samples.slice(0, 3));
+    assert.deepEqual(output.slice(-2), samples.slice(-2));
+    near(output[3].count, (-3 * 1 + 12 * 8 + 17 * 0 + 12 * 6 - 3 * 2) / 35);
+    assert.deepEqual(samples, before);
+    assert.notEqual(output[0], samples[0]);
+});
+
+test("normalization uses window_size/degree defaults and preserves valid parameters", () => {
     assert.deepEqual(resolveSmoothingConfig({ aggregate_view: { strategy: "smoothing" } }), {
         enabled: true,
-        method: { type: "savgol", window_length: 4, polyorder: 2 },
+        method: { type: "savgol", window_size: 5, degree: 3 },
         trigger: { type: "interaction", threshold: 50 },
     });
-    const config = resolveSmoothingConfig(settings({ type: "savgol", window_length: 0.5, polyorder: 0 }, { type: "time" }));
-    assert.equal(config.method.window_length, 0.5);
-    assert.equal(config.method.polyorder, 0);
+    const config = resolveSmoothingConfig(settings({ type: "savgol", window_size: 3, degree: 1 }, { type: "time" }));
+    assert.equal(config.method.window_size, 3);
+    assert.equal(config.method.degree, 1);
     assert.equal(config.trigger.threshold, 3600);
-    const invalid = resolveSmoothingConfig(settings({ type: "savgol", window_length: -1, polyorder: 1.5 }, { threshold: NaN }));
-    assert.equal(invalid.method.window_length, 4);
-    assert.equal(invalid.method.polyorder, 2);
+    const invalid = resolveSmoothingConfig(settings({ type: "savgol", window_size: 4, degree: 1.5 }, { threshold: NaN }));
+    assert.equal(invalid.method.window_size, 5);
+    assert.equal(invalid.method.degree, 3);
     assert.equal(invalid.trigger.threshold, 50);
 });
 

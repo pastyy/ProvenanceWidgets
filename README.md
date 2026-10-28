@@ -105,10 +105,12 @@ linear-gradient fill below the curve retains the bars' recency colors. SingleSli
 smooths frequency by value; RangeSlider smooths interval coverage. Temporal
 smoothing replaces the value-over-history marks with a non-interactive recency
 gradient curve: SingleSlider smooths values, while RangeSlider smooths center
-and span to keep its endpoints ordered. Interaction mode uses record-order
-units and time mode uses elapsed seconds. Both views cap numerical work at
-2,049 samples and never mutate provenance. Savitzky-Golay `window_length`
-defaults to `4` in the active view's data-domain units.
+and span to keep its endpoints ordered. Gaussian/B-spline temporal distances
+use record-order units in interaction mode and elapsed seconds in time mode.
+Both views cap numerical work at
+2,049 samples and never mutate provenance. Savitzky-Golay uses the vendored
+`js-savgol-filter` through `window_size: 5, degree: 3`: a five-sample window
+and quadratic fit. Internally, `M = (window_size - 1) / 2` and `N = degree - 1`.
 See [smoothing configuration and semantics](src/shared/logic/scalability/SMOOTHING.md).
 
 ## Checkbox scalability

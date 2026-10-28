@@ -13,8 +13,8 @@ scalability={{
     smoothing_options: {
       method: {
         type: "savgol",
-        window_length: 4,
-        polyorder: 2,
+        window_size: 5,
+        degree: 3,
       },
       trigger: { type: "interaction", threshold: 50 },
     },
@@ -30,8 +30,9 @@ Use the same structure under `aggregate_view` to smooth aggregate data.
 - RangeSlider smooths center and span as separate signals, then reconstructs
   low/high endpoints. Span is clamped to the Slider domain and reconstruction
   guarantees `min <= low <= high <= max`.
-- In interaction mode, smoothing distances use record-order units. In time
-  mode, they use elapsed seconds from the first valid timestamp. A time series
+- Gaussian/B-spline distances use record-order units in interaction mode and
+  elapsed seconds from the first valid timestamp in time mode. Savgol `window_size`
+  counts adapted grid samples in either mode. A time series
   with missing or decreasing timestamps remains unsmoothed.
 - Non-uniform time histories are linearly adapted to a uniform numerical grid.
   Histories larger than 2,049 points are reduced to a 2,049-point display grid;
@@ -58,16 +59,26 @@ Use the same structure under `aggregate_view` to smooth aggregate data.
 
 ## Savitzky-Golay Rules
 
-`window_length` is a positive width in the slider's data-domain units, not a
-pixel width. It is converted to the nearest usable odd number of samples and
-expanded when necessary so it is greater than `polyorder`. The defaults are
-`window_length: 4` and `polyorder: 2`.
+The adapter delegates to the vendored
+[gorlang/js-savgol-filter](../../../../../vendor/js-savgol-filter/readme.md).
+The public API exposes `window_size` (odd integer >= 3, default 5) and `degree`
+(integer >= 1, default 3). The wrapper maps these to the library's parameters:
+`M = (window_size - 1) / 2`, `N = degree - 1`.
+`window_size` counts numerical grid samples in either view, including on
+resampled temporal grids; it is not a data-domain width or a pixel width.
+`degree` is the coefficient count (`N+1`): the highest polynomial power is
+`degree-1`, so `degree: 3` fits a quadratic. This differs from B-spline's degree,
+which is the highest polynomial power. The library requires `degree < window_size`.
+The previous `window_length`/`polyorder` and direct `M`/`N` options are not supported.
 
-Each point is evaluated from a local least-squares polynomial. At the domain
-boundaries, the full window shifts inward and evaluates the polynomial at the
-boundary point instead of padding or dropping samples. Histories too short for
-the configured polynomial remain unsmoothed. Aggregate negative estimates are
-clamped to zero. Temporal estimates are clamped to the Slider domain, and
+Interior values use the library's Savitzky-Golay coefficients. Its boundary
+behavior is preserved: the first `(window_size+1)/2` and last `(window_size-1)/2`
+samples retain their original values. No shifted boundary polynomial is fitted.
+The adapter does not resize windows; histories shorter than `window_size`
+samples and combinations with `degree >= window_size`
+remain unchanged. Missing or individually invalid configuration fields use
+their defaults before this combination check. Aggregate negative estimates
+are clamped to zero. Temporal estimates are clamped to the Slider domain, and
 RangeSlider spans are additionally clamped to a valid range.
 
 Aggregate curves use the same x and count scales as the bars. SingleSlider

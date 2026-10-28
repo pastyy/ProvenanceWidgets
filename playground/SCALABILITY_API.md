@@ -129,8 +129,8 @@ type SmoothingOptions = {
   method?:
     | {
         type: "savgol";
-        window_length?: number;
-        polyorder?: number;
+        window_size?: number;
+        degree?: number;
       }
     | {
         type: "gaussian";
@@ -150,29 +150,32 @@ type SmoothingOptions = {
 };
 ```
 
-- `method` 默认为 `{ type: "savgol", window_length: 4, polyorder: 2 }`。
-- 平滑距离统一使用 `data_domain`，不提供单位字段；阶数、`truncate` 和
-  `smoothing_factor` 是无量纲参数。
+- `method` 默认为 `{ type: "savgol", window_size: 5, degree: 3 }`。
+- Gaussian 和 B-spline 的距离使用 `data_domain`，不提供单位字段；Savgol 的
+  `window_size` 使用数值网格采样点单位。阶数、`truncate` 和 `smoothing_factor` 是无量纲参数。
 - `trigger.type` 默认 `interaction`。
 - `trigger.threshold` 在 `interaction` 下默认 `50` 次交互，在 `time` 下默认 `3600` 秒。
-- Savitzky-Golay 默认 `window_length: 4`、`polyorder: 2`。
+- Savitzky-Golay 使用 vendored `js-savgol-filter`，默认 `window_size: 5`、`degree: 3`。
 - Gaussian 默认 `sigma: 2`、`truncate: 3`。
 - B-spline 默认 `degree: 3`、`smoothing_factor: 0.5`、`knot_spacing: 10`。
 - 提供 `method` 对象时，`type` 必填；其余算法参数均可省略，使用上述对应默认值。
 
 | 算法参数 | 含义 | 默认值 | 约束 |
 | --- | --- | --- | --- |
-| `savgol.window_length` | 局部拟合窗口的总宽度，使用数据域单位 | `4` | 正有限数，允许小数 |
-| `savgol.polyorder` | 局部多项式阶数 | `2` | 非负整数 |
+| `savgol.window_size` | 完整窗口的采样点数，对应库的 `2*M+1` | `5` | 大于等于 `3` 的奇数整数 |
+| `savgol.degree` | 多项式系数个数，对应库的 `N+1`；`3` 表示二次拟合 | `3` | 正整数，且小于 `window_size` |
 | `gaussian.sigma` | 标准差，使用数据域单位 | `2` | 正有限数 |
 | `gaussian.truncate` | 支持半径是标准差的几倍；实际半径为 `truncate * sigma` | `3` | 正有限数 |
 | `bspline.degree` | 样条阶数，`3` 表示三次样条 | `3` | `1` 到 `5` 的整数 |
 | `bspline.smoothing_factor` | 归一化平滑强度，值越大越平滑 | `0.5` | `[0, 1]` 中的有限数 |
 | `bspline.knot_spacing` | 内部结点之间的距离，使用数据域单位 | `10` | 正有限数 |
 
-- Savitzky-Golay 适配器需按已明确的数据域采样网格，把 `window_length` 转换为
-  大于 `polyorder` 的奇数采样点数；该参数不表示像素宽度或原始采样点数。
-  数据点不足以支持配置的阶数时，该段保留未平滑数据。
+- Savitzky-Golay 的 `window_size` 作用于适配后的数值采样网格，内部转换为
+  `M = (window_size - 1) / 2`、`N = degree - 1`。不再接受 `window_length`、
+  `polyorder` 或直接传入 `M`、`N`。窗口超过采样点数或 `degree >= window_size`
+  时保留未平滑数据，不自动调整窗口。前 `(window_size+1)/2` 个和后
+  `(window_size-1)/2` 个值沿用原值。Savgol 的 `degree` 是系数个数，
+  与 B-spline 中表示最高次数的 `degree` 定义不同。
 - `smoothing_factor` 是本 API 的归一化控制参数，不是某个拟合库的原始残差上限；
   Slider 的样条系数曲率惩罚映射见 [SMOOTHING.md](../src/shared/logic/scalability/SMOOTHING.md)。
 - 算法数值参数缺失或无效时使用对应默认值；距离参数的小数不得被强制取整。
@@ -186,7 +189,8 @@ Slider temporal smoothing 使用独立于 aggregate smoothing 的视图适配器
 
 - SingleSlider 平滑历史中的记录值；RangeSlider 平滑 center 和 span，再重建并裁剪
   为有序的 low/high 端点。
-- interaction 模式下，平滑距离使用历史记录顺序单位；time 模式下使用经过秒数。
+- Gaussian 和 B-spline 在 interaction 模式下的平滑距离使用历史记录顺序单位；
+  time 模式下使用经过秒数。Savgol 的 `window_size` 始终按适配后网格的采样点数计。
   非均匀时间历史会先适配到均匀数值网格，再应用所选算法。
 - 数值计算与显示最多使用 2049 个采样点，不依赖像素宽度，也不修改原始记录或 provenance。
 - 达到 trigger 前保留现有点、连线、tooltip 和历史恢复交互；达到 trigger 后，以带纵向
@@ -249,11 +253,12 @@ type AggregateClippingOptions = {
 
 使用与 temporal view 相同的 `SmoothingOptions` 结构：
 
-- `method` 默认为 `{ type: "savgol", window_length: 4, polyorder: 2 }`。
-- 平滑距离使用聚合数据域单位；无量纲参数、约束和默认规则与 Smoothing 节相同。
+- `method` 默认为 `{ type: "savgol", window_size: 5, degree: 3 }`。
+- Gaussian 和 B-spline 的距离使用聚合数据域单位；Savgol 的 `window_size` 按网格采样点数计。
+  其他参数、约束和默认规则与 Smoothing 节相同。
 - `trigger.type` 默认 `interaction`。
 - `trigger.threshold` 在 `interaction` 下默认 `50` 次交互，在 `time` 下默认 `3600` 秒。
-- Savitzky-Golay 默认 `window_length: 4`、`polyorder: 2`。
+- Savitzky-Golay 默认 `window_size: 5`、`degree: 3`。
 - Gaussian 默认 `sigma: 2`、`truncate: 3`。
 - B-spline 默认 `degree: 3`、`smoothing_factor: 0.5`、`knot_spacing: 10`。
 - SingleSlider 和 RangeSlider 已实现 `savgol`、`gaussian` 和 `bspline`。达到 trigger
@@ -264,7 +269,8 @@ type AggregateClippingOptions = {
 - SingleSlider 平滑数值频次，未发生交互的数值按零频次参与拟合；RangeSlider
   平滑历史区间的覆盖次数，而不是分别平滑低、高端点的频次。
 - 采样遵循 Slider 数据域和 `step`，不依赖像素宽度，数值计算最多使用 2049 个
-  采样点。需要缩减采样网格时对来源区间取平均；Savgol 边界使用向内平移的完整窗口拟合。
+  采样点。需要缩减采样网格时对来源区间取平均；Savgol 保留前 `(window_size+1)/2`
+  个和后 `(window_size-1)/2` 个原始值。
 - Gaussian 在边界对可用核权重重新归一化。B-spline 使用端点重复的样条基和带
   惩罚的最小二乘拟合；`smoothing_factor: 0` 表示不加惩罚，`1` 表示最佳拟合
   直线。过密的结点请求会受采样点数上限限制。

@@ -15,7 +15,6 @@ export function resolveSmoothingConfig(scalability, view = "aggregate_view") {
     const type = options.trigger?.type === "time" ? "time" : "interaction";
     const threshold = positive(options.trigger?.threshold, type === "time"
         ? DEFAULT_TEMPORAL_TIME_THRESHOLD : DEFAULT_TEMPORAL_INTERACTION_THRESHOLD);
-    const order = method.polyorder;
     const normalizedMethod = method.type === "gaussian" ? {
         type: "gaussian",
         sigma: positive(method.sigma, 2),
@@ -30,9 +29,9 @@ export function resolveSmoothingConfig(scalability, view = "aggregate_view") {
         knot_spacing: positive(method.knot_spacing, 10),
     } : {
         type: method.type,
-        window_length: positive(method.window_length, 4),
-        polyorder: typeof order === "number" && Number.isInteger(order) && order >= 0
-            ? order : 2,
+        window_size: Number.isInteger(method.window_size) && method.window_size >= 3 &&
+            method.window_size % 2 === 1 ? method.window_size : 5,
+        degree: Number.isInteger(method.degree) && method.degree >= 1 ? method.degree : 3,
     };
     return {
         enabled: config?.strategy === "smoothing" && ["savgol", "gaussian", "bspline"].includes(method.type),

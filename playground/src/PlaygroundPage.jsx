@@ -374,7 +374,7 @@ export default function PlaygroundPage() {
                   "temporal_view": {
                     "strategy": "zoom_in",
                     "smoothing_options": {
-                      "method": { "type": "savgol", "window_length": 4, "polyorder": 2 },
+                      "method": { "type": "savgol", "window_size": 5, "degree": 3 },
                       "trigger": { "type": "interaction", "threshold": 20 }
                     },
                     "zoom_in_options": {
@@ -387,7 +387,13 @@ export default function PlaygroundPage() {
                       }
                     }
                   },
-                  "aggregate_view": sliderClipping.aggregate_view
+                  "aggregate_view": {
+                    "strategy": "smoothing",
+                    "smoothing_options": {
+                      "method": { "type": "savgol", "window_size": 5, "degree": 3 },
+                      "trigger": { "type": "interaction", "threshold": 10 }
+                    }
+                  }
                 }}
               />
             </WidgetCard>

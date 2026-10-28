@@ -144,8 +144,8 @@ type SmoothingOptions = {
   method?:
     | {
         type: "savgol";
-        window_length?: number;
-        polyorder?: number;
+        window_size?: number;
+        degree?: number;
       }
     | {
         type: "gaussian";
@@ -165,13 +165,14 @@ type SmoothingOptions = {
 };
 ```
 
-- `method` defaults to `{ type: "savgol", window_length: 4, polyorder: 2 }`.
-- Smoothing distances always use `data_domain`; no unit field is exposed.
-  Order, degree, `truncate`, and `smoothing_factor` are dimensionless.
+- `method` defaults to `{ type: "savgol", window_size: 5, degree: 3 }`.
+- Gaussian/B-spline distances use `data_domain`; no unit field is exposed.
+  Savgol `window_size` counts numerical grid samples. Degree, `truncate`, and
+  `smoothing_factor` are dimensionless.
 - `trigger.type` defaults to `interaction`.
 - `trigger.threshold` defaults to `50` interaction events for `interaction` and
   `3600` seconds for `time`.
-- Savitzky-Golay defaults to `window_length: 4` and `polyorder: 2`.
+- Savitzky-Golay uses vendored `js-savgol-filter`, defaulting to `window_size: 5, degree: 3`.
 - Gaussian defaults to `sigma: 2` and `truncate: 3`.
 - B-spline defaults to `degree: 3`, `smoothing_factor: 0.5`, and
   `knot_spacing: 10`.
@@ -180,18 +181,21 @@ type SmoothingOptions = {
 
 | Method parameter | Meaning | Default | Constraint |
 | --- | --- | --- | --- |
-| `savgol.window_length` | Total width of the local fitting window in data-domain units | `4` | Positive finite number; fractional widths are allowed |
-| `savgol.polyorder` | Local polynomial order | `2` | Non-negative integer |
+| `savgol.window_size` | Full window in samples; library `2*M+1` | `5` | Odd integer >= `3` |
+| `savgol.degree` | Polynomial coefficient count; library `N+1`; `3` means quadratic | `3` | Positive integer below `window_size` |
 | `gaussian.sigma` | Standard deviation in data-domain units | `2` | Positive finite number |
 | `gaussian.truncate` | Support radius in multiples of `sigma`; actual radius is `truncate * sigma` | `3` | Positive finite number |
 | `bspline.degree` | Spline degree; `3` means cubic | `3` | Integer from `1` to `5` |
 | `bspline.smoothing_factor` | Normalized smoothing strength; larger values mean stronger smoothing | `0.5` | Finite number in `[0, 1]` |
 | `bspline.knot_spacing` | Distance between interior knots in data-domain units | `10` | Positive finite number |
 
-- Savitzky-Golay adapters convert `window_length` through the documented
-  data-domain sampling grid to an odd sample count greater than `polyorder`;
-  it does not specify a pixel width or a raw sample count. If there are too few
-  samples for the configured order, leave that segment unsmoothed.
+- Savitzky-Golay `window_size` counts samples on the adapted numerical grid.
+  The wrapper maps `M = (window_size - 1) / 2`, `N = degree - 1` internally.
+  The previous `window_length`/`polyorder` and direct `M`/`N` options are not supported.
+  Windows larger than the sample count or `degree >= window_size` leave the
+  signal unchanged; windows are not resized. The first `(window_size+1)/2` and
+  last `(window_size-1)/2` samples retain their original values. Savgol `degree`
+  counts coefficients; B-spline `degree` is the highest polynomial power.
 - `smoothing_factor` is this API's normalized control, not a fitting library's
   raw residual bound. The Slider coefficient-curvature penalty mapping is
   documented in [SMOOTHING.md](../src/shared/logic/scalability/SMOOTHING.md).
@@ -209,8 +213,9 @@ smoothing:
 
 - SingleSlider smooths recorded values over history. RangeSlider smooths center
   and span, then reconstructs and clamps ordered low/high endpoints.
-- In interaction mode, smoothing distances use record-order units. In time mode,
-  they use elapsed seconds. Non-uniform time history is adapted to a uniform
+- For Gaussian/B-spline, interaction-mode distances use record-order units. In time mode,
+  they use elapsed seconds. Savgol `window_size` counts adapted grid samples in either mode.
+  Non-uniform time history is adapted to a uniform
   numerical grid before applying the selected method.
 - Numerical and display sampling is capped at 2,049 points independently of pixel
   width. The original records and provenance remain unchanged.
@@ -278,13 +283,14 @@ type AggregateClippingOptions = {
 
 Uses the same `SmoothingOptions` structure as the temporal view:
 
-- `method` defaults to `{ type: "savgol", window_length: 4, polyorder: 2 }`.
-- Smoothing distances use the aggregate data domain. Dimensionless parameters,
-  constraints, and default rules are the same as in the Smoothing section.
+- `method` defaults to `{ type: "savgol", window_size: 5, degree: 3 }`.
+- Gaussian/B-spline distances use the aggregate data domain; Savgol `window_size` counts
+  grid samples. Other parameters, constraints, and default rules are the same
+  as in the Smoothing section.
 - `trigger.type` defaults to `interaction`.
 - `trigger.threshold` defaults to `50` interaction events for `interaction` and
   `3600` seconds for `time`.
-- Savitzky-Golay defaults to `window_length: 4` and `polyorder: 2`.
+- Savitzky-Golay defaults to `window_size: 5, degree: 3`.
 - Gaussian defaults to `sigma: 2` and `truncate: 3`.
 - B-spline defaults to `degree: 3`, `smoothing_factor: 0.5`, and
   `knot_spacing: 10`.
@@ -298,7 +304,8 @@ Uses the same `SmoothingOptions` structure as the temporal view:
   values. RangeSlider smooths interval coverage, not endpoint frequencies.
 - Sampling follows the Slider data domain and `step`, independent of pixel width,
   with a maximum of 2,049 numerical samples. Reduced grids average their source
-  bins. Savitzky-Golay boundary points use shifted full-window polynomial fits.
+  bins. Savitzky-Golay preserves the first `(window_size+1)/2` and last
+  `(window_size-1)/2` original values.
 - Gaussian renormalizes the available kernel at boundaries. B-spline uses a
   clamped basis and penalized least squares; `smoothing_factor: 0` is an
   unpenalized fit and `1` is the best least-squares line. Dense requested knots

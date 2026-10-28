@@ -75,12 +75,15 @@ export type ScalabilitySmoothingTriggerType = "interaction" | "time";
 export type ScalabilitySmoothingMethod =
   | {
       type: "savgol";
-      /** Total data-domain window width; defaults to 4 (positive, may be fractional).
-       * The adapter converts it to an odd sample count greater than polyorder.
+      /** Odd integer window size in grid samples >= 3; defaults to 5 (2*M+1).
+       * A window larger than the sample count leaves the signal unchanged.
        */
-      window_length?: number;
-      /** Non-negative integer polynomial order; defaults to 2. */
-      polyorder?: number;
+      window_size?: number;
+      /** Positive integer coefficient count (N+1); defaults to 3 (quadratic).
+       * Highest polynomial power is degree-1. Requires degree < window_size;
+       * invalid combinations leave the signal unchanged.
+       */
+      degree?: number;
     }
   | {
       type: "gaussian";
@@ -104,14 +107,15 @@ export type ScalabilitySmoothingMethod =
       knot_spacing?: number;
     };
 
-/** Distance parameters always use the component's documented data domain.
- * Order, degree, truncate, and smoothing_factor are dimensionless.
+/** Gaussian/B-spline distances use the component's documented data domain.
+ * Savgol window_size counts numerical grid samples; degree is N+1.
+ * Degree, truncate, and smoothing_factor are dimensionless.
  * Slider aggregate and temporal views implement all three methods with
  * view-specific data adapters. Temporal interaction mode uses record-order
  * units; temporal time mode uses elapsed seconds.
  */
 export interface ScalabilitySmoothingOptions {
-  /** Defaults to { type: "savgol", window_length: 4, polyorder: 2 }. */
+  /** Defaults to { type: "savgol", window_size: 5, degree: 3 }. */
   method?: ScalabilitySmoothingMethod;
   /** Defaults to interaction; threshold defaults to 50 interactions or 3600 seconds.
    * Both views count recorded interaction events, rather than aggregate item count.
