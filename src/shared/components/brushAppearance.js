@@ -1,8 +1,10 @@
+export const ZOOM_BRUSH_ACCENT = "#17a2b8";
+
 /** Shared selection styling for a rectangle and its derived detail chart. */
 export const rectangleZoomStyle = {
     backgroundColor: "rgba(113, 231, 251, 0.12)",
     // An inset border preserves the plot's coordinate system and dimensions.
-    boxShadow: "inset 0 0 0 2px #17a2b8",
+    boxShadow: `inset 0 0 0 2px ${ZOOM_BRUSH_ACCENT}`,
 };
 
 /** Shared D3 brush colors and direction-aware cursors. */
@@ -12,9 +14,9 @@ export function styleZoomBrush(group, direction) {
         .style("cursor", direction === "x" ? "ew-resize" : "ns-resize");
     group.selectAll(".selection")
         .attr("fill", "#71e7fb").attr("fill-opacity", 0.24)
-        .attr("stroke", "#17a2b8").attr("stroke-width", 1.5)
+        .attr("stroke", ZOOM_BRUSH_ACCENT).attr("stroke-width", 1.5)
         .style("cursor", "move");
     group.selectAll(".handle")
-        .attr("fill", "#17a2b8").attr("fill-opacity", 0.8)
+        .attr("fill", ZOOM_BRUSH_ACCENT).attr("fill-opacity", 0.8)
         .style("cursor", direction === "x" ? "ew-resize" : "ns-resize");
 }
