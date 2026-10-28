@@ -1,4 +1,5 @@
 import { getClippingBadgeColor } from "../shared/logic/clippingBadgeColor.js";
+import { NO_HIDDEN_RECORDS } from "../shared/logic/scalability/views/clippingNotice.js";
 import { Button } from 'primereact/button/button.esm.js';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -36,8 +37,7 @@ const ProvenanceButton = ({ target }) => {
     const { registrations } = useWidgetRegistry();
     const buttonRef = useRef(null);
     const [overClippingBadge, setOverClippingBadge] = useState(false);
-    const [clippingBadgeFocused, setClippingBadgeFocused] = useState(false);
-    const clippingPopupOpen = overClippingBadge || clippingBadgeFocused;
+    const clippingPopupOpen = overClippingBadge;
 
     const borderColor = widgetColors[target] || null;
     const haloColor = '#71e7fb';
@@ -75,11 +75,11 @@ const ProvenanceButton = ({ target }) => {
     const safeTarget = String(target ?? "widget")
         .replace(/[^a-zA-Z0-9_-]/g, "-");
     const clippingMessage = registration?.clippingMessage ?? null;
-    const hasClippedHistory = Boolean(clippingMessage);
+    const showClippingBadge = Boolean(clippingMessage);
+    const hasClippedHistory = showClippingBadge && clippingMessage !== NO_HIDDEN_RECORDS;
     useEffect(() => {
-        setClippingBadgeFocused(false);
         setOverClippingBadge(false);
-    }, [target, hasClippedHistory]);
+    }, [target, showClippingBadge]);
     const clippingTooltipId = `provenance-clipping-tooltip-${safeTarget}`;
     const viewTooltipId = `provenance-view-tooltip-${safeTarget}`;
     const viewTooltipLabel = viewTooltip
@@ -249,14 +249,12 @@ const ProvenanceButton = ({ target }) => {
                             )}
                         />
                     </div>
-                    {hasClippedHistory && (
+                    {showClippingBadge && (
                         <button
                             type="button"
                             aria-label={clippingMessage}
                             aria-expanded={clippingPopupOpen}
                             onPointerDown={event => event.stopPropagation()}
-                            onFocus={() => setClippingBadgeFocused(true)}
-                            onBlur={() => setClippingBadgeFocused(false)}
                             onMouseEnter={() => setOverClippingBadge(true)}
                             onMouseLeave={() => setOverClippingBadge(false)}
                             onClick={event => {
@@ -269,12 +267,31 @@ const ProvenanceButton = ({ target }) => {
                             style={{
                                 position: 'absolute', right: -5, bottom: -5,
                                 width: 16, height: 16, padding: 0, borderRadius: '50%',
+                                display: 'grid', placeItems: 'center', color: '#fff',
                                 background: getClippingBadgeColor(),
                                 border: '2px solid #fff',
                                 boxSizing: 'border-box', cursor: 'pointer', zIndex: 2,
                                 pointerEvents: 'auto',
                             }}
-                        />
+                        >
+                            <svg
+                                aria-hidden="true"
+                                focusable="false"
+                                viewBox="0 0 24 24"
+                                width="11"
+                                height="11"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                style={{ pointerEvents: 'none' }}
+                            >
+                                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
+                                <circle cx="12" cy="12" r="2.5" />
+                                {hasClippedHistory && <path d="M4 3 20 21" />}
+                            </svg>
+                        </button>
                     )}
                 </div>
 
@@ -282,22 +299,24 @@ const ProvenanceButton = ({ target }) => {
                     <Tooltip
                         id={clippingTooltipId}
                         isOpen={clippingPopupOpen}
+                        hidden={!clippingPopupOpen}
+                        events={['hover']}
+                        clickable={false}
                         place="right"
                         positionStrategy="fixed"
                         delayShow={0}
+                        delayHide={0}
                         opacity={1}
-                        arrowColor="#fff"
+                        arrowColor={FOOTPRINT_TOOLTIP_BACKGROUND}
                         style={{
-                            ...footprintTooltipStyle,
-                            width: 'max-content',
-                            minWidth: 0,
-                            padding: '5px 8px',
-                            fontSize: '12px',
-                            lineHeight: 1.3,
-                            whiteSpace: 'nowrap',
-                            backgroundColor: '#fff',
-                            color: '#243746',
-                            border: '1px solid #adb5bd',
+                            // Use the same compact metrics as the other simple React tooltips.
+                            zIndex: FOOTPRINT_TOOLTIP_Z_INDEX,
+                            backgroundColor: FOOTPRINT_TOOLTIP_BACKGROUND,
+                            color: '#fff',
+                            fontSize: '90%',
+                            fontWeight: 400,
+                            lineHeight: 'normal',
+                            pointerEvents: 'none',
                         }}
                     />,
                     document.body

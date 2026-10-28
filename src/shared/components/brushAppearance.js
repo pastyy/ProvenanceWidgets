@@ -1,3 +1,10 @@
+/** Shared selection styling for a rectangle and its derived detail chart. */
+export const rectangleZoomStyle = {
+    backgroundColor: "rgba(113, 231, 251, 0.12)",
+    // An inset border preserves the plot's coordinate system and dimensions.
+    boxShadow: "inset 0 0 0 2px #17a2b8",
+};
+
 /** Shared D3 brush colors and direction-aware cursors. */
 export function styleZoomBrush(group, direction) {
     group.selectAll(".overlay")

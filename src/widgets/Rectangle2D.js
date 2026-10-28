@@ -5,6 +5,7 @@ import {
     useState,
 } from "react";
 import * as d3 from "d3";
+import { rectangleZoomStyle } from "../shared/components/brushAppearance.js";
 import {
     formatTemporalTooltip,
     getTooltipAnchorProps,
@@ -311,6 +312,7 @@ export const RectangleDerivedChart = ({
         <div
             data-provenance-rectangle-derived="true"
             style={{
+                ...rectangleZoomStyle,
                 position: "relative",
                 width: isFullWidth
                     ? "100%"

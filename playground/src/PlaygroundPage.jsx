@@ -40,7 +40,7 @@ const meatOptions = [
 
 const checkboxScalability = {
   temporal_view: {
-    strategy: "zoom_in",
+    strategy: "clipping",
     zoom_in_options: {
       visibility: "all-active",
       trigger: { type: "interaction", threshold: 10 },
@@ -59,7 +59,7 @@ const checkboxScalability = {
 
 const radioScalability = {
   temporal_view: {
-    strategy: "clipping",
+    strategy: "zoom_in",
     zoom_in_options: {
       visibility: "all-active",
       trigger: { type: "interaction", threshold: 10 },
@@ -69,7 +69,7 @@ const radioScalability = {
     },
   },
   aggregate_view: {
-    strategy: "clipping",
+    strategy: "zoom_in",
     clipping_options: {
       trigger: { type: "interaction", threshold: 10 },
     },
@@ -370,7 +370,25 @@ export default function PlaygroundPage() {
                 options={singleSliderOptions}
                 provenance={playgroundSingleSliderProvenance}
                 dataLabel="Single value"
-                scalability={sliderClipping}
+                scalability={{
+                  "temporal_view": {
+                    "strategy": "zoom_in",
+                    "smoothing_options": {
+                      "method": { "type": "savgol", "window_length": 4, "polyorder": 2 },
+                      "trigger": { "type": "interaction", "threshold": 20 }
+                    },
+                    "zoom_in_options": {
+                      "modes": ["interactions", "interactions-values", "values"],
+                      "visibility": "all-active",
+                      "trigger": {
+                        "type": "interaction",
+                        "threshold": 10,
+                        "auto_zoom": false
+                      }
+                    }
+                  },
+                  "aggregate_view": sliderClipping.aggregate_view
+                }}
               />
             </WidgetCard>
 
