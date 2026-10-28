@@ -144,19 +144,25 @@ type SmoothingOptions = {
   method?:
     | {
         type: "savgol";
-        window_size?: number;
-        degree?: number;
+        options: {
+          window_size?: number;
+          degree?: number;
+        };
       }
     | {
         type: "gaussian";
-        sigma?: number;
-        truncate?: number;
+        options: {
+          sigma?: number;
+          truncate?: number;
+        };
       }
     | {
         type: "bspline";
-        degree?: number;
-        smoothing_factor?: number;
-        knot_spacing?: number;
+        options: {
+          degree?: number;
+          smoothing_factor?: number;
+          knot_spacing?: number;
+        };
       };
   trigger?: {
     type?: "interaction" | "time";
@@ -165,7 +171,7 @@ type SmoothingOptions = {
 };
 ```
 
-- `method` defaults to `{ type: "savgol", window_size: 5, degree: 3 }`.
+- `method` defaults to `{ type: "savgol", options: { window_size: 5, degree: 3 } }`.
 - Gaussian/B-spline distances use `data_domain`; no unit field is exposed.
   Savgol `window_size` counts numerical grid samples. Degree, `truncate`, and
   `smoothing_factor` are dimensionless.
@@ -176,18 +182,19 @@ type SmoothingOptions = {
 - Gaussian defaults to `sigma: 2` and `truncate: 3`.
 - B-spline defaults to `degree: 3`, `smoothing_factor: 0.5`, and
   `knot_spacing: 10`.
-- A supplied `method` requires its `type`; every other method field is optional
-  and uses the corresponding default above when omitted.
+- A supplied `method` requires `type` and `options`; algorithm fields inside
+  `options` are optional and use the corresponding defaults when omitted. Only
+  the options belonging to the selected `type` are read.
 
 | Method parameter | Meaning | Default | Constraint |
 | --- | --- | --- | --- |
-| `savgol.window_size` | Full window in samples; library `2*M+1` | `5` | Odd integer >= `3` |
-| `savgol.degree` | Polynomial coefficient count; library `N+1`; `3` means quadratic | `3` | Positive integer below `window_size` |
-| `gaussian.sigma` | Standard deviation in data-domain units | `2` | Positive finite number |
-| `gaussian.truncate` | Support radius in multiples of `sigma`; actual radius is `truncate * sigma` | `3` | Positive finite number |
-| `bspline.degree` | Spline degree; `3` means cubic | `3` | Integer from `1` to `5` |
-| `bspline.smoothing_factor` | Normalized smoothing strength; larger values mean stronger smoothing | `0.5` | Finite number in `[0, 1]` |
-| `bspline.knot_spacing` | Distance between interior knots in data-domain units | `10` | Positive finite number |
+| `savgol.options.window_size` | Full window in samples; library `2*M+1` | `5` | Odd integer >= `3` |
+| `savgol.options.degree` | Polynomial coefficient count; library `N+1`; `3` means quadratic | `3` | Positive integer below `window_size` |
+| `gaussian.options.sigma` | Standard deviation in data-domain units | `2` | Positive finite number |
+| `gaussian.options.truncate` | Support radius in multiples of `sigma`; actual radius is `truncate * sigma` | `3` | Positive finite number |
+| `bspline.options.degree` | Spline degree; `3` means cubic | `3` | Integer from `1` to `5` |
+| `bspline.options.smoothing_factor` | Normalized smoothing strength; larger values mean stronger smoothing | `0.5` | Finite number in `[0, 1]` |
+| `bspline.options.knot_spacing` | Distance between interior knots in data-domain units | `10` | Positive finite number |
 
 - Savitzky-Golay `window_size` counts samples on the adapted numerical grid.
   The wrapper maps `M = (window_size - 1) / 2`, `N = degree - 1` internally.
@@ -283,7 +290,7 @@ type AggregateClippingOptions = {
 
 Uses the same `SmoothingOptions` structure as the temporal view:
 
-- `method` defaults to `{ type: "savgol", window_size: 5, degree: 3 }`.
+- `method` defaults to `{ type: "savgol", options: { window_size: 5, degree: 3 } }`.
 - Gaussian/B-spline distances use the aggregate data domain; Savgol `window_size` counts
   grid samples. Other parameters, constraints, and default rules are the same
   as in the Smoothing section.

@@ -129,19 +129,25 @@ type SmoothingOptions = {
   method?:
     | {
         type: "savgol";
-        window_size?: number;
-        degree?: number;
+        options: {
+          window_size?: number;
+          degree?: number;
+        };
       }
     | {
         type: "gaussian";
-        sigma?: number;
-        truncate?: number;
+        options: {
+          sigma?: number;
+          truncate?: number;
+        };
       }
     | {
         type: "bspline";
-        degree?: number;
-        smoothing_factor?: number;
-        knot_spacing?: number;
+        options: {
+          degree?: number;
+          smoothing_factor?: number;
+          knot_spacing?: number;
+        };
       };
   trigger?: {
     type?: "interaction" | "time";
@@ -150,7 +156,7 @@ type SmoothingOptions = {
 };
 ```
 
-- `method` 默认为 `{ type: "savgol", window_size: 5, degree: 3 }`。
+- `method` 默认为 `{ type: "savgol", options: { window_size: 5, degree: 3 } }`。
 - Gaussian 和 B-spline 的距离使用 `data_domain`，不提供单位字段；Savgol 的
   `window_size` 使用数值网格采样点单位。阶数、`truncate` 和 `smoothing_factor` 是无量纲参数。
 - `trigger.type` 默认 `interaction`。
@@ -158,17 +164,18 @@ type SmoothingOptions = {
 - Savitzky-Golay 使用 vendored `js-savgol-filter`，默认 `window_size: 5`、`degree: 3`。
 - Gaussian 默认 `sigma: 2`、`truncate: 3`。
 - B-spline 默认 `degree: 3`、`smoothing_factor: 0.5`、`knot_spacing: 10`。
-- 提供 `method` 对象时，`type` 必填；其余算法参数均可省略，使用上述对应默认值。
+- 提供 `method` 对象时，`type` 和 `options` 必填；`options` 中的算法参数可省略，
+  使用对应默认值。只读取当前 `type` 对应的 `options` 字段。
 
 | 算法参数 | 含义 | 默认值 | 约束 |
 | --- | --- | --- | --- |
-| `savgol.window_size` | 完整窗口的采样点数，对应库的 `2*M+1` | `5` | 大于等于 `3` 的奇数整数 |
-| `savgol.degree` | 多项式系数个数，对应库的 `N+1`；`3` 表示二次拟合 | `3` | 正整数，且小于 `window_size` |
-| `gaussian.sigma` | 标准差，使用数据域单位 | `2` | 正有限数 |
-| `gaussian.truncate` | 支持半径是标准差的几倍；实际半径为 `truncate * sigma` | `3` | 正有限数 |
-| `bspline.degree` | 样条阶数，`3` 表示三次样条 | `3` | `1` 到 `5` 的整数 |
-| `bspline.smoothing_factor` | 归一化平滑强度，值越大越平滑 | `0.5` | `[0, 1]` 中的有限数 |
-| `bspline.knot_spacing` | 内部结点之间的距离，使用数据域单位 | `10` | 正有限数 |
+| `savgol.options.window_size` | 完整窗口的采样点数，对应库的 `2*M+1` | `5` | 大于等于 `3` 的奇数整数 |
+| `savgol.options.degree` | 多项式系数个数，对应库的 `N+1`；`3` 表示二次拟合 | `3` | 正整数，且小于 `window_size` |
+| `gaussian.options.sigma` | 标准差，使用数据域单位 | `2` | 正有限数 |
+| `gaussian.options.truncate` | 支持半径是标准差的几倍；实际半径为 `truncate * sigma` | `3` | 正有限数 |
+| `bspline.options.degree` | 样条阶数，`3` 表示三次样条 | `3` | `1` 到 `5` 的整数 |
+| `bspline.options.smoothing_factor` | 归一化平滑强度，值越大越平滑 | `0.5` | `[0, 1]` 中的有限数 |
+| `bspline.options.knot_spacing` | 内部结点之间的距离，使用数据域单位 | `10` | 正有限数 |
 
 - Savitzky-Golay 的 `window_size` 作用于适配后的数值采样网格，内部转换为
   `M = (window_size - 1) / 2`、`N = degree - 1`。不再接受 `window_length`、
@@ -253,7 +260,7 @@ type AggregateClippingOptions = {
 
 使用与 temporal view 相同的 `SmoothingOptions` 结构：
 
-- `method` 默认为 `{ type: "savgol", window_size: 5, degree: 3 }`。
+- `method` 默认为 `{ type: "savgol", options: { window_size: 5, degree: 3 } }`。
 - Gaussian 和 B-spline 的距离使用聚合数据域单位；Savgol 的 `window_size` 按网格采样点数计。
   其他参数、约束和默认规则与 Smoothing 节相同。
 - `trigger.type` 默认 `interaction`。

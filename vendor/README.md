@@ -2,7 +2,8 @@
 
 此目录保存随本项目一起维护的第三方源码。Savitzky–Golay 已通过
 `src/shared/logic/scalability/strategies/smoothing/savgol.js` 接入；用户 API 使用
-`window_size`（默认 `5`）和 `degree`（默认 `3`），由适配层转换为上游的 `M` 和 `N`。
+`method.options.window_size`（默认 `5`）和 `method.options.degree`（默认 `3`），
+由适配层转换为上游的 `M` 和 `N`。
 
 ## 目录约定
 

@@ -72,39 +72,51 @@ export type AggregateScalabilityClippingOptions =
 
 export type ScalabilitySmoothingTriggerType = "interaction" | "time";
 
+export interface SavgolSmoothingOptions {
+  /** Odd integer window size in grid samples >= 3; defaults to 5 (2*M+1).
+   * A window larger than the sample count leaves the signal unchanged.
+   */
+  window_size?: number;
+  /** Positive integer coefficient count (N+1); defaults to 3 (quadratic).
+   * Highest polynomial power is degree-1. Requires degree < window_size;
+   * invalid combinations leave the signal unchanged.
+   */
+  degree?: number;
+}
+
+export interface GaussianSmoothingOptions {
+  /** Positive Gaussian standard deviation in data-domain units; defaults to 2. */
+  sigma?: number;
+  /** Positive support radius in standard deviations; defaults to 3.
+   * The data-domain support radius is truncate * sigma.
+   */
+  truncate?: number;
+}
+
+export interface BsplineSmoothingOptions {
+  /** Integer spline degree in [1, 5]; defaults to 3 (cubic). */
+  degree?: number;
+  /** Normalized smoothing strength in [0, 1]; defaults to 0.5.
+   * Larger values mean stronger smoothing; not a library-specific residual bound.
+   * Slider: 0 = unpenalized B-spline fit, 1 = least-squares line.
+   */
+  smoothing_factor?: number;
+  /** Positive distance between interior knots in data-domain units; defaults to 10. */
+  knot_spacing?: number;
+}
+
 export type ScalabilitySmoothingMethod =
   | {
       type: "savgol";
-      /** Odd integer window size in grid samples >= 3; defaults to 5 (2*M+1).
-       * A window larger than the sample count leaves the signal unchanged.
-       */
-      window_size?: number;
-      /** Positive integer coefficient count (N+1); defaults to 3 (quadratic).
-       * Highest polynomial power is degree-1. Requires degree < window_size;
-       * invalid combinations leave the signal unchanged.
-       */
-      degree?: number;
+      options: SavgolSmoothingOptions;
     }
   | {
       type: "gaussian";
-      /** Positive Gaussian standard deviation in data-domain units; defaults to 2. */
-      sigma?: number;
-      /** Positive support radius in standard deviations; defaults to 3.
-       * The data-domain support radius is truncate * sigma.
-       */
-      truncate?: number;
+      options: GaussianSmoothingOptions;
     }
   | {
       type: "bspline";
-      /** Integer spline degree in [1, 5]; defaults to 3 (cubic). */
-      degree?: number;
-      /** Normalized smoothing strength in [0, 1]; defaults to 0.5.
-       * Larger values mean stronger smoothing; not a library-specific residual bound.
-       * Slider: 0 = unpenalized B-spline fit, 1 = least-squares line.
-       */
-      smoothing_factor?: number;
-      /** Positive distance between interior knots in data-domain units; defaults to 10. */
-      knot_spacing?: number;
+      options: BsplineSmoothingOptions;
     };
 
 /** Gaussian/B-spline distances use the component's documented data domain.
@@ -115,7 +127,7 @@ export type ScalabilitySmoothingMethod =
  * units; temporal time mode uses elapsed seconds.
  */
 export interface ScalabilitySmoothingOptions {
-  /** Defaults to { type: "savgol", window_size: 5, degree: 3 }. */
+  /** Defaults to { type: "savgol", options: { window_size: 5, degree: 3 } }. */
   method?: ScalabilitySmoothingMethod;
   /** Defaults to interaction; threshold defaults to 50 interactions or 3600 seconds.
    * Both views count recorded interaction events, rather than aggregate item count.

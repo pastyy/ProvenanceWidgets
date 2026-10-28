@@ -13,8 +13,10 @@ scalability={{
     smoothing_options: {
       method: {
         type: "savgol",
-        window_size: 5,
-        degree: 3,
+        options: {
+          window_size: 5,
+          degree: 3,
+        },
       },
       trigger: { type: "interaction", threshold: 50 },
     },
@@ -61,7 +63,7 @@ Use the same structure under `aggregate_view` to smooth aggregate data.
 
 The adapter delegates to the vendored
 [gorlang/js-savgol-filter](../../../../../vendor/js-savgol-filter/readme.md).
-The public API exposes `window_size` (odd integer >= 3, default 5) and `degree`
+Savgol's `method.options` exposes `window_size` (odd integer >= 3, default 5) and `degree`
 (integer >= 1, default 3). The wrapper maps these to the library's parameters:
 `M = (window_size - 1) / 2`, `N = degree - 1`.
 `window_size` counts numerical grid samples in either view, including on
@@ -89,7 +91,7 @@ pointer events.
 
 ## Gaussian Rules
 
-Use `method: { type: "gaussian", sigma: 2, truncate: 3 }`. `sigma` is the
+Use `method: { type: "gaussian", options: { sigma: 2, truncate: 3 } }`. `sigma` is the
 standard deviation in slider data-domain units; `truncate * sigma` is the
 support radius. Samples farther away than that radius do not participate.
 Weights are `exp(-0.5 * (distance / sigma)^2)` and normalized to sum to one.
@@ -99,8 +101,8 @@ one grid interval leaves the original sample counts unchanged.
 
 ## B-spline Rules
 
-Use `method: { type: "bspline", degree: 3, smoothing_factor: 0.5,
-knot_spacing: 10 }`. The solver fits a clamped B-spline basis over the whole
+Use `method: { type: "bspline", options: { degree: 3, smoothing_factor: 0.5,
+knot_spacing: 10 } }`. The solver fits a clamped B-spline basis over the whole
 data domain, with `degree` between 1 and 5. Repeated endpoint knots bound the
 curve to the domain; they do not force interpolation of endpoint counts.
 

@@ -109,8 +109,9 @@ and span to keep its endpoints ordered. Gaussian/B-spline temporal distances
 use record-order units in interaction mode and elapsed seconds in time mode.
 Both views cap numerical work at
 2,049 samples and never mutate provenance. Savitzky-Golay uses the vendored
-`js-savgol-filter` through `window_size: 5, degree: 3`: a five-sample window
-and quadratic fit. Internally, `M = (window_size - 1) / 2` and `N = degree - 1`.
+`js-savgol-filter` through `method.options: { window_size: 5, degree: 3 }`:
+a five-sample window and quadratic fit. Internally,
+`M = (window_size - 1) / 2` and `N = degree - 1`.
 See [smoothing configuration and semantics](src/shared/logic/scalability/SMOOTHING.md).
 
 ## Checkbox scalability

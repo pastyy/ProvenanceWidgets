@@ -374,7 +374,10 @@ export default function PlaygroundPage() {
                   "temporal_view": {
                     "strategy": "zoom_in",
                     "smoothing_options": {
-                      "method": { "type": "savgol", "window_size": 5, "degree": 3 },
+                      "method": {
+                        "type": "savgol",
+                        "options": { "window_size": 5, "degree": 3 }
+                      },
                       "trigger": { "type": "interaction", "threshold": 20 }
                     },
                     "zoom_in_options": {
@@ -390,7 +393,10 @@ export default function PlaygroundPage() {
                   "aggregate_view": {
                     "strategy": "smoothing",
                     "smoothing_options": {
-                      "method": { "type": "savgol", "window_size": 5, "degree": 3 },
+                      "method": {
+                        "type": "savgol",
+                        "options": { "window_size": 5, "degree": 3 }
+                      },
                       "trigger": { "type": "interaction", "threshold": 10 }
                     }
                   }

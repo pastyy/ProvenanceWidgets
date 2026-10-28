@@ -40,22 +40,28 @@
 
             "smoothing_options": {
 
-                // Optional; defaults to { type: "savgol", window_size: 5, degree: 3 }.
-                // Each method.type is required; its other parameters are optional.
+                // Optional; defaults to { type: "savgol", options: { window_size: 5, degree: 3 } }.
+                // If method is supplied, type and options are required. Fields inside options are optional.
                 // Distance parameters use data-domain units; there is no unit option.
                 "method": {
                     "type": "savgol",
-                    "window_size": int, // default: 5; odd >= 3; full grid sample window = 2*M+1
-                    "degree": int // default: 3; coefficient count = N+1; >= 1 and < window_size
+                    "options": {
+                        "window_size": int, // default: 5; odd >= 3; full grid sample window = 2*M+1
+                        "degree": int // default: 3; coefficient count = N+1; >= 1 and < window_size
+                    }
                 } | {
                     "type": "gaussian",
-                    "sigma": number, // default: 2; data-domain standard deviation
-                    "truncate": number // default: 3; support radius = truncate * sigma
+                    "options": {
+                        "sigma": number, // default: 2; data-domain standard deviation
+                        "truncate": number // default: 3; support radius = truncate * sigma
+                    }
                 } | {
                     "type": "bspline",
-                    "degree": int, // default: 3; cubic spline
-                    "smoothing_factor": number, // default: 0.5; normalized [0, 1], larger = smoother
-                    "knot_spacing": number // default: 10; data-domain distance between interior knots
+                    "options": {
+                        "degree": int, // default: 3; cubic spline
+                        "smoothing_factor": number, // default: 0.5; normalized [0, 1], larger = smoother
+                        "knot_spacing": number // default: 10; data-domain distance between interior knots
+                    }
                 },
 
                 // Optional; defaults to { type: "interaction", threshold: 50 }.
@@ -105,22 +111,28 @@
 
             "smoothing_options": {
 
-                // Optional; defaults to { type: "savgol", window_size: 5, degree: 3 }.
-                // Each method.type is required; its other parameters are optional.
+                // Optional; defaults to { type: "savgol", options: { window_size: 5, degree: 3 } }.
+                // If method is supplied, type and options are required. Fields inside options are optional.
                 // Distance parameters use data-domain units; there is no unit option.
                 "method": {
                     "type": "savgol",
-                    "window_size": int, // default: 5; odd >= 3; full grid sample window = 2*M+1
-                    "degree": int // default: 3; coefficient count = N+1; >= 1 and < window_size
+                    "options": {
+                        "window_size": int, // default: 5; odd >= 3; full grid sample window = 2*M+1
+                        "degree": int // default: 3; coefficient count = N+1; >= 1 and < window_size
+                    }
                 } | {
                     "type": "gaussian",
-                    "sigma": number, // default: 2; data-domain standard deviation
-                    "truncate": number // default: 3; support radius = truncate * sigma
+                    "options": {
+                        "sigma": number, // default: 2; data-domain standard deviation
+                        "truncate": number // default: 3; support radius = truncate * sigma
+                    }
                 } | {
                     "type": "bspline",
-                    "degree": int, // default: 3; cubic spline
-                    "smoothing_factor": number, // default: 0.5; normalized [0, 1], larger = smoother
-                    "knot_spacing": number // default: 10; data-domain distance between interior knots
+                    "options": {
+                        "degree": int, // default: 3; cubic spline
+                        "smoothing_factor": number, // default: 0.5; normalized [0, 1], larger = smoother
+                        "knot_spacing": number // default: 10; data-domain distance between interior knots
+                    }
                 },
 
                 // Optional; defaults to { type: "interaction", threshold: 50 }.

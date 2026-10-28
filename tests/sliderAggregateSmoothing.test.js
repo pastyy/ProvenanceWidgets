@@ -11,8 +11,9 @@ import {
     smoothBspline,
 } from "../src/shared/logic/scalability/index.js";
 
-const settings = (method = { type: "savgol" }, trigger = { threshold: 1 }) => ({
-    aggregate_view: { strategy: "smoothing", smoothing_options: { method, trigger } },
+const method = (type = "savgol", options = {}) => ({ type, options });
+const settings = (selectedMethod = method(), trigger = { threshold: 1 }) => ({
+    aggregate_view: { strategy: "smoothing", smoothing_options: { method: selectedMethod, trigger } },
 });
 const history = values => values.map((value, index) => ({
     value, kind: "interaction", timestamp: new Date(index * 1000).toISOString(),
@@ -79,16 +80,20 @@ test("Savgol preserves the library's asymmetric boundary samples and input data"
 test("normalization uses window_size/degree defaults and preserves valid parameters", () => {
     assert.deepEqual(resolveSmoothingConfig({ aggregate_view: { strategy: "smoothing" } }), {
         enabled: true,
-        method: { type: "savgol", window_size: 5, degree: 3 },
+        method: { type: "savgol", options: { window_size: 5, degree: 3 } },
         trigger: { type: "interaction", threshold: 50 },
     });
-    const config = resolveSmoothingConfig(settings({ type: "savgol", window_size: 3, degree: 1 }, { type: "time" }));
-    assert.equal(config.method.window_size, 3);
-    assert.equal(config.method.degree, 1);
+    const config = resolveSmoothingConfig(settings(method("savgol", {
+        window_size: 3, degree: 1,
+    }), { type: "time" }));
+    assert.equal(config.method.options.window_size, 3);
+    assert.equal(config.method.options.degree, 1);
     assert.equal(config.trigger.threshold, 3600);
-    const invalid = resolveSmoothingConfig(settings({ type: "savgol", window_size: 4, degree: 1.5 }, { threshold: NaN }));
-    assert.equal(invalid.method.window_size, 5);
-    assert.equal(invalid.method.degree, 3);
+    const invalid = resolveSmoothingConfig(settings(method("savgol", {
+        window_size: 4, degree: 1.5,
+    }), { threshold: NaN }));
+    assert.equal(invalid.method.options.window_size, 5);
+    assert.equal(invalid.method.options.degree, 3);
     assert.equal(invalid.trigger.threshold, 50);
 });
 
@@ -145,7 +150,8 @@ test("smoothing is independent of temporal strategy and ignores unsupported meth
     const input = { records: history([5]), provenance, min: 0, max: 10 };
     assert.deepEqual(resolveSliderAggregateSmoothing(input), []);
     for (const type of ["unknown"]) {
-        assert.deepEqual(resolveSliderAggregateSmoothing({ ...input, scalability: settings({ type }) }), []);
+        assert.deepEqual(resolveSliderAggregateSmoothing({ ...input,
+            scalability: settings(method(type)) }), []);
     }
     assert.deepEqual(resolveSliderAggregateSmoothing({ ...input, scalability: { temporal_view: { strategy: "smoothing" } } }), []);
     const active = settings();
@@ -169,17 +175,22 @@ test("Gaussian matches the normalized kernel, preserves constants at edges and r
 });
 
 test("Gaussian and B-spline normalize their own defaults and constraints", () => {
-    assert.deepEqual(resolveSmoothingConfig(settings({ type: "gaussian" })).method,
-        { type: "gaussian", sigma: 2, truncate: 3 });
-    assert.deepEqual(resolveSmoothingConfig(settings({ type: "gaussian", sigma: -1, truncate: Infinity })).method,
-        { type: "gaussian", sigma: 2, truncate: 3 });
-    assert.deepEqual(resolveSmoothingConfig(settings({ type: "bspline" })).method,
-        { type: "bspline", degree: 3, smoothing_factor: 0.5, knot_spacing: 10 });
-    assert.deepEqual(resolveSmoothingConfig(settings({ type: "bspline", degree: 6, smoothing_factor: NaN, knot_spacing: 0 })).method,
-        { type: "bspline", degree: 3, smoothing_factor: 0.5, knot_spacing: 10 });
-    const valid = resolveSmoothingConfig(settings({ type: "bspline", degree: 1, smoothing_factor: 0, knot_spacing: 0.1 }));
-    assert.equal(valid.method.smoothing_factor, 0);
-    assert.equal(valid.method.knot_spacing, 0.1);
+    assert.deepEqual(resolveSmoothingConfig(settings(method("gaussian"))).method,
+        { type: "gaussian", options: { sigma: 2, truncate: 3 } });
+    assert.deepEqual(resolveSmoothingConfig(settings(method("gaussian", {
+        sigma: -1, truncate: Infinity,
+    }))).method, { type: "gaussian", options: { sigma: 2, truncate: 3 } });
+    assert.deepEqual(resolveSmoothingConfig(settings(method("bspline"))).method,
+        { type: "bspline", options: { degree: 3, smoothing_factor: 0.5, knot_spacing: 10 } });
+    assert.deepEqual(resolveSmoothingConfig(settings(method("bspline", {
+        degree: 6, smoothing_factor: NaN, knot_spacing: 0,
+    }))).method,
+    { type: "bspline", options: { degree: 3, smoothing_factor: 0.5, knot_spacing: 10 } });
+    const valid = resolveSmoothingConfig(settings(method("bspline", {
+        degree: 1, smoothing_factor: 0, knot_spacing: 0.1,
+    })));
+    assert.equal(valid.method.options.smoothing_factor, 0);
+    assert.equal(valid.method.options.knot_spacing, 0.1);
 });
 
 test("B-spline reproduces affine signals at every degree and smoothing strength", () => {
@@ -257,12 +268,13 @@ test("all methods route both aggregate Slider kinds and obey the trigger", () =>
         const before = structuredClone([...provenance.aggregateData]);
         const input = { provenance, kind, min: 0, max: 20, records: history(values) };
         for (const type of ["savgol", "gaussian", "bspline"]) {
-            const output = resolveSliderAggregateSmoothing({ ...input, scalability: settings({ type }) });
+            const output = resolveSliderAggregateSmoothing({ ...input,
+                scalability: settings(method(type)) });
             assert.equal(output.length, 21);
             assert.ok(output.every(sample => Number.isFinite(sample.count) && sample.count >= 0));
             assert.ok(output.some(sample => sample.count > 0));
             assert.deepEqual(resolveSliderAggregateSmoothing({ ...input,
-                scalability: settings({ type }, { threshold: 4 }) }), []);
+                scalability: settings(method(type), { threshold: 4 }) }), []);
         }
         assert.deepEqual([...provenance.aggregateData], before);
     }
