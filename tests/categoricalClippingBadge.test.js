@@ -7,7 +7,7 @@ const records = Array.from({ length: 16 }, (_, i) => ({
     kind: 'interaction', timestamp: new Date(i * 1000).toISOString(), value: ['A'],
 }));
 const clipping = { strategy: 'clipping', clipping_options: {
-    trigger: { type: 'on_interaction_over', threshold: 10 },
+    trigger: { type: 'interaction', threshold: 10 },
 } };
 const resolve = (scalability, showTimeline, data = records) => resolveActiveClippingBadge({
     scalability, showTimeline, records: data, mode: 'interaction', width: 300,
@@ -30,7 +30,7 @@ test('temporal-only clipping does not affect the aggregate view', () => {
 });
 test('time clipping reports hidden interactions, not elapsed seconds', () => {
     assert.equal(resolve({ aggregate_view: { strategy: 'clipping', clipping_options: {
-        trigger: { type: 'on_time_over', threshold: 10 },
+        trigger: { type: 'time', threshold: 10 },
     } } }, false), '6 records hidden');
 });
 test('badge color stays yellow across all widget colors', () => {

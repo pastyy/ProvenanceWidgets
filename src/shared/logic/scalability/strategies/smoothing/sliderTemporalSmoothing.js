@@ -39,7 +39,7 @@ export function resolveSliderTemporalSmoothing({
     if (!smooth) return inactive;
     const samples = smoothSliderTemporalSeries({
         series,
-        method: config.method,
+        method: config.method.options,
         smooth,
         min,
         max,

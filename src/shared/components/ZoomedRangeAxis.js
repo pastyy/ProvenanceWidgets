@@ -1,4 +1,5 @@
 import { buildAdaptiveSliderTicks } from "../logic/sliderTicks.js";
+import { ZOOM_BRUSH_ACCENT } from "./brushAppearance.js";
 
 const HORIZONTAL_INSET = 6;
 const VERTICAL_INSET = 8;
@@ -18,13 +19,13 @@ const isValidDomain = (domain) => (
 const axisColors = theme => theme === "light"
     ? {
         background: "rgba(255, 255, 255, 0.94)",
-        line: "#6c757d",
-        text: "#495057",
+        line: ZOOM_BRUSH_ACCENT,
+        text: ZOOM_BRUSH_ACCENT,
     }
     : {
         background: "rgba(51, 51, 51, 0.94)",
-        line: "#adb5bd",
-        text: "#ced4da",
+        line: ZOOM_BRUSH_ACCENT,
+        text: ZOOM_BRUSH_ACCENT,
     };
 
 /** Render a non-layout-affecting axis for the currently selected domain. */

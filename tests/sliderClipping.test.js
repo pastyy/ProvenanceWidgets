@@ -9,7 +9,7 @@ import {
     resolveRecordTemporalView,
 } from "../src/shared/logic/scalability/index.js";
 
-const clipping = (threshold, type = "on_interaction_over") => ({
+const clipping = (threshold, type = "interaction") => ({
     strategy: "clipping",
     clipping_options: { trigger: { type, threshold } },
 });
@@ -137,7 +137,7 @@ test("time clipping uses recorded elapsed time and reports hidden interactions",
     ];
     const view = resolveRecordTemporalView({
         entries: makeEntries(records),
-        scalability: { temporal_view: clipping(10, "on_time_over") },
+        scalability: { temporal_view: clipping(10, "time") },
         width: 300,
         mode: "time",
     });

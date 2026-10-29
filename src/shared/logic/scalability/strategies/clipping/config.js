@@ -1,4 +1,4 @@
-/** CSS pixels per record (or second for on_time_over) in the default threshold. */
+/** CSS pixels per record (or second for time) in the default threshold. */
 export const CLIPPING_PIXELS_PER_RECORD = 10;
 
 export function resolveClippingConfig(scalability, { view = "temporal_view", width = 0 } = {}) {
@@ -19,7 +19,7 @@ export function resolveClippingConfig(scalability, { view = "temporal_view", wid
         enabled,
         // Wait for layout when an explicit threshold is not supplied.
         ready: enabled && threshold !== null,
-        triggerType: trigger.type === "on_time_over" ? "on_time_over" : "on_interaction_over",
+        triggerType: trigger.type === "time" ? "time" : "interaction",
         threshold,
     };
 }

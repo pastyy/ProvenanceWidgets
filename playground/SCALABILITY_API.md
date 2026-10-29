@@ -25,7 +25,7 @@ const scalability: ScalabilityOptions = {
   aggregate_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 20 },
+      trigger: { type: "interaction", threshold: 20 },
     },
   },
 };
@@ -65,10 +65,10 @@ See [Temporal zoom](../src/shared/logic/scalability/strategies/zoomin/README.md)
 Both views accept the same `clipping_options`, configured independently:
 
 ```js
-{ trigger: { type: "on_interaction_over", threshold: 20 } }
+{ trigger: { type: "interaction", threshold: 20 } }
 ```
 
-- `type` defaults to `on_interaction_over`; `on_time_over` uses recorded elapsed seconds.
+- `type` defaults to `interaction`; `time` uses recorded elapsed seconds.
 - For either trigger, omitted or invalid thresholds use `max(1, floor(widgetWidth / 10))`.
   Resolution waits for measured width; the default is not a fixed 50, 3600, or 10.
 - Exceeding the threshold displays the latest threshold-sized window without deleting
@@ -87,23 +87,25 @@ Only the two Sliders currently implement `smoothing_options` in both views:
 
 ```js
 {
-  method: { type: "savgol", window_length: 4, polyorder: 2 },
+  method: { type: "savgol", options: { window_size: 5, degree: 3 } },
   trigger: { type: "interaction", threshold: 50 },
 }
 ```
 
 An omitted method uses the Savitzky-Golay configuration above; a supplied method
-requires `type`. Triggers default to `interaction`, with thresholds of 50 interactions
+requires `type`; algorithm parameters belong in `method.options`. Triggers default to `interaction`, with thresholds of 50 interactions
 or 3600 seconds. Both views count recorded events, not distinct aggregate items.
 
 | Method | Parameter defaults | Constraints |
 | --- | --- | --- |
-| `savgol` | `window_length: 4`, `polyorder: 2` | Positive finite width; non-negative integer order |
+| `savgol` | `window_size: 5`, `degree: 3` | Odd integer window ≥ 3; positive integer degree smaller than window |
 | `gaussian` | `sigma: 2`, `truncate: 3` | Positive finite numbers |
 | `bspline` | `degree: 3`, `smoothing_factor: 0.5`, `knot_spacing: 10` | Integer degree 1–5; strength in [0, 1]; positive finite spacing |
 
-Distances allow fractions: aggregate uses the slider value domain; temporal uses
-record order or elapsed seconds. SingleSlider smooths value frequencies or historical
+Gaussian/B-spline distances allow fractions: aggregate uses the slider value domain;
+temporal uses record order or elapsed seconds. Savgol `window_size` counts numerical
+grid samples; `degree` is the polynomial coefficient count, so 3 fits a quadratic.
+The vendored filter preserves its original boundary samples. SingleSlider smooths value frequencies or historical
 values; RangeSlider smooths interval coverage or historical center and span.
 At the threshold, non-interactive curves with recency gradients replace marks and
 hitboxes. Earlier interactions remain unchanged. Each view uses at most 2049 numerical
@@ -142,9 +144,9 @@ interactions and responsive layouts have passed acceptance review.
 | SuperProvenanceWidget | Pending | Pending | Pending | Pending | Pending |
 
 Aggregate zoom-in is unimplemented for every component. Types reserve
-`zoom_in_options.trigger` fields `on_interaction_over`, `on_time_over`, `on_range_over`,
+`zoom_in_options.trigger` fields `interaction`, `time`, `range`,
 `threshold`, `tool_visible_before_trigger`, and `auto_zoom_on_trigger` for future work.
-The draft's `on_range_over` means maximum minus minimum aggregate counts, not the
+The draft's `range` means maximum minus minimum aggregate counts, not the
 slider value domain. Its provisional threshold of 10, initially visible tools, and
 non-automatic zoom are proposals, not implemented behavior.
 Categorical/text smoothing, non-Slider paging, and cross-widget scalability still

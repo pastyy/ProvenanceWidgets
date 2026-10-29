@@ -18,7 +18,7 @@ export function resolveClippingPeriod({ records = [], config, mode = "interactio
         }
     }
     if (!Number.isFinite(origin)) origin = latest = 0;
-    const byTime = config.triggerType === "on_time_over";
+    const byTime = config.triggerType === "time";
     const metric = byTime ? (latest - origin) / 1000 : interactions.length;
     const boundary = getClippingBoundary({ metric, config });
     const startTime = boundary

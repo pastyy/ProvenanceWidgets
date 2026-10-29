@@ -46,13 +46,13 @@ const checkboxScalability = {
       trigger: { type: "interaction", threshold: 10 },
     },
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
   aggregate_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
 };
@@ -65,13 +65,13 @@ const radioScalability = {
       trigger: { type: "interaction", threshold: 10 },
     },
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
   aggregate_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
 };
@@ -84,13 +84,13 @@ const singleSelectScalability = {
       trigger: { type: "interaction", threshold: 10 },
     },
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
   aggregate_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
 };
@@ -103,13 +103,13 @@ const multiSelectScalability = {
       trigger: { type: "interaction", threshold: 10 },
     },
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
   aggregate_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
 };
@@ -273,13 +273,13 @@ const sliderClipping = {
   temporal_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 20 },
+      trigger: { type: "interaction", threshold: 20 },
     },
   },
   aggregate_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 10 },
+      trigger: { type: "interaction", threshold: 10 },
     },
   },
 };
@@ -348,13 +348,13 @@ export default function PlaygroundPage() {
                   temporal_view: {
                     strategy: "clipping",
                     clipping_options: {
-                      trigger: { type: "on_interaction_over", threshold: 10 },
+                      trigger: { type: "interaction", threshold: 10 },
                     },
                   },
                   aggregate_view: {
                     strategy: "clipping",
                     clipping_options: {
-                      trigger: { type: "on_interaction_over", threshold: 10 },
+                      trigger: { type: "interaction", threshold: 10 },
                     },
                   },
                 }}
@@ -389,7 +389,10 @@ export default function PlaygroundPage() {
                     "strategy": "zoom_in",
                     "clipping_options": sliderClipping.temporal_view.clipping_options,
                     "smoothing_options": {
-                      "method": { "type": "savgol", "window_length": 4, "polyorder": 2 },
+                      "method": {
+                        "type": "savgol",
+                        "options": { "window_size": 5, "degree": 3 }
+                      },
                       "trigger": { "type": "interaction", "threshold": 20 }
                     },
                     "zoom_in_options": {
@@ -402,7 +405,16 @@ export default function PlaygroundPage() {
                       }
                     }
                   },
-                  "aggregate_view": sliderClipping.aggregate_view
+                  "aggregate_view": {
+                    "strategy": "smoothing",
+                    "smoothing_options": {
+                      "method": {
+                        "type": "savgol",
+                        "options": { "window_size": 5, "degree": 3 }
+                      },
+                      "trigger": { "type": "interaction", "threshold": 10 }
+                    }
+                  }
                 }}
               />
             </WidgetCard>

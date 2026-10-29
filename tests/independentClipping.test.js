@@ -4,7 +4,7 @@ import { resolveClippingConfig } from '../src/shared/logic/scalability/strategie
 import { resolveSelectionTemporalView } from '../src/shared/logic/scalability/strategies/clipping/selectionTemporal.js';
 
 const clipping = threshold => ({ strategy: 'clipping', clipping_options: {
-    trigger: { type: 'on_interaction_over', threshold },
+    trigger: { type: 'interaction', threshold },
 } });
 
 test('each view resolves only its own clipping strategy and threshold', () => {

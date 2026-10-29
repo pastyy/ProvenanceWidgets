@@ -15,7 +15,7 @@ export function getClippingNotice(periods) {
     for (const period of periods) {
         if (!period.config.ready || period.boundary <= 0) continue;
         const hidden = Number(period.boundary.toFixed(2));
-        const unit = period.config.triggerType === "on_time_over" ? "second" : "interaction";
+		const unit = period.config.triggerType === "time" ? "second" : "interaction";
         messages.add(`hide ${hidden} ${unit}${hidden === 1 ? "" : "s"}`);
     }
     return messages.size ? [...messages].join(" · ") : null;

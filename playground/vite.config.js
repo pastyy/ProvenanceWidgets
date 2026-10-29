@@ -1,7 +1,24 @@
 import { fileURLToPath, URL } from "node:url";
 
 import react from "@vitejs/plugin-react";
+import { build } from "esbuild";
 import { defineConfig, transformWithOxc } from "vite";
+
+const savgolSource = fileURLToPath(new URL("../vendor/js-savgol-filter/js-savgol-filter.js", import.meta.url));
+const vendorCommonJs = {
+  name: "provenance-vendor-commonjs",
+  apply: "serve",
+  async transform(_code, id) {
+    if (id.replaceAll("\\", "/") !== savgolSource.replaceAll("\\", "/")) return null;
+    // Local CommonJS files are source modules, so dependency optimization alone
+    // does not rewrite their relative imports in development.
+    const result = await build({
+      entryPoints: [savgolSource], bundle: true, write: false,
+      format: "esm", platform: "browser", sourcemap: "inline",
+    });
+    return { code: result.outputFiles[0].text, map: null };
+  },
+};
 
 const sourceJsAsJsx = {
   name: "provenance-source-js-as-jsx",
@@ -19,6 +36,7 @@ const sourceJsAsJsx = {
 export default defineConfig({
   root: fileURLToPath(new URL(".", import.meta.url)),
   plugins: [
+    vendorCommonJs,
     sourceJsAsJsx,
     react({
       include: /\.[jt]sx?$/,

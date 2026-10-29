@@ -11,7 +11,7 @@ export function resolveSliderAggregateSmoothing({ scalability, records = [], ...
     const config = resolveSmoothingConfig(scalability);
     if (!config.enabled || !hasSmoothingTriggered(records, config.trigger)) return [];
     const samples = buildSliderAggregateSamples(domain);
-    return methods[config.method.type](samples, config.method).map(sample => ({
+    return methods[config.method.type](samples, config.method.options).map(sample => ({
         ...sample, count: Math.max(0, sample.count),
     }));
 }

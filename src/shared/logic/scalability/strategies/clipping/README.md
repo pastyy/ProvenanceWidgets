@@ -11,7 +11,7 @@ const scalability = {
   temporal_view: {
     strategy: "clipping",
     clipping_options: {
-      trigger: { type: "on_interaction_over", threshold: 20 },
+      trigger: { type: "interaction", threshold: 20 },
     },
   },
 };
@@ -26,14 +26,14 @@ or threshold.
 
 ## Rolling window behavior
 
-- `type` defaults to `on_interaction_over`.
+- `type` defaults to `interaction`.
 - `threshold` is a positive integer. When omitted or invalid it defaults to
   `max(1, floor(widgetWidth / 10))`, using the widget's CSS pixel width. The hook
   waits for layout before applying this default and observes width changes.
 - Interaction triggers count records with `kind: "interaction"`. Baseline and
   time-sampling records do not increase the count. One multi-selection change
   counts as one interaction, regardless of how many options changed.
-- `on_time_over` measures elapsed **seconds in the recorded history**, including
+- `time` measures elapsed **seconds in the recorded history**, including
   time samples. In `mode="time"`, the existing controller's sampling advances
   that span while idle; in interaction mode it advances when history changes.
   Importing old history does not count the wall-clock gap since it was recorded.

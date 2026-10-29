@@ -4,8 +4,8 @@ export type ScalabilityStrategy =
   | "smoothing";
 
 export type TemporalScalabilityTriggerType =
-  | "on_interaction_over"
-  | "on_time_over";
+  | "interaction"
+  | "time";
 
 export type AggregateScalabilityTriggerType =
   | TemporalScalabilityTriggerType
@@ -60,7 +60,7 @@ export interface AggregateScalabilityZoomInOptions {
 export interface ScalabilityClippingOptions<
   TType extends string = TemporalScalabilityTriggerType,
 > {
-  /** Defaults to on_interaction_over; on_time_over uses recorded elapsed seconds. */
+  /** Defaults to interaction; time uses recorded elapsed seconds. */
   trigger?: ScalabilityThresholdTrigger<TType>;
 }
 
@@ -72,46 +72,62 @@ export type AggregateScalabilityClippingOptions =
 
 export type ScalabilitySmoothingTriggerType = "interaction" | "time";
 
+export interface SavgolSmoothingOptions {
+  /** Odd integer window size in grid samples >= 3; defaults to 5 (2*M+1).
+   * A window larger than the sample count leaves the signal unchanged.
+   */
+  window_size?: number;
+  /** Positive integer coefficient count (N+1); defaults to 3 (quadratic).
+   * Highest polynomial power is degree-1. Requires degree < window_size;
+   * invalid combinations leave the signal unchanged.
+   */
+  degree?: number;
+}
+
+export interface GaussianSmoothingOptions {
+  /** Positive Gaussian standard deviation in data-domain units; defaults to 2. */
+  sigma?: number;
+  /** Positive support radius in standard deviations; defaults to 3.
+   * The data-domain support radius is truncate * sigma.
+   */
+  truncate?: number;
+}
+
+export interface BsplineSmoothingOptions {
+  /** Integer spline degree in [1, 5]; defaults to 3 (cubic). */
+  degree?: number;
+  /** Normalized smoothing strength in [0, 1]; defaults to 0.5.
+   * Larger values mean stronger smoothing; not a library-specific residual bound.
+   * Slider: 0 = unpenalized B-spline fit, 1 = least-squares line.
+   */
+  smoothing_factor?: number;
+  /** Positive distance between interior knots in data-domain units; defaults to 10. */
+  knot_spacing?: number;
+}
+
 export type ScalabilitySmoothingMethod =
   | {
       type: "savgol";
-      /** Total data-domain window width; defaults to 4 (positive, may be fractional).
-       * The adapter converts it to an odd sample count greater than polyorder.
-       */
-      window_length?: number;
-      /** Non-negative integer polynomial order; defaults to 2. */
-      polyorder?: number;
+      options: SavgolSmoothingOptions;
     }
   | {
       type: "gaussian";
-      /** Positive Gaussian standard deviation in data-domain units; defaults to 2. */
-      sigma?: number;
-      /** Positive support radius in standard deviations; defaults to 3.
-       * The data-domain support radius is truncate * sigma.
-       */
-      truncate?: number;
+      options: GaussianSmoothingOptions;
     }
   | {
       type: "bspline";
-      /** Integer spline degree in [1, 5]; defaults to 3 (cubic). */
-      degree?: number;
-      /** Normalized smoothing strength in [0, 1]; defaults to 0.5.
-       * Larger values mean stronger smoothing; not a library-specific residual bound.
-       * Slider: 0 = unpenalized B-spline fit, 1 = least-squares line.
-       */
-      smoothing_factor?: number;
-      /** Positive distance between interior knots in data-domain units; defaults to 10. */
-      knot_spacing?: number;
+      options: BsplineSmoothingOptions;
     };
 
-/** Distance parameters always use the component's documented data domain.
- * Order, degree, truncate, and smoothing_factor are dimensionless.
+/** Gaussian/B-spline distances use the component's documented data domain.
+ * Savgol window_size counts numerical grid samples; degree is N+1.
+ * Degree, truncate, and smoothing_factor are dimensionless.
  * Slider aggregate and temporal views implement all three methods with
  * view-specific data adapters. Temporal interaction mode uses record-order
  * units; temporal time mode uses elapsed seconds.
  */
 export interface ScalabilitySmoothingOptions {
-  /** Defaults to { type: "savgol", window_length: 4, polyorder: 2 }. */
+  /** Defaults to { type: "savgol", options: { window_size: 5, degree: 3 } }. */
   method?: ScalabilitySmoothingMethod;
   /** Defaults to interaction; threshold defaults to 50 interactions or 3600 seconds.
    * Both views count recorded interaction events, rather than aggregate item count.

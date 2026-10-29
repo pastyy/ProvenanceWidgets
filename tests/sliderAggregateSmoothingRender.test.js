@@ -39,7 +39,7 @@ test("all methods replace bars and hitboxes only after smoothing is triggered", 
         const barsOnly = render();
         for (const type of ["savgol", "gaussian", "bspline"]) {
             const scalability = { aggregate_view: { strategy: "smoothing",
-                smoothing_options: { method: { type }, trigger: { threshold: 1 } } } };
+                smoothing_options: { method: { type, options: {} }, trigger: { threshold: 1 } } } };
             const samples = resolveSliderAggregateSmoothing({
                 scalability, provenance, records, kind, min: 0, max: 20,
             });
@@ -60,7 +60,7 @@ test("all methods replace bars and hitboxes only after smoothing is triggered", 
             assert.ok(offsets.every(offset => offset >= 0 && offset <= 100));
             const gated = resolveSliderAggregateSmoothing({
                 scalability: { aggregate_view: { ...scalability.aggregate_view,
-                    smoothing_options: { method: { type }, trigger: { threshold: 4 } } } },
+                    smoothing_options: { method: { type, options: {} }, trigger: { threshold: 4 } } } },
                 provenance, records, kind, min: 0, max: 20,
             });
             assert.equal(gated.length, 0);

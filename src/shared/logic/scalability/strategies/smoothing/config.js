@@ -11,28 +11,37 @@ const positive = (value, fallback) =>
 export function resolveSmoothingConfig(scalability, view = "aggregate_view") {
     const config = scalability?.[view];
     const options = config?.smoothing_options ?? {};
-    const method = options.method ?? { type: "savgol" };
+    const method = options.method ?? { type: "savgol", options: {} };
+    const methodOptions = method.options ?? {};
     const type = options.trigger?.type === "time" ? "time" : "interaction";
     const threshold = positive(options.trigger?.threshold, type === "time"
         ? DEFAULT_TEMPORAL_TIME_THRESHOLD : DEFAULT_TEMPORAL_INTERACTION_THRESHOLD);
-    const order = method.polyorder;
     const normalizedMethod = method.type === "gaussian" ? {
         type: "gaussian",
-        sigma: positive(method.sigma, 2),
-        truncate: positive(method.truncate, 3),
+        options: {
+            sigma: positive(methodOptions.sigma, 2),
+            truncate: positive(methodOptions.truncate, 3),
+        },
     } : method.type === "bspline" ? {
         type: "bspline",
-        degree: Number.isInteger(method.degree) && method.degree >= 1 && method.degree <= 5
-            ? method.degree : 3,
-        smoothing_factor: typeof method.smoothing_factor === "number" &&
-            Number.isFinite(method.smoothing_factor) && method.smoothing_factor >= 0 &&
-            method.smoothing_factor <= 1 ? method.smoothing_factor : 0.5,
-        knot_spacing: positive(method.knot_spacing, 10),
+        options: {
+            degree: Number.isInteger(methodOptions.degree) && methodOptions.degree >= 1 &&
+                methodOptions.degree <= 5 ? methodOptions.degree : 3,
+            smoothing_factor: typeof methodOptions.smoothing_factor === "number" &&
+                Number.isFinite(methodOptions.smoothing_factor) &&
+                methodOptions.smoothing_factor >= 0 && methodOptions.smoothing_factor <= 1
+                ? methodOptions.smoothing_factor : 0.5,
+            knot_spacing: positive(methodOptions.knot_spacing, 10),
+        },
     } : {
         type: method.type,
-        window_length: positive(method.window_length, 4),
-        polyorder: typeof order === "number" && Number.isInteger(order) && order >= 0
-            ? order : 2,
+        options: {
+            window_size: Number.isInteger(methodOptions.window_size) &&
+                methodOptions.window_size >= 3 && methodOptions.window_size % 2 === 1
+                ? methodOptions.window_size : 5,
+            degree: Number.isInteger(methodOptions.degree) && methodOptions.degree >= 1
+                ? methodOptions.degree : 3,
+        },
     };
     return {
         enabled: config?.strategy === "smoothing" && ["savgol", "gaussian", "bspline"].includes(method.type),
