@@ -58,6 +58,7 @@ const TEMPORAL_BRUSH_HEIGHT = 240;
 const TEMPORAL_SLIDER_HEIGHT = 250;
 // Text history uses a taller fixed plot without an inner scrollbar.
 const INPUT_TEXT_TEMPORAL_HEIGHT = 440;
+const TEMPORAL_ZOOM_BRUSH_CROSS_AXIS_SIZE = 32;
 
 const TemporalBrush = ({
     height = TEMPORAL_BRUSH_HEIGHT,
@@ -97,7 +98,7 @@ const TemporalBrush = ({
         const brush = d3
             .brushY()
             // Attach the brush to the y-axis and extend its hit area left.
-            .extent([[-42, 0], [0, height]])
+            .extent([[-TEMPORAL_ZOOM_BRUSH_CROSS_AXIS_SIZE, 0], [0, height]])
             .on("start", () => onInteractionStart?.())
             .on("brush", updateRange)
             .on("end", event => {
@@ -306,7 +307,13 @@ const TemporalValueBrush = ({
         const brush = d3
             .brushX()
             // Leave the caption below the brush, as on the vertical axis.
-            .extent([[0, 0], [width, Math.max(1, height - 32)]])
+            .extent([
+                [0, 0],
+                [
+                    width,
+                    Math.max(1, height - TEMPORAL_ZOOM_BRUSH_CROSS_AXIS_SIZE),
+                ],
+            ])
             .on("start", () => onInteractionStart?.())
             .on("brush", updateRange)
             .on("end", event => {
