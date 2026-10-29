@@ -1,5 +1,5 @@
 import { cloneProvenanceValue } from "@provenance-widgets/core";
-import { resolveClippingConfig } from "../core/normalizeClippingConfig.js";
+import { resolveClippingConfig } from "./config.js";
 import { resolveClippingPeriod } from "./clippingPeriod.js";
 
 /** Rebuild only the visible text/numeric frequencies; registered history stays intact. */

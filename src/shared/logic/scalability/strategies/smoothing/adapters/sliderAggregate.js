@@ -1,4 +1,4 @@
-import { getRangeBarSegments } from "../../rangeSliderBarData.js";
+import { getRangeBarSegments } from "../../../../rangeSliderBarData.js";
 
 // Bound numerical work independently of DOM width. Larger domains are averaged
 // into data-domain bins; the original provenance and bars are never modified.

@@ -1,5 +1,7 @@
 # Display clipping for widgets
 
+[Scalability API](../../../../../../playground/SCALABILITY_API.md) · [Source layout](../../../../../README.md)
+
 All seven widgets share temporal and aggregate clipping: `CheckboxGroup`, `RadioGroup`,
 `SingleSelectDropdown`, `MultiSelectDropdown`, `InputText`, `Singleslider`, and
 `Rangeslider`. Temporal and aggregate views are configured independently.
@@ -58,7 +60,7 @@ Aggregate statistics count only interactions inside the window. Selection
 state at its left edge is retained to compute deltas, without being counted
 as a new selection. Current widget values and full source history are preserved.
 
-Checkbox, radio, single-select, multi-select, single-slider, and range-slider
+Checkbox, radio, single-select, multi-select, text input, single-slider, and range-slider
 widgets show an outlined eye
 at the footprint icon's bottom-right when the **displayed view** uses clipping.
 The 16px yellow (`#FFD600`) circular badge has a 2px white border and an 11px
@@ -71,27 +73,25 @@ views, and suppresses the footprint help tooltip while hovered. The bubble
 hides immediately when the pointer leaves the circle, including after a click.
 Time-based clipping also reports the number of hidden records.
 
-All four categorical widgets share the checkbox linear drag-selection zoom
-brush, trigger behavior, and selected-range axis. Sliders retain their existing
-value-history points and aggregate bars, limited to the active rolling window.
+Sliders retain their existing value-history points and aggregate bars, limited
+to the active rolling window. For categorical drag-selection under the separate
+`zoom_in` strategy, see [temporal zoom](../zoomin/README.md).
 
-For text input, the notification stays visible whenever older history is hidden, including
-imported history. At 15 interactions with threshold 10, it reads
-`hide 5 interactions`; at 16 it reads `hide 6 interactions`. It disappears when clipping
-is disabled or no history is hidden. Synchronized temporal/aggregate windows
-produce one notice. Time-trigger notices use seconds.
+Text input uses the same active-view eye badge and hidden-record count as checkbox
+groups. Repeated committed searches count as separate interactions; its text-specific
+history and aggregate frequency adapters remain unchanged.
 
 ## Implementation
 
-- `core/normalizeClippingConfig.js`: shared view configuration and width default.
-- `triggers/clipping.js`: threshold-boundary calculation.
-- `views/clippingPeriod.js`: shared cutoff, cumulative counts, and axis labels.
-- `views/recordTemporal.js`: text/numeric temporal records and axis positions.
-- `views/recordAggregate.js`: text/numeric frequencies for the current period.
-- `views/selectionTemporal.js`: display projections for aggregate and temporal.
-- `shared/hooks/useClippingBadge.js`: active-view badge message for categorical
+- `strategies/clipping/config.js`: shared view configuration and width default.
+- `strategies/clipping/trigger.js`: threshold-boundary calculation.
+- `strategies/clipping/clippingPeriod.js`: shared cutoff, cumulative counts, and axis labels.
+- `strategies/clipping/recordTemporal.js`: text/numeric temporal records and axis positions.
+- `strategies/clipping/recordAggregate.js`: text/numeric frequencies for the current period.
+- `strategies/clipping/selectionTemporal.js`: display projections for aggregate and temporal.
+- [useClippingBadge.js](../../../../hooks/useClippingBadge.js): active-view badge message for categorical
   widgets and sliders.
-- `shared/hooks/useSelectionTemporalScalability.js`: width measurement and brush
+- [useSelectionTemporalScalability.js](../../../../hooks/useSelectionTemporalScalability.js): width measurement and brush
   state shared by all four widgets.
 
 Components pass their records and `scalability` attributes into the shared

@@ -1,7 +1,7 @@
 import {
     DEFAULT_TEMPORAL_INTERACTION_THRESHOLD,
     DEFAULT_TEMPORAL_TIME_THRESHOLD,
-} from "./defaults.js";
+} from "../../shared/defaults.js";
 
 const positive = (value, fallback) =>
     typeof value === "number" && Number.isFinite(value) && value > 0

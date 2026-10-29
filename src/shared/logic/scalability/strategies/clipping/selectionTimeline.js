@@ -1,4 +1,4 @@
-import { buildSelectionTimelineBars } from "../../selectionTimeline.js";
+import { buildSelectionTimelineBars } from "../../../selectionTimeline.js";
 
 /** Convert a selection widget's provenance domain to an interaction count. */
 export function getSelectionInteractionCount(provenance) {

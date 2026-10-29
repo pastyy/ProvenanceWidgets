@@ -1,4 +1,4 @@
-import { getClippingBoundary } from "../triggers/clipping.js";
+import { getClippingBoundary } from "./trigger.js";
 
 const timestamp = record => {
     const value = new Date(record?.timestamp).getTime();

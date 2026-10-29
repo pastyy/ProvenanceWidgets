@@ -1,4 +1,4 @@
-import { resolveClippingConfig } from "../core/normalizeClippingConfig.js";
+import { resolveClippingConfig } from "./config.js";
 import { resolveClippingPeriod } from "./clippingPeriod.js";
 
 export const NO_HIDDEN_RECORDS = "No hidden records";

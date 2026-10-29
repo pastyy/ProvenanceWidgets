@@ -1,5 +1,5 @@
 import { SelectionProvenance } from "@provenance-widgets/core";
-import { resolveClippingConfig } from "../core/normalizeClippingConfig.js";
+import { resolveClippingConfig } from "./config.js";
 import { resolveClippingPeriod } from "./clippingPeriod.js";
 
 /** Pure display projection. Never mutate the controller, source records, or source strategy. */

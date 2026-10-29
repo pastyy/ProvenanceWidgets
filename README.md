@@ -1,10 +1,68 @@
 # ProvenanceWidgets
 
-A JavaScript library of GUI Controls for Tracking and Dynamically Overlaying Analytic Provenance.
+A JavaScript library of UI controls for tracking and displaying analytic provenance.
+It provides React widgets and Web Components, with temporal and aggregate history views.
+
+## Install
+
+```bash
+npm install provenance-widgets
+```
+
+## Documentation
+
+- [Upstream documentation and demos](https://provenancewidgets.github.io/)
+- Local scalability API: [Scalability API](./playground/SCALABILITY_API.md)
+- [Source layout](./src/README.md) and [public types](./src/types/README.md)
+- [Web Components](./src/web-components/README.md)
+- [Playground](./playground/README.md)
+
+The local API guides describe this checkout's supported features and remaining
+work. Detailed behavior is documented once per topic:
+
+| Topic | Scope |
+| --- | --- |
+| [Clipping](./src/shared/logic/scalability/strategies/clipping/README.md) | Independent temporal and aggregate windows for all seven widgets |
+| [Temporal zoom](./src/shared/logic/scalability/strategies/zoomin/README.md) | Slider dimensions and categorical drag-selection brushes |
+| [Smoothing](./src/shared/logic/scalability/strategies/smoothing/README.md) | Slider temporal and aggregate curves |
+| [Aggregate windows](./src/shared/logic/scalability/windowing/README.md) | Scrollable slider value domains |
+| [Development guide](./src/shared/logic/scalability/DEVELOPMENT.md) | Internal structure and extension rules |
+
+## Development
+
+Run commands from the repository root:
+
+```bash
+npm install
+npm run playground
+```
+
+| Command | Purpose |
+| --- | --- |
+| `node --test tests/*.test.js` | Logic and SVG rendering regressions |
+| `npm run typecheck` | TypeScript checking |
+| `npm run build` | React library and Web Components bundles |
+| `npm run verify` | TypeScript checking followed by both builds |
+| `npm run playground:build` | Playground production bundle |
+
+The playground imports source directly and is not a library runtime dependency.
+Automated checks do not replace browser interaction and responsive-layout review.
+
+## Publishing
+
+```bash
+node --test tests/*.test.js
+npm run verify
+npm run playground:build
+npm pack --dry-run
+npm login --auth-type=web
+npm whoami
+npm publish --access public
+```
 
 ## Read and cite our papers
 
-#### SuperProvenanceWidgets, published at the 2026 ACM CHI Conference
+### SuperProvenanceWidgets, published at the 2026 ACM CHI Conference
 [![DOI:10.1145/3772363.3798409](https://zenodo.org/badge/DOI/10.1145/3772363.3798409.svg)](https://doi.org/10.1145/3772363.3798409)
 [![arXiv badge](https://img.shields.io/badge/arXiv-2604.15342-red)](https://arxiv.org/abs/2604.15342)
 
@@ -20,7 +78,7 @@ A JavaScript library of GUI Controls for Tracking and Dynamically Overlaying Ana
 }
 ```
 
-#### ProvenanceWidgets, published at the 2024 IEEE VIS Conference
+### ProvenanceWidgets, published at the 2024 IEEE VIS Conference
 [![DOI:10.1109/TVCG.2024.3456144](https://zenodo.org/badge/DOI/10.1109/TVCG.2024.3456144.svg)](https://doi.org/10.1109/TVCG.2024.3456144)
 [![arXiv badge](https://img.shields.io/badge/arXiv-2407.17431-red)](https://arxiv.org/abs/2407.17431)
 [![NPM - Downloads](https://img.shields.io/npm/dm/provenance-widgets)](https://www.npmjs.com/package/provenance-widgets)
@@ -46,106 +104,6 @@ A JavaScript library of GUI Controls for Tracking and Dynamically Overlaying Ana
 <p align="center">
   GRSI-approved replicable project
 </p>
-
-## Documentation
-
-Visit https://provenancewidgets.github.io/ to view the full documentation and demos.
-
-## Install
-
-```bash
-npm install provenance-widgets
-```
-
-## Development
-
-```bash
-npm install
-```
-
-Run the local component playground, which imports directly from `src/index.ts`:
-
-```bash
-npm run playground
-```
-
-Use `npm run playground:build` to verify its production bundle.
-
-## Deployment
-
-```bash
-npm run verify
-npm login --auth-type=web
-npm whoami
-npm pack --dry-run
-npm publish --access public
-```
-
-## Display clipping
-
-CheckboxGroup, RadioGroup, SingleSelectDropdown, MultiSelectDropdown,
-SingleSlider, and RangeSlider share clipping for both `temporal_view` and
-`aggregate_view`. Each view uses
-`strategy: "clipping"` and `clipping_options.trigger`, supporting
-`on_interaction_over` (default) and `on_time_over` (recorded elapsed seconds).
-The default threshold is `max(1, floor(widgetWidth / 10))`.
-After the threshold is exceeded, the view displays a rolling window containing
-the latest threshold-sized period; original provenance and current values are
-preserved. A yellow dot on the active provenance footprint reports how many
-interactions are hidden. Temporal and aggregate configurations are independent.
-See [clipping configuration and semantics](src/shared/logic/scalability/CLIPPING.md).
-
-## Slider smoothing
-
-SingleSlider and RangeSlider can replace their aggregate bars with Savitzky-Golay,
-Gaussian, or B-spline curves after the configured trigger is reached by using
-`aggregate_view.strategy: "smoothing"`. Before the trigger, the original bars
-and their interactions remain unchanged. After the trigger, a horizontal
-linear-gradient fill below the curve retains the bars' recency colors. SingleSlider
-smooths frequency by value; RangeSlider smooths interval coverage. Temporal
-smoothing replaces the value-over-history marks with a non-interactive recency
-gradient curve: SingleSlider smooths values, while RangeSlider smooths center
-and span to keep its endpoints ordered. Interaction mode uses record-order
-units and time mode uses elapsed seconds. Both views cap numerical work at
-2,049 samples and never mutate provenance. Savitzky-Golay `window_length`
-defaults to `4` in the active view's data-domain units.
-See [smoothing configuration and semantics](src/shared/logic/scalability/SMOOTHING.md).
-
-## Checkbox scalability
-
-Checkbox zoom calculation, state, and UI live together in `src/widgets/CheckboxGroup.js`,
-following the slider renderer in `src/widgets/Chart.js`. Both import configuration
-and trigger helpers through `src/shared/logic/scalability/index.js`.
-
-`CheckboxGroup` uses the active `DEFAULT_CHECKBOX_SCALABILITY` configuration in
-`src/types/scalability.ts`, with the same field names as sliders. Edit parameters
-there for the existing zoom path. Explicit `clipping` configurations supplied
-through `scalability` use the shared selection implementation instead.
-The configuration is shared, while each group maintains independent brush state.
-The playground is not required by the library.
-
-For example, `threshold: 20` uses blocks of 20 for checkbox zoom.
-`auto_zoom: false` keeps the full history visible until the user brushes.
-
-In interaction mode, checkbox zoom keeps older history in a compressed region
-of the brush axis. With threshold 20, automatic zoom compresses completed
-blocks of 20 and focuses on the current block. Both handles can still
-move continuously back through older history. Changing `threshold` changes
-the block size. This preserves the existing checkbox history zoom behavior.
-
-`visibility` controls brush visibility before the threshold (`all-active`, `after-trigger`, or `off`).
-`auto_zoom` controls automatic focus and axis compression. When false,
-reaching the threshold leaves both the full history and the uncompressed axis
-unchanged. Manual brushing selects a range on that axis. `time` measures the
-recorded history span in seconds and zooms to recent history without
-interaction-block compression.
-`temporalBrush={false}` disables the zoom tool and automatic zoom.
-
-Checkbox currently supports `modes: ["interactions"]` (history-range zoom).
-Numeric `values` and `rectangle-2d` dimensions do not apply to its categorical
-options and are ignored. Checkbox zoom does not implement `smoothing` or
-aggregate zoom. Aggregate clipping is supported through `scalability` as described
-above. Configure checkbox zoom using `zoom_in_options` in the central object.
 
 ## Contact
 

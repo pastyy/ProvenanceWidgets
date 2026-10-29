@@ -1,9 +1,9 @@
-import { resolveSmoothingConfig } from "../core/normalizeSmoothingConfig.js";
-import { hasSmoothingTriggered } from "../triggers/smoothing.js";
-import { buildSliderAggregateSamples } from "../adapters/sliderAggregate.js";
-import { smoothSavgol } from "../strategies/smoothing/savgol.js";
-import { smoothGaussian } from "../strategies/smoothing/gaussian.js";
-import { smoothBspline } from "../strategies/smoothing/bspline.js";
+import { resolveSmoothingConfig } from "./config.js";
+import { hasSmoothingTriggered } from "./trigger.js";
+import { buildSliderAggregateSamples } from "./adapters/sliderAggregate.js";
+import { smoothSavgol } from "./savgol.js";
+import { smoothGaussian } from "./gaussian.js";
+import { smoothBspline } from "./bspline.js";
 
 const methods = { savgol: smoothSavgol, gaussian: smoothGaussian, bspline: smoothBspline };
 

@@ -4,7 +4,7 @@ import {
     DEFAULT_TEMPORAL_ZOOM_MODES,
     DEFAULT_TEMPORAL_ZOOM_TRIGGER_TYPE,
     DEFAULT_TEMPORAL_ZOOM_VISIBILITY,
-} from "./defaults.js";
+} from "../../shared/defaults.js";
 
 const unique = values => Array.from(new Set(values));
 

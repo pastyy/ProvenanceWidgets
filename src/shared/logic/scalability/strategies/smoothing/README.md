@@ -1,5 +1,7 @@
 # Slider Smoothing
 
+[Scalability API](../../../../../../playground/SCALABILITY_API.md) · [Source layout](../../../../../README.md)
+
 SingleSlider and RangeSlider support Savitzky-Golay, Gaussian, and B-spline
 smoothing independently in their temporal and aggregate views. Smoothing is
 display-only: it never changes provenance, recorded values, or aggregate data.

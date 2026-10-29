@@ -1,13 +1,13 @@
-import { resolveSmoothingConfig } from "../core/normalizeSmoothingConfig.js";
-import { hasSmoothingTriggered } from "../triggers/smoothing.js";
+import { resolveSmoothingConfig } from "./config.js";
+import { hasSmoothingTriggered } from "./trigger.js";
 import {
     buildSliderTemporalSmoothingSeries,
     getSliderTemporalSmoothingTriggerRecords,
     smoothSliderTemporalSeries,
-} from "../adapters/sliderTemporalSmoothing.js";
-import { smoothSavgol } from "../strategies/smoothing/savgol.js";
-import { smoothGaussian } from "../strategies/smoothing/gaussian.js";
-import { smoothBspline } from "../strategies/smoothing/bspline.js";
+} from "./adapters/sliderTemporalSmoothing.js";
+import { smoothSavgol } from "./savgol.js";
+import { smoothGaussian } from "./gaussian.js";
+import { smoothBspline } from "./bspline.js";
 
 const temporalSmoothingMethods = {
     savgol: smoothSavgol,

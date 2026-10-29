@@ -1,5 +1,5 @@
 import { getClippingBadgeColor } from "../shared/logic/clippingBadgeColor.js";
-import { NO_HIDDEN_RECORDS } from "../shared/logic/scalability/views/clippingNotice.js";
+import { NO_HIDDEN_RECORDS } from "../shared/logic/scalability/strategies/clipping/clippingNotice.js";
 import { Button } from 'primereact/button/button.esm.js';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';

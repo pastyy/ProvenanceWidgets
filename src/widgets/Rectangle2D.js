@@ -28,6 +28,7 @@ const TEMPORAL_AXIS_GUTTER = 64;
  */
 export const useRectangle2D = ({ enabled, geometryRef }) => {
     const [selection, setSelection] = useState(null);
+    const [dragMode, setDragMode] = useState(null);
     const [points, setPoints] = useState([]);
     const [valueDomain, setValueDomain] = useState(null);
     const selectionRef = useRef(null);
@@ -36,6 +37,7 @@ export const useRectangle2D = ({ enabled, geometryRef }) => {
     const clear = useCallback(() => {
         selectionRef.current = null;
         dragRef.current = null;
+        setDragMode(null);
         setSelection(null);
         setPoints([]);
         setValueDomain(null);
@@ -98,6 +100,7 @@ export const useRectangle2D = ({ enabled, geometryRef }) => {
             const drag = dragRef.current;
             if (!drag) return;
             dragRef.current = null;
+            setDragMode(null);
             const next = drag.latestRectangle;
             if (
                 !drag.moved ||
@@ -175,6 +178,7 @@ export const useRectangle2D = ({ enabled, geometryRef }) => {
 
         if (!inside) clear();
 
+        setDragMode(inside ? "move" : "create");
         dragRef.current = {
             mode: inside ? "move" : "create",
             rect: bounds,
@@ -204,6 +208,7 @@ export const useRectangle2D = ({ enabled, geometryRef }) => {
     return {
         clear,
         handleMouseDown,
+        dragMode,
         points,
         selection,
         valueDomain,

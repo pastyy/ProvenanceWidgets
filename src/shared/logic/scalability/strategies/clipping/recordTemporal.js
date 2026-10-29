@@ -1,4 +1,4 @@
-import { resolveClippingConfig } from "../core/normalizeClippingConfig.js";
+import { resolveClippingConfig } from "./config.js";
 import { resolveClippingPeriod } from "./clippingPeriod.js";
 
 /** Adapter for the one-record-per-row histories of text and numeric widgets. */

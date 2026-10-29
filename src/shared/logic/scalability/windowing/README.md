@@ -1,5 +1,7 @@
 # Aggregate Slider windows
 
+[Scalability API](../../../../../playground/SCALABILITY_API.md) · [Source layout](../../../../README.md)
+
 `Singleslider` and `Rangeslider` support `aggregate_view.window_options`
 independently of the selected strategy:
 

@@ -59,7 +59,7 @@ const checkboxScalability = {
 
 const radioScalability = {
   temporal_view: {
-    strategy: "zoom_in",
+    strategy: "clipping",
     zoom_in_options: {
       visibility: "all-active",
       trigger: { type: "interaction", threshold: 10 },
@@ -69,7 +69,7 @@ const radioScalability = {
     },
   },
   aggregate_view: {
-    strategy: "zoom_in",
+    strategy: "clipping",
     clipping_options: {
       trigger: { type: "on_interaction_over", threshold: 10 },
     },
@@ -344,6 +344,20 @@ export default function PlaygroundPage() {
                 value={inputValue}
                 onChange={setInputValue}
                 provenance={playgroundInputTextProvenance}
+                scalability={{
+                  temporal_view: {
+                    strategy: "clipping",
+                    clipping_options: {
+                      trigger: { type: "on_interaction_over", threshold: 10 },
+                    },
+                  },
+                  aggregate_view: {
+                    strategy: "clipping",
+                    clipping_options: {
+                      trigger: { type: "on_interaction_over", threshold: 10 },
+                    },
+                  },
+                }}
                 dataLabel="Search"
               />
             </WidgetCard>
@@ -373,6 +387,7 @@ export default function PlaygroundPage() {
                 scalability={{
                   "temporal_view": {
                     "strategy": "zoom_in",
+                    "clipping_options": sliderClipping.temporal_view.clipping_options,
                     "smoothing_options": {
                       "method": { "type": "savgol", "window_length": 4, "polyorder": 2 },
                       "trigger": { "type": "interaction", "threshold": 20 }

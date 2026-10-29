@@ -470,6 +470,7 @@ const Chart = ({
     const {
         clear: clearRectangleSelection,
         handleMouseDown: handleRectangleMouseDown,
+        dragMode: rectangleDragMode,
         points: rectanglePoints,
         selection: rectangleSelection,
         valueDomain: rectangleValueDomain,
@@ -1632,7 +1633,9 @@ const Chart = ({
                            minHeight: `${temporalPlotHeight}px`,
                            overflow: valueBrushRange ? 'hidden' : 'visible',
                            order: 1,
-                           cursor: rectangleToolEnabled ? 'crosshair' : undefined,
+                           cursor: rectangleToolEnabled
+                               ? rectangleDragMode === 'move' ? 'move' : 'crosshair'
+                               : undefined,
                        }}
                        data-provenance-rectangle-plot={
                            rectangleToolEnabled ? "true" : undefined
@@ -1893,7 +1896,8 @@ const Chart = ({
                                       width: `${rectangleSelection.width}px`,
                                       height: `${rectangleSelection.height}px`,
                                       ...rectangleZoomStyle,
-                                      pointerEvents: "none",
+                                      pointerEvents: rectangleDragMode === "create" ? "none" : "auto",
+                                      cursor: "move",
                                       zIndex: 4,
                                   }}
                               />

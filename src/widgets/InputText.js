@@ -1,4 +1,4 @@
-import ClippingNotice from "../shared/components/ClippingNotice.js";
+import useClippingBadge from "../shared/hooks/useClippingBadge.js";
 import { InputText as InputText_ } from "primereact/inputtext/inputtext.esm.js";
 import {
     useCallback,
@@ -111,6 +111,13 @@ const InputText = (props) => {
         width: containerWidth,
         mode: provenanceMode,
     }), [serializedProvenance, strategy, strategyFactory, props.scalability, containerWidth, provenanceMode]);
+    const { message: clippingMessage, revision: clippingRevision } = useClippingBadge({
+        records: serializedProvenance.data,
+        scalability: props.scalability,
+        width: containerWidth,
+        mode: provenanceMode,
+        showTimeline: isDropdownVisible,
+    });
     const [text, setText] = useState(currentValue ?? "");
     const currentValueRef = useRef(currentValue);
     currentValueRef.current = currentValue;
@@ -208,6 +215,8 @@ const InputText = (props) => {
             setValue: applyRegisteredValue,
             visualize,
             mode: provenanceMode,
+            clippingMessage,
+            clippingRevision,
             focus: () => {
                 elementRef.current?.scrollIntoView?.({
                     behavior: "smooth",
@@ -238,6 +247,8 @@ const InputText = (props) => {
         notifyWidget,
         visualize,
         provenanceMode,
+        clippingMessage,
+        clippingRevision,
     ]);
 
     useEffect(() => {
@@ -367,13 +378,6 @@ const InputText = (props) => {
                 tooltip?.hide?.();
             }}
         >
-            {visualize && <ClippingNotice
-                id={id}
-                records={serializedProvenance.data}
-                scalability={props.scalability}
-                width={containerWidth}
-                mode={provenanceMode}
-            />}
             <InputText_
                 {...props.inputProps}
                 ref={nativeInputRef}

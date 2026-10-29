@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { resolveClippingConfig } from '../src/shared/logic/scalability/core/normalizeClippingConfig.js';
-import { resolveSelectionTemporalView } from '../src/shared/logic/scalability/views/selectionTemporal.js';
+import { resolveClippingConfig } from '../src/shared/logic/scalability/strategies/clipping/config.js';
+import { resolveSelectionTemporalView } from '../src/shared/logic/scalability/strategies/clipping/selectionTemporal.js';
 
 const clipping = threshold => ({ strategy: 'clipping', clipping_options: {
     trigger: { type: 'on_interaction_over', threshold },

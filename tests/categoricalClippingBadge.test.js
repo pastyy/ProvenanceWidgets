@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { resolveActiveClippingBadge } from '../src/shared/logic/scalability/views/clippingNotice.js';
+import { resolveActiveClippingBadge } from '../src/shared/logic/scalability/strategies/clipping/clippingNotice.js';
 import { getClippingBadgeColor } from '../src/shared/logic/clippingBadgeColor.js';
 
 const records = Array.from({ length: 16 }, (_, i) => ({
