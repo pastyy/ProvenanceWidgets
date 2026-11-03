@@ -62,7 +62,11 @@ views.
 - [TemporalZoomBrush.js](../../../../components/TemporalZoomBrush.js): categorical drag selection.
 - [CheckboxZoomAxis.js](../../../../components/CheckboxZoomAxis.js): selected-range axis.
 
-InputText forwards configuration to Chart, but slider value and two-dimensional
-zoom semantics do not define a complete text-specific zoom contract.
+InputText supports the `interactions` mode through Chart's vertical history
+brush. It honors `visibility`, interaction/time triggers, `auto_zoom`, and
+`temporalBrush`. Interaction triggers count committed searches and exclude the
+baseline and time-sampling records; time triggers use the complete recorded
+elapsed span. Text has no numeric value dimension, so `values` and
+`interactions-values` do not activate a text brush.
 Aggregate zoom-in remains unimplemented; aggregate scrolling is described in
 [Aggregate windows](../../windowing/README.md).

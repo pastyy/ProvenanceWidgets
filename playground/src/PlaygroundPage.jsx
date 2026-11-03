@@ -40,7 +40,7 @@ const meatOptions = [
 
 const checkboxScalability = {
   temporal_view: {
-    strategy: "clipping",
+    strategy: "zoom_in",
     zoom_in_options: {
       visibility: "all-active",
       trigger: { type: "interaction", threshold: 10 },
@@ -78,7 +78,7 @@ const radioScalability = {
 
 const singleSelectScalability = {
   temporal_view: {
-    strategy: "clipping",
+    strategy: "zoom_in",
     zoom_in_options: {
       visibility: "all-active",
       trigger: { type: "interaction", threshold: 10 },
@@ -271,13 +271,13 @@ const rangeSliderOptions = {
 
 const sliderClipping = {
   temporal_view: {
-    strategy: "clipping",
+    strategy: "smoothing",
     clipping_options: {
       trigger: { type: "interaction", threshold: 20 },
     },
   },
   aggregate_view: {
-    strategy: "clipping",
+    strategy: "smoothing",
     clipping_options: {
       trigger: { type: "interaction", threshold: 10 },
     },
@@ -346,7 +346,16 @@ export default function PlaygroundPage() {
                 provenance={playgroundInputTextProvenance}
                 scalability={{
                   temporal_view: {
-                    strategy: "clipping",
+                    strategy: "zoom_in",
+                    zoom_in_options: {
+                      modes: ["interactions"],
+                      visibility: "after-trigger",
+                      trigger: {
+                        type: "interaction",
+                        threshold: 10,
+                        auto_zoom: true,
+                      },
+                    },
                     clipping_options: {
                       trigger: { type: "interaction", threshold: 10 },
                     },
@@ -386,34 +395,38 @@ export default function PlaygroundPage() {
                 dataLabel="Single value"
                 scalability={{
                   "temporal_view": {
-                    "strategy": "zoom_in",
+                    "strategy": "smoothing", // "clipping" or "zoom_in" or "smoothing"
                     "clipping_options": sliderClipping.temporal_view.clipping_options,
                     "smoothing_options": {
                       "method": {
-                        "type": "savgol",
-                        "options": { "window_size": 5, "degree": 3 }
+                        "type": "savgol", // "gaussian" or "bspline"
+                        "options": { "window_size": 200, "degree": 1 }
                       },
                       "trigger": { "type": "interaction", "threshold": 20 }
                     },
                     "zoom_in_options": {
                       "modes": ["interactions", "interactions-values", "values"],
-                      "visibility": "all-active",
+                      "visibility": "all-active", // "all-active" or "after-trigger"
                       "trigger": {
-                        "type": "interaction",
+                        "type": "interaction",  // "interaction" or "time"
                         "threshold": 10,
-                        "auto_zoom": false
+                        "auto_zoom": true
                       }
                     }
                   },
                   "aggregate_view": {
-                    "strategy": "smoothing",
+                    "strategy": "smoothing", // "clipping" or "zoom_in" or "smoothing"
                     "smoothing_options": {
                       "method": {
                         "type": "savgol",
-                        "options": { "window_size": 5, "degree": 3 }
+                        "options": { "window_size": 9, "degree": 8 }
                       },
                       "trigger": { "type": "interaction", "threshold": 10 }
-                    }
+                    },
+                    // "window_options": {
+                    //   "window_size": 50,
+                    //   "window_start": 10
+                    // }
                   }
                 }}
               />

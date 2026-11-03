@@ -140,7 +140,7 @@ interactions and responsive layouts have passed acceptance review.
 | RadioGroup | Integrated | Integrated | interactions | Pending | Pending |
 | SingleSelectDropdown | Integrated | Integrated | interactions | Pending | Pending |
 | MultiSelectDropdown | Integrated | Integrated | interactions | Pending | Pending |
-| InputText | Integrated | Integrated | Shared Chart path; text-specific semantics need refinement | Pending | Pending |
+| InputText | Integrated | Integrated | interactions | Pending | Pending |
 | SuperProvenanceWidget | Pending | Pending | Pending | Pending | Pending |
 
 Aggregate zoom-in is unimplemented for every component. Types reserve
@@ -159,7 +159,7 @@ require their own data adapters.
 - Clipping, smoothing, and windows: [development guide](../src/shared/logic/scalability/DEVELOPMENT.md).
 - Regression checks: run `node --test tests/*.test.js` from the repository root; see [project commands](../README.md#development) for builds.
 
-Existing tests cover independent clipping, Slider windows, numerical smoothing,
-and SVG rendering. They do not replace per-widget browser
+Existing tests cover independent clipping, InputText temporal zoom, Slider
+windows, numerical smoothing, and SVG rendering. They do not replace per-widget browser
 acceptance. Update the API guide and the relevant topic when changing the
 API; shared algorithms or types alone do not establish widget integration.

@@ -10,6 +10,12 @@ export {
     brushSelectionToValueRange,
 } from "./valueRange.js";
 export {
+    getInputTextAutoZoomRange,
+    getInputTextZoomDomain,
+    getInputTextZoomTriggerEntries,
+    resolveInputTextTemporalZoom,
+} from "./inputText.js";
+export {
     normalizeRectangle,
     rectangleContainsPoint,
     rectangleContainsAnyPoint,

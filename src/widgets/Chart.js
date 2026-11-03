@@ -30,6 +30,9 @@ import {
     resolveTemporalZoomActions,
     isTemporalZoomToolVisible,
     resolveTemporalZoomIn,
+    getInputTextAutoZoomRange,
+    getInputTextZoomDomain,
+    resolveInputTextTemporalZoom,
     temporalTriggerMetric,
     resolveRecordTemporalView,
     getClippedTemporalYPositions,
@@ -945,6 +948,13 @@ const Chart = ({
         }
         return sourceChartData;
     }, [sourceChartData, clipping]);
+    const inputTextZoom = useMemo(() => resolveInputTextTemporalZoom({
+        entries: chartData?.isInputText
+            ? chartData.inputTextEntries
+            : [],
+        config: temporalZoom,
+        temporalBrush: normalizeTemporalBrush(temporalBrush),
+    }), [chartData, temporalBrush, temporalZoom]);
 
     useEffect(() => {
         setBrushRange(null);
@@ -971,41 +981,59 @@ const Chart = ({
         const isTemporalSlider = chartData?.isCheckboxGroup && (
             chartData.isSingleSlider || chartData.isRangeSlider
         );
-        const entryCount = isTemporalSlider
-            ? chartData.detailedDataEntries.length
-            : 0;
-        const previousEntryCount = previousTemporalEntryCountRef.current;
+        const isTemporalInputText = Boolean(
+            chartData?.isInputText && inputTextZoom.enabled
+        );
+        const isTemporalRecordChart =
+            isTemporalSlider || isTemporalInputText;
         const entries = isTemporalSlider
             ? chartData.detailedDataEntries
-            : [];
+            : isTemporalInputText
+                ? chartData.inputTextEntries
+                : [];
+        const triggerEntries = isTemporalInputText
+            ? inputTextZoom.triggerEntries
+            : entries;
+        const entryCount = isTemporalRecordChart ? entries.length : 0;
+        const previousEntryCount = previousTemporalEntryCountRef.current;
+        const historyReset = entryCount < previousEntryCount;
         const currentMetric = temporalTriggerMetric(
-            entries,
+            triggerEntries,
             temporalZoom.trigger.type
         );
         const { shouldAutoZoom } = resolveTemporalZoomActions({
-            entries,
+            entries: triggerEntries,
             trigger: temporalZoom.trigger,
-            previousMetric: lastTemporalMetricRef.current,
-            enabled: isTemporalSlider && normalizeTemporalBrush(temporalBrush) &&
-                temporalZoom.enabled && temporalZoom.modes.includes("interactions"),
-            alreadyAutoZoomed: autoZoomTriggeredRef.current,
+            previousMetric: historyReset
+                ? 0
+                : lastTemporalMetricRef.current,
+            enabled: isTemporalInputText
+                ? inputTextZoom.enabled && temporalZoom.visibility !== "off"
+                : isTemporalSlider && normalizeTemporalBrush(temporalBrush) &&
+                    temporalZoom.enabled && temporalZoom.modes.includes("interactions"),
+            alreadyAutoZoomed: historyReset
+                ? false
+                : autoZoomTriggeredRef.current,
         });
 
-        if (shouldAutoZoom) {
-            autoZoomTriggeredRef.current = true;
-            setBrushRange(getTemporalAutoZoomRange(entries, temporalZoom.trigger));
-            setBrushSyncRevision(revision => revision + 1);
-        }
-
-        if (entryCount < previousEntryCount) {
+        if (historyReset) {
             setBrushRange(null);
-            setBrushSyncRevision(revision => revision + 1);
             clearRectangleSelection();
             autoZoomTriggeredRef.current = false;
             lastTemporalMetricRef.current = null;
+        }
+
+        if (shouldAutoZoom) {
+            autoZoomTriggeredRef.current = true;
+            setBrushRange(isTemporalInputText
+                ? getInputTextAutoZoomRange(entries, temporalZoom.trigger)
+                : getTemporalAutoZoomRange(entries, temporalZoom.trigger));
+            setBrushSyncRevision(revision => revision + 1);
+        } else if (historyReset) {
+            setBrushSyncRevision(revision => revision + 1);
         } else if (entryCount > previousEntryCount) {
             clearRectangleSelection();
-            if (!shouldAutoZoom) setBrushRange(currentRange => {
+            setBrushRange(currentRange => {
                 if (
                     !Array.isArray(currentRange) ||
                     currentRange.length !== 2 ||
@@ -1030,9 +1058,7 @@ const Chart = ({
                 const nextStart = Math.max(0, nextEnd - windowSpan);
                 return [nextStart, nextEnd];
             });
-            if (!shouldAutoZoom) {
-                setBrushSyncRevision(revision => revision + 1);
-            }
+            setBrushSyncRevision(revision => revision + 1);
         }
 
         previousTemporalEntryCountRef.current = entryCount;
@@ -1040,6 +1066,7 @@ const Chart = ({
     }, [
         chartData,
         clearRectangleSelection,
+        inputTextZoom,
         temporalBrush,
         temporalZoom,
         temporalZoomKey,
@@ -1116,8 +1143,7 @@ const Chart = ({
         const allInputTextEntries = chartData.inputTextEntries ?? [];
         const inputTextBrushEnabled =
             !clipping.enabled &&
-            normalizeTemporalBrush(temporalBrush) &&
-            allInputTextEntries.length > 1;
+            inputTextZoom.visible;
         const inputTextEntries = inputTextBrushEnabled
             ? filterTemporalEntries(allInputTextEntries, brushRange)
             : allInputTextEntries;
@@ -1136,29 +1162,13 @@ const Chart = ({
                 mode,
                 inputTextPlotHeight
             );
-        const inputTextSequenceMax = Math.max(
-            0,
-            inputTextEntries.length - 1
-        );
-        const inputTextTicks = inputTextSequenceMax === 0
-            ? [0]
-            : mode === "time"
-                ? [0, inputTextSequenceMax]
-                : d3.ticks(0, inputTextSequenceMax, 10);
-        const inputTextTickFormat = mode === "time"
-            ? value => value === 0 ? "t=0" : "now"
-            : inputTextSequenceMax === 0
-                ? () => "0"
-                : d3.tickFormat(0, inputTextSequenceMax, 10);
-        const getInputTextTickY = value => {
-            if (inputTextSequenceMax === 0) {
-                return inputTextPlotHeight / 2;
-            }
-            return 8 + (
-                (value / inputTextSequenceMax) *
-                (inputTextPlotHeight - 16)
-            );
-        };
+        const inputTextZoomDomain = inputTextBrushEnabled
+            ? getInputTextZoomDomain(
+                allInputTextEntries,
+                brushRange,
+                mode
+            )
+            : null;
         
         let calculatedMax = 0;
         for (const [, records] of sortedEntries) {
@@ -1339,101 +1349,54 @@ const Chart = ({
                     overflow: "visible",
                 }}
             >
-                {!clipping.enabled && (inputTextBrushEnabled ? (
-                    <TemporalBrush
-                        interactive={inputTextBrushEnabled}
-                        range={brushRange}
-                        syncRevision={brushSyncRevision}
-                        height={inputTextPlotHeight}
-                        mode={mode}
-                        onInteractionStart={clearRectangleSelection}
-                        onRangeChange={handleBrushRangeChange}
-                        positions={inputTextBrushYPositions}
-                        target={target}
-                        tooltipId={tooltipId}
-                        widgetType="input-text"
-                    />
-                ) : (
-                <div
-                    style={{
-                        position: "relative",
-                        flex: "0 0 48px",
-                        height: `${inputTextPlotHeight}px`,
-                        color: "#6c757d",
-                    }}
-                >
-                    <div
-                        style={{
-                            position: "absolute",
-                            inset: "8px auto 8px 0",
-                            writingMode: "vertical-rl",
-                            transform: "rotate(180deg)",
-                            fontSize: "11px",
-                            fontWeight: "bold",
-                            textAlign: "center",
-                        }}
-                    >
-                        {mode === "time"
-                            ? "time"
-                            : "Sequence of Interaction (0 = first)"}
-                    </div>
-                    <svg
-                        aria-hidden="true"
-                        width="60"
-                        height={inputTextPlotHeight}
-                        style={{
-                            position: "absolute",
-                            inset: "0 auto 0 0",
-                            overflow: "visible",
-                            pointerEvents: "none",
-                        }}
-                    >
-                        <line
-                            x1="60"
-                            x2="60"
-                            y1="8"
-                            y2={inputTextPlotHeight - 8}
-                            stroke="#495057"
-                            strokeWidth="1"
-                        />
-                        {inputTextTicks.map(value => (
-                            <g
-                                key={value}
-                                transform={
-                                    `translate(0 ${getInputTextTickY(value)})`
-                                }
-                            >
-                                <line
-                                    x1="52"
-                                    x2="60"
-                                    y1="0"
-                                    y2="0"
-                                    stroke="#495057"
-                                    strokeWidth="1"
-                                />
-                                <text
-                                    x="48"
-                                    y="0"
-                                    dy="0.32em"
-                                    fill="#495057"
-                                    fontSize="10"
-                                    textAnchor="end"
-                                >
-                                    {inputTextTickFormat(value)}
-                                </text>
-                            </g>
-                        ))}
-                    </svg>
-                </div>
-                ))}
+                <TemporalBrush
+                    interactive={inputTextBrushEnabled}
+                    interactionLabels={allInputTextEntries.map(
+                        ([, records], index) =>
+                            records[0]?.sequenceIndex ?? index
+                    )}
+                    range={inputTextBrushEnabled ? brushRange : null}
+                    syncRevision={brushSyncRevision}
+                    height={inputTextPlotHeight}
+                    mode={mode}
+                    onInteractionStart={clearRectangleSelection}
+                    onRangeChange={handleBrushRangeChange}
+                    positions={inputTextBrushYPositions}
+                    target={target}
+                    tooltipId={tooltipId}
+                    widgetType="input-text"
+                />
                 <div
                     style={{
                         position: "relative",
                         flex: 1,
                         minWidth: 0,
                         height: `${inputTextPlotHeight}px`,
+                        paddingRight: inputTextZoomDomain
+                            ? `${ZOOM_AXIS_RIGHT_SPACE}px`
+                            : undefined,
+                        boxSizing: "border-box",
                     }}
                 >
+                    {inputTextZoomDomain && (
+                        <ZoomedRangeAxis
+                            domain={inputTextZoomDomain}
+                            label={mode === "time"
+                                ? "Selected time range"
+                                : "Selected interaction range"}
+                            orientation="vertical"
+                            pixelLength={inputTextPlotHeight}
+                            step={mode === "time" ? undefined : 1}
+                            integerTicks={mode !== "time"}
+                            theme={theme}
+                            topInset={0}
+                            formatTick={value => (
+                                `${Number(Number(value).toFixed(2))}${
+                                    mode === "time" ? "s" : ""
+                                }`
+                            )}
+                        />
+                    )}
                     {inputTextEntries.map(([, records], index) => {
                         const record = records[0];
                         const value = record.value;
@@ -1460,8 +1423,10 @@ const Chart = ({
                                     position: "absolute",
                                     top:
                                         `${inputTextYPositions[index] - 8}px`,
-                                    left: 0,
-                                    right: 0,
+                                     left: 0,
+                                     right: inputTextZoomDomain
+                                         ? `${ZOOM_AXIS_RIGHT_SPACE}px`
+                                         : 0,
                                     height: "24px",
                                     display: "flex",
                                     alignItems: "center",
