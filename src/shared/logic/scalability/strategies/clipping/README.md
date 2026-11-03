@@ -64,7 +64,7 @@ Checkbox, radio, single-select, multi-select, text input, single-slider, and ran
 widgets show an outlined eye
 at the footprint icon's bottom-right when the **displayed view** uses clipping.
 The 16px yellow (`#FFD600`) circular badge has a 2px white border and an 11px
-white eye outline. The eye has a slash while records are hidden; otherwise it is open.
+complementary blue (`#0029FF`) eye outline. The eye has a slash while records are hidden; otherwise it is open.
 Aggregate clipping works independently of temporal zoom. Switching to a view
 without clipping hides the badge.
 Hovering over the yellow circle shows `No hidden records`, `1 record hidden`, or

@@ -50,7 +50,7 @@ const checkboxScalability = {
     },
   },
   aggregate_view: {
-    strategy: "clipping",
+    strategy: "zoom_in",
     clipping_options: {
       trigger: { type: "interaction", threshold: 10 },
     },

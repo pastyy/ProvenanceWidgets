@@ -267,7 +267,7 @@ const ProvenanceButton = ({ target }) => {
                             style={{
                                 position: 'absolute', right: -5, bottom: -5,
                                 width: 16, height: 16, padding: 0, borderRadius: '50%',
-                                display: 'grid', placeItems: 'center', color: '#fff',
+                                display: 'grid', placeItems: 'center', color: '#0029FF',
                                 background: getClippingBadgeColor(),
                                 border: '2px solid #fff',
                                 boxSizing: 'border-box', cursor: 'pointer', zIndex: 2,
