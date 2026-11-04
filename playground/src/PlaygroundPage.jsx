@@ -59,7 +59,7 @@ const checkboxScalability = {
 
 const radioScalability = {
   temporal_view: {
-    strategy: "clipping",
+    strategy: "zoom_in",
     zoom_in_options: {
       visibility: "all-active",
       trigger: { type: "interaction", threshold: 10 },
@@ -69,7 +69,7 @@ const radioScalability = {
     },
   },
   aggregate_view: {
-    strategy: "clipping",
+    strategy: "zoom_in",
     clipping_options: {
       trigger: { type: "interaction", threshold: 10 },
     },
@@ -97,7 +97,7 @@ const singleSelectScalability = {
 
 const multiSelectScalability = {
   temporal_view: {
-    strategy: "clipping",
+    strategy: "zoom_in",
     zoom_in_options: {
       visibility: "all-active",
       trigger: { type: "interaction", threshold: 10 },
@@ -107,7 +107,7 @@ const multiSelectScalability = {
     },
   },
   aggregate_view: {
-    strategy: "clipping",
+    strategy: "zoom_in",
     clipping_options: {
       trigger: { type: "interaction", threshold: 10 },
     },

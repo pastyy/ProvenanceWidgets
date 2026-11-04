@@ -1386,6 +1386,12 @@ const Chart = ({
                                 : "Selected interaction range"}
                             orientation="vertical"
                             pixelLength={inputTextPlotHeight}
+                            positionedTicks={mode !== "time"
+                                ? inputTextEntries.map(([, records], index) => ({
+                                    value: records[0].sequenceIndex,
+                                    position: inputTextYPositions[index] + 4,
+                                }))
+                                : undefined}
                             step={mode === "time" ? undefined : 1}
                             integerTicks={mode !== "time"}
                             theme={theme}
@@ -1564,6 +1570,10 @@ const Chart = ({
                          label="Selected interaction range"
                          orientation="vertical"
                          pixelLength={temporalPlotHeight}
+                         positionedTicks={sortedEntries.map(([, records], index) => ({
+                             value: records[0].sequenceIndex,
+                             position: temporalYPositions[index],
+                         }))}
                          step={1}
                          theme={theme}
                          topInset={reserveValueZoomAxisSpace

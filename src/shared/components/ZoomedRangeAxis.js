@@ -43,6 +43,9 @@ const ZoomedRangeAxis = ({
     horizontalInset = HORIZONTAL_INSET,
     axisKind,
     integerTicks = false,
+    positionedTicks,
+    guideHeight = 0,
+    minTickSpacing = 48,
     formatTick = value => value,
 }) => {
     if (!isValidDomain(domain)) return null;
@@ -59,6 +62,7 @@ const ZoomedRangeAxis = ({
         max: Math.floor(max),
         step: 1,
         pixelLength: length,
+        minTickSpacing,
     }) : buildAdaptiveSliderTicks({
         min,
         max,
@@ -66,6 +70,7 @@ const ZoomedRangeAxis = ({
         minimumStep,
         ticksArray,
         pixelLength: length,
+        minTickSpacing,
     });
     const span = max - min;
     const getRatio = value => span > 0
@@ -107,6 +112,14 @@ const ZoomedRangeAxis = ({
                         );
                         return (
                             <g key={`zoom-values-tick-${tick}`}>
+                                {guideHeight > 0 && (
+                                    <line
+                                        data-provenance-zoom-guide={tick}
+                                        x1={x} x2={x} y1={-guideHeight} y2="8"
+                                        stroke={colors.line} strokeOpacity="0.25"
+                                        strokeDasharray="2 3"
+                                    />
+                                )}
                                 <line
                                     x1={x}
                                     x2={x}
@@ -135,6 +148,13 @@ const ZoomedRangeAxis = ({
     }
 
     const trackLength = Math.max(1, length - (VERTICAL_INSET * 2));
+    // History rows may be evenly spaced even when their sequence numbers
+    // repeat or skip. Use their rendered centers instead of interpolating.
+    const verticalTicks = positionedTicks ?? ticks.map(value => ({
+        value,
+        position: VERTICAL_INSET + getRatio(value) * trackLength,
+    }));
+    let lastLabelPosition = -Infinity;
     return (
         <div
             data-provenance-zoom-axis="interactions"
@@ -162,12 +182,11 @@ const ZoomedRangeAxis = ({
                     y2={length - VERTICAL_INSET}
                     stroke={colors.line}
                 />
-                {ticks.map(tick => {
-                    const y = VERTICAL_INSET + (
-                        getRatio(tick) * trackLength
-                    );
+                {verticalTicks.map(({ value: tick, position: y }, index) => {
+                    const showLabel = y - lastLabelPosition >= 14;
+                    if (showLabel) lastLabelPosition = y;
                     return (
-                        <g key={`zoom-interactions-tick-${tick}`}>
+                        <g key={`zoom-interactions-tick-${index}`}>
                             <line
                                 x1="8"
                                 x2="14"
@@ -175,7 +194,7 @@ const ZoomedRangeAxis = ({
                                 y2={y}
                                 stroke={colors.line}
                             />
-                            <text
+                            {showLabel && <text
                                 x="18"
                                 y={y}
                                 dy="0.32em"
@@ -184,7 +203,7 @@ const ZoomedRangeAxis = ({
                                 textAnchor="start"
                             >
                                 {formatTick(tick)}
-                            </text>
+                            </text>}
                         </g>
                     );
                 })}

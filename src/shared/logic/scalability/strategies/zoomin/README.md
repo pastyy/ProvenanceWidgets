@@ -52,8 +52,14 @@ After a non-empty zoom selection, a small selected-range axis appears below
 the categorical rows. Its bounds follow the brush and its ticks align with the
 history tracks above it. It uses the same axis renderer as slider zoom, with
 interaction positions or elapsed seconds according to the mode. Clearing the
-selection hides this secondary axis. It does not affect clipping or aggregate
-views.
+selection hides this secondary axis. Tick guides extend through the history
+rows in CheckboxGroup, RadioGroup, SingleSelectDropdown, and MultiSelectDropdown
+so interaction counts line up with the blocks. Slider and InputText axes do not
+extend guides into their plots. It does not affect clipping or aggregate views.
+
+Moving an existing brush selection uses the four-way move cursor. Only its
+resize handles use directional resize arrows; drawing a new selection uses a
+crosshair.
 
 ## Implementation
 

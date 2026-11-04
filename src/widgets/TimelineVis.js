@@ -64,6 +64,9 @@ const TimelineVis = ({
         ]
     );
 
+    const zoomed = !clipping && Array.isArray(brushRange) &&
+        (brushRange[0] > 0 || brushRange[1] < 100);
+
     const restoreBar = (bar, event) => {
         if (!onRestore) return;
         event.preventDefault();
@@ -119,12 +122,17 @@ const TimelineVis = ({
                 {bars.map(bar => {
                     const tooltipProps = getTooltipAnchorProps(
                         tooltipId,
-                        () => formatTemporalTooltip({
-                            label: widgetId,
-                            value,
-                            record: bar.record,
-                            kind,
-                        })
+                        () => {
+                            const content = formatTemporalTooltip({
+                                label: widgetId,
+                                value,
+                                record: bar.record,
+                                kind,
+                            });
+                            return zoomed && mode !== "time"
+                                ? `${content}\nInteraction range: ${bar.startValue}–${bar.endValue}${bar.record.unselect ? " (end exclusive)" : " (current)"}`
+                                : content;
+                        }
                     );
 
                     return (
@@ -166,9 +174,7 @@ const TimelineVis = ({
                                 left: bar.left,
                                 width: bar.width,
                                 minWidth: "8px",
-                                boxSizing: clipping
-                                    ? "border-box"
-                                    : undefined,
+                                boxSizing: "border-box",
                                 height: "24px",
                                 top: 0,
                                 backgroundColor: bar.color,
