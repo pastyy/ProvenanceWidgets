@@ -88,8 +88,12 @@ RangeSlider spans are additionally clamped to a valid range.
 Aggregate curves use the same x and count scales as the bars. SingleSlider
 places gradient color stops at recorded values; RangeSlider places them at
 aggregate segment centers. Temporal curves use the existing value and temporal
-scales with vertical color stops. All smoothing paths and gradients ignore
-pointer events.
+scales with vertical color stops. Temporal smoothing also overlays a dark dashed
+best-fit line, calculated by ordinary least squares from the displayed smoothed
+values against their temporal offsets. RangeSlider fits its low and high endpoints
+separately. These display-only trend lines are clipped to the plot bounds and do
+not modify provenance records. All smoothing paths, trend lines, and gradients
+ignore pointer events.
 
 ## Gaussian Rules
 

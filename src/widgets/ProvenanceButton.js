@@ -267,7 +267,7 @@ const ProvenanceButton = ({ target }) => {
                             style={{
                                 position: 'absolute', right: -5, bottom: -5,
                                 width: 16, height: 16, padding: 0, borderRadius: '50%',
-                                display: 'grid', placeItems: 'center', color: '#0029FF',
+                                color: '#0029FF', lineHeight: 0,
                                 background: getClippingBadgeColor(),
                                 border: '2px solid #fff',
                                 boxSizing: 'border-box', cursor: 'pointer', zIndex: 2,
@@ -285,7 +285,11 @@ const ProvenanceButton = ({ target }) => {
                                 strokeWidth="2"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                style={{ pointerEvents: 'none' }}
+                                style={{
+                                    position: 'absolute', left: '50%', top: '50%',
+                                    transform: 'translate(-50%, -50%)', display: 'block',
+                                    pointerEvents: 'none',
+                                }}
                             >
                                 <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
                                 <circle cx="12" cy="12" r="2.5" />

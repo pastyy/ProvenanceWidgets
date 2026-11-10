@@ -35,6 +35,26 @@ const SliderTemporalSmoothingCurve = ({
         gradientKey ?? `${method}-${min}-${max}`
     )}`;
     const fields = range ? ["low", "high"] : ["value"];
+    const clipId = `${gradientId}-best-fit-clip`;
+    const bestFitFor = field => {
+        const points = samples.filter(sample =>
+            Number.isFinite(sample.offset) && Number.isFinite(sample[field]));
+        if (points.length < 2) return null;
+        const meanOffset = points.reduce((sum, sample) => sum + sample.offset, 0) / points.length;
+        const meanValue = points.reduce((sum, sample) => sum + sample[field], 0) / points.length;
+        const variance = points.reduce((sum, sample) => sum + (sample.offset - meanOffset) ** 2, 0);
+        if (!(variance > 0)) return null;
+        const slope = points.reduce((sum, sample) =>
+            sum + (sample.offset - meanOffset) * (sample[field] - meanValue), 0) / variance;
+        const start = Math.min(...points.map(sample => sample.offset));
+        const end = Math.max(...points.map(sample => sample.offset));
+        return {
+            x1: x(meanValue + slope * (start - meanOffset)),
+            y1: y({ offset: start }),
+            x2: x(meanValue + slope * (end - meanOffset)),
+            y2: y({ offset: end }),
+        };
+    };
 
     return (
         <g
@@ -42,6 +62,11 @@ const SliderTemporalSmoothingCurve = ({
             pointerEvents="none"
             aria-hidden="true"
         >
+            <defs>
+                <clipPath id={clipId}>
+                    <rect x={0} y={8} width={width} height={Math.max(0, height - 16)} />
+                </clipPath>
+            </defs>
             {stops.length > 0 && (
                 <defs>
                     <linearGradient
@@ -76,6 +101,21 @@ const SliderTemporalSmoothingCurve = ({
                     vectorEffect="non-scaling-stroke"
                 />
             ))}
+            {fields.map(field => {
+                const bestFit = bestFitFor(field);
+                return bestFit && (
+                    <line
+                        key={`best-fit-${field}`}
+                        data-provenance-temporal-best-fit={field}
+                        {...bestFit}
+                        clipPath={`url(#${clipId})`}
+                        stroke="#334155"
+                        strokeWidth={1.5}
+                        strokeDasharray="6 4"
+                        vectorEffect="non-scaling-stroke"
+                    />
+                );
+            })}
         </g>
     );
 };

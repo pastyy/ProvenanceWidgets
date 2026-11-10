@@ -66,8 +66,7 @@ input {
 
 .super-provenance-demo > div > div:first-child {
   max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: visible;
   padding-bottom: 8px;
 }
 
