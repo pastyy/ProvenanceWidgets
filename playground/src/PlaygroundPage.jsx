@@ -15,6 +15,7 @@ import {
 } from "../../src/index.ts";
 
 import WidgetCard from "./WidgetCard.jsx";
+import { configurePlaygroundScalability } from "./scalabilityControls.js";
 
 const cityOptions = [
   { label: "New York", value: "New York" },
@@ -40,7 +41,12 @@ const meatOptions = [
 
 const checkboxScalability = {
   temporal_view: {
-    strategy: "zoom_in",
+    strategy: "smoothing",
+    smoothing_options: {
+      // 整条历史 bar 的横向模糊强度（标准差，占 bar 总宽度的百分比）。
+      // 0 = 不模糊；例如 0.5 / 1.2 / 3，越大越模糊，不受小块宽度限制。
+      blur_radius: 1.2,
+    },
     zoom_in_options: {
       visibility: "all-active",
       trigger: { type: "interaction", threshold: 10 },
@@ -60,6 +66,11 @@ const checkboxScalability = {
 const radioScalability = {
   temporal_view: {
     strategy: "zoom_in",
+    smoothing_options: {
+      // 整条历史 bar 的横向模糊强度（标准差，占 bar 总宽度的百分比）。
+      // 0 = 不模糊；例如 0.5 / 1.2 / 3，越大越模糊，不受小块宽度限制。
+      blur_radius: 1.2,
+    },
     zoom_in_options: {
       visibility: "all-active",
       trigger: { type: "interaction", threshold: 10 },
@@ -79,6 +90,11 @@ const radioScalability = {
 const singleSelectScalability = {
   temporal_view: {
     strategy: "zoom_in",
+    smoothing_options: {
+      // 整条历史 bar 的横向模糊强度（标准差，占 bar 总宽度的百分比）。
+      // 0 = 不模糊；例如 0.5 / 1.2 / 3，越大越模糊，不受小块宽度限制。
+      blur_radius: 1.2,
+    },
     zoom_in_options: {
       visibility: "all-active",
       trigger: { type: "interaction", threshold: 10 },
@@ -98,6 +114,11 @@ const singleSelectScalability = {
 const multiSelectScalability = {
   temporal_view: {
     strategy: "zoom_in",
+    smoothing_options: {
+      // 整条历史 bar 的横向模糊强度（标准差，占 bar 总宽度的百分比）。
+      // 0 = 不模糊；例如 0.5 / 1.2 / 3，越大越模糊，不受小块宽度限制。
+      blur_radius: 1.2,
+    },
     zoom_in_options: {
       visibility: "all-active",
       trigger: { type: "interaction", threshold: 10 },
@@ -295,6 +316,15 @@ const provenanceComponents = [
 ];
 
 export default function PlaygroundPage() {
+  const [strategyOverrides, setStrategyOverrides] = useState({});
+  const configure = (id, defaults) =>
+    configurePlaygroundScalability(defaults, strategyOverrides[id]);
+  const controls = id => ({
+    strategies: strategyOverrides[id],
+    onStrategyChange: (view, strategy) => setStrategyOverrides(previous => ({
+      ...previous, [id]: { ...previous[id], [view]: strategy },
+    })),
+  });
   const [checkboxSelection, setCheckboxSelection] = useState(
     () => playgroundCheckboxProvenance.data.at(-1).value,
   );
@@ -323,28 +353,28 @@ export default function PlaygroundPage() {
             default
           >
             <div className="playground-grid">
-            <WidgetCard id="checkbox-group" title="Checkbox Group">
+            <WidgetCard {...controls("checkbox-group")} defaultStrategies={{ temporal_view: "smoothing", aggregate_view: "zoom_in" }} supportsSmoothing={["temporal_view"]} id="checkbox-group" title="Checkbox Group">
               <CheckboxGroup
                 id="checkbox-group"
                 data={meatOptions}
                 optionLabel="label"
                 optionValue="value"
                 provenance={playgroundCheckboxProvenance}
-                scalability={checkboxScalability}
+                scalability={configure("checkbox-group", checkboxScalability)}
                 selected={checkboxSelection}
                 onSelectedChange={setCheckboxSelection}
                 dataLabel="Meat"
               />
             </WidgetCard>
 
-            <WidgetCard id="input-text" title="Input Text">
+            <WidgetCard {...controls("input-text")} defaultStrategies={{ temporal_view: "zoom_in", aggregate_view: "clipping" }} supportsSmoothing={false} id="input-text" title="Input Text">
               <InputText
                 id="input-text"
                 placeholder="Search and press Enter"
                 value={inputValue}
                 onChange={setInputValue}
                 provenance={playgroundInputTextProvenance}
-                scalability={{
+                scalability={configure("input-text", {
                   temporal_view: {
                     strategy: "zoom_in",
                     zoom_in_options: {
@@ -366,12 +396,12 @@ export default function PlaygroundPage() {
                       trigger: { type: "interaction", threshold: 10 },
                     },
                   },
-                }}
+                })}
                 dataLabel="Search"
               />
             </WidgetCard>
 
-            <WidgetCard id="radiobutton-group" title="Radiobutton Group">
+            <WidgetCard {...controls("radiobutton-group")} defaultStrategies={{ temporal_view: "zoom_in", aggregate_view: "zoom_in" }} supportsSmoothing={["temporal_view"]} id="radiobutton-group" title="Radiobutton Group">
               <RadioGroup
                 id="radiobutton-group"
                 data={toppingOptions}
@@ -380,12 +410,12 @@ export default function PlaygroundPage() {
                 selected={ingredient}
                 onSelectedChange={setIngredient}
                 provenance={playgroundRadioProvenance}
-                scalability={radioScalability}
+                scalability={configure("radiobutton-group", radioScalability)}
                 dataLabel="Pizza topping"
               />
             </WidgetCard>
 
-            <WidgetCard id="single-slider" title="Single Slider">
+            <WidgetCard {...controls("single-slider")} defaultStrategies={{ temporal_view: "smoothing", aggregate_view: "smoothing" }} supportsSmoothing={true} id="single-slider" title="Single Slider">
               <Singleslider
                 id="single-slider"
                 value={singleSliderValue}
@@ -393,7 +423,7 @@ export default function PlaygroundPage() {
                 options={singleSliderOptions}
                 provenance={playgroundSingleSliderProvenance}
                 dataLabel="Single value"
-                scalability={{
+                scalability={configure("single-slider", {
                   "temporal_view": {
                     "strategy": "smoothing", // "clipping" or "zoom_in" or "smoothing"
                     "clipping_options": sliderClipping.temporal_view.clipping_options,
@@ -428,11 +458,11 @@ export default function PlaygroundPage() {
                     //   "window_start": 10
                     // }
                   }
-                }}
+                })}
               />
             </WidgetCard>
 
-            <WidgetCard id="single-select-dropdown" title="Single Select Dropdown">
+            <WidgetCard {...controls("single-select-dropdown")} defaultStrategies={{ temporal_view: "zoom_in", aggregate_view: "clipping" }} supportsSmoothing={["temporal_view"]} id="single-select-dropdown" title="Single Select Dropdown">
               <SingleSelectDropdown
                 id="single-select-dropdown"
                 options={cityOptions}
@@ -441,14 +471,14 @@ export default function PlaygroundPage() {
                 selected={city}
                 onSelectedChange={setCity}
                 provenance={playgroundSingleSelectProvenance}
-                scalability={singleSelectScalability}
+                scalability={configure("single-select-dropdown", singleSelectScalability)}
                 filter
                 showClear
                 dataLabel="City"
               />
             </WidgetCard>
 
-            <WidgetCard id="multi-select-dropdown" title="Multi Select Dropdown">
+            <WidgetCard {...controls("multi-select-dropdown")} defaultStrategies={{ temporal_view: "zoom_in", aggregate_view: "zoom_in" }} supportsSmoothing={["temporal_view"]} id="multi-select-dropdown" title="Multi Select Dropdown">
               <MultiSelectDropdown
                 id="multi-select-dropdown"
                 options={cityOptions}
@@ -457,21 +487,21 @@ export default function PlaygroundPage() {
                 selected={cities}
                 onSelectedChange={setCities}
                 provenance={playgroundMultiSelectProvenance}
-                scalability={multiSelectScalability}
+                scalability={configure("multi-select-dropdown", multiSelectScalability)}
                 filter
                 showClear
                 dataLabel="Cities"
               />
             </WidgetCard>
 
-            <WidgetCard id="range-slider" title="Range Slider">
+            <WidgetCard {...controls("range-slider")} defaultStrategies={{ temporal_view: "smoothing", aggregate_view: "smoothing" }} supportsSmoothing={true} id="range-slider" title="Range Slider">
               <Rangeslider
                 id="range-slider"
                 value={rangeSliderValue}
                 onChange={setRangeSliderValue}
                 options={rangeSliderOptions}
                 provenance={playgroundRangeSliderProvenance}
-                scalability={sliderClipping}
+                scalability={configure("range-slider", sliderClipping)}
                 dataLabel="Range"
               />
             </WidgetCard>

@@ -338,6 +338,9 @@ const Checkbox = ({
                                 timeDomain={checkboxGroup?.timeDomain}
                                 brushRange={checkboxGroup?.brushRange}
                                 clipping={checkboxGroup?.clipping}
+                                smoothing={checkboxGroup?.smoothing}
+                                smoothingWholeBar
+                                smoothingBlurRadius={checkboxGroup?.smoothingBlurRadius}
                                 tooltipId={tooltip}
                                 widgetId={
                                     checkboxGroup?.tooltipLabel ??

@@ -60,6 +60,8 @@ const MultiSelectItem = ({
     timeDomain,
     brushRange,
     clipping,
+    smoothing,
+    smoothingBlurRadius,
     target,
     tooltipLabel,
     visualize,
@@ -137,11 +139,13 @@ const MultiSelectItem = ({
             style={{
                 ...aggregateTooltipProps.style,
                 position: "relative",
-                height: "32px",
+                height: "24px",
                 display: "flex",
                 alignItems: "center",
                 padding: "0 8px",
+                boxSizing: "border-box",
                 width: "100%",
+                minWidth: 0,
                 flex: 1,
             }}
         >
@@ -170,7 +174,7 @@ const MultiSelectItem = ({
                                         : "interactionIndex",
                             }}
                             width={containerWidth}
-                            height={32}
+                            height={24}
                             layout="checkbox"
                             style={{
                                 width: "100%",
@@ -186,7 +190,10 @@ const MultiSelectItem = ({
                     <div data-provenance-selection-track={"dropdown"}
                         style={{
                             position: "absolute",
-                            inset: 0,
+                            top: 0,
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
                             zIndex: 0,
                             display: "flex",
                             alignItems: "center",
@@ -199,6 +206,9 @@ const MultiSelectItem = ({
                             timeDomain={timeDomain}
                             brushRange={brushRange}
                             clipping={clipping}
+                            smoothing={smoothing}
+                            smoothingWholeBar
+                            smoothingBlurRadius={smoothingBlurRadius}
                             tooltipId={tooltip}
                             widgetId={tooltipLabel}
                             value={optionKey}
@@ -653,8 +663,16 @@ const MultiSelectDropdown = (props) => {
             }}
         >
             <style>{`
+                .${safePanelClass} .p-multiselect-items {
+                    padding: 8px 16px !important;
+                }
                 .${safePanelClass} .p-multiselect-item {
                     padding: 0 !important;
+                    gap: 5px;
+                }
+                .${safePanelClass} .p-multiselect-item .p-checkbox {
+                    margin-right: 0;
+                    flex-shrink: 0;
                 }
                 .${safePanelClass} .p-multiselect-item-content {
                     width: 100%;
@@ -687,12 +705,18 @@ const MultiSelectDropdown = (props) => {
                 }}
                 panelClassName={panelClassName}
                 onShow={event => {
+                    window.dispatchEvent(new CustomEvent("provenance-panel-visibility", {
+                        detail: { target: id, open: true },
+                    }));
                     primeProps.onShow?.(event);
                     primeProps.onPanelShow?.(event);
                     multiSelectProps.onShow?.(event);
                     multiSelectProps.onPanelShow?.(event);
                 }}
                 onHide={event => {
+                    window.dispatchEvent(new CustomEvent("provenance-panel-visibility", {
+                        detail: { target: id, open: false },
+                    }));
                     primeProps.onHide?.(event);
                     primeProps.onPanelHide?.(event);
                     multiSelectProps.onHide?.(event);
@@ -735,6 +759,8 @@ const MultiSelectDropdown = (props) => {
                             timeDomain={clipping.timeDomain ?? timeDomain}
                             brushRange={clipping.brushRange}
                             clipping={clipping.enabled}
+                            smoothing={scalabilityProp?.temporal_view?.strategy === "smoothing"}
+                            smoothingBlurRadius={scalabilityProp?.temporal_view?.smoothing_options?.blur_radius}
                             target={id}
                             tooltipLabel={tooltipLabel}
                             visualize={visualize}
@@ -749,6 +775,17 @@ const MultiSelectDropdown = (props) => {
                 panelFooterTemplate={templateOptions => (
                     <>
                         {originalFooterTemplate?.(templateOptions)}
+                        {showTimeline && temporalBrush && clipping.showTemporalAxis && clipping.zoomedDomain && (
+                            <div style={{ padding: "0 8px 12px", boxSizing: "border-box" }}>
+                                <CheckboxZoomAxis
+                                    id={id}
+                                    elementRef={elementRef}
+                                    domain={clipping.zoomedDomain}
+                                    mode={provenanceMode}
+                                    panel
+                                />
+                            </div>
+                        )}
                         {showTimeline && temporalBrush && clipping.showTemporalAxis && (
                             <div
                                 data-provenance-temporal-footer={id}
@@ -756,7 +793,8 @@ const MultiSelectDropdown = (props) => {
                                     display: "flex",
                                     flexDirection: "column",
                                     width: "100%",
-                                    padding: "8px 20px 12px",
+                                    padding: "8px 16px 12px 43px",
+                                    boxSizing: "border-box",
                                     gap: "6px",
                                     borderTop: "1px solid #ced4da",
                                     backgroundColor: "#fff",
@@ -778,17 +816,9 @@ const MultiSelectDropdown = (props) => {
                                         {...clipping.sliderProps}
                                     />
                                 )}
-                                {clipping.zoomedDomain && (
-                                    <CheckboxZoomAxis
-                                        id={id}
-                                        elementRef={elementRef}
-                                        domain={clipping.zoomedDomain}
-                                        mode={provenanceMode}
-                                        panel
-                                    />
-                                )}
                             </div>
                         )}
+
                     </>
                 )}
             />

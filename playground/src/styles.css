@@ -81,7 +81,8 @@ input {
 }
 
 .widget-card__heading {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
   border-bottom: 1px solid #e6eaee;
@@ -119,4 +120,39 @@ input {
   .playground-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+.widget-card__strategies {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.widget-card__strategies label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #52606d;
+}
+.widget-card__strategy-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.widget-card__strategies select {
+  width: 92px;
+  padding: 4px;
+  border: 1px solid #ccd3da;
+  border-radius: 4px;
+  background: white;
+  color: #20242a;
+  font: inherit;
+}
+@media (max-width: 460px) {
+  .widget-card__heading { padding: 12px 8px; gap: 5px; }
+  .widget-card__heading h2 { font-size: 0.8rem; }
+  .widget-card__strategies { gap: 4px; }
+  .widget-card__strategies select { width: 76px; }
+  .widget-card__strategies label { gap: 2px; }
+  .widget-card__strategies img { width: 12px; }
 }

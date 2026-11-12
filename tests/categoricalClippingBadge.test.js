@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { resolveActiveClippingBadge } from '../src/shared/logic/scalability/strategies/clipping/clippingNotice.js';
-import { getClippingBadgeColor } from '../src/shared/logic/clippingBadgeColor.js';
+import { schemeCategory10 } from "d3";
+import { getClippingBadgeColor, CLIPPING_BADGE_BACKGROUND } from '../src/shared/logic/clippingBadgeColor.js';
 
 const records = Array.from({ length: 16 }, (_, i) => ({
     kind: 'interaction', timestamp: new Date(i * 1000).toISOString(), value: ['A'],
@@ -17,9 +18,9 @@ test('aggregate clipping remains visible with temporal zoom and follows the acti
     const scalability = { temporal_view: { strategy: 'zoom_in' }, aggregate_view: clipping };
     assert.equal(resolve(scalability, false), '6 records hidden');
     assert.equal(resolve(scalability, true), null);
-    assert.equal(resolve(scalability, false, records.slice(0, 10)), 'No hidden records');
+    assert.equal(resolve(scalability, false, records.slice(0, 10)), null);
     assert.equal(resolve(scalability, false, records.slice(0, 11)), '1 record hidden');
-    assert.equal(resolve(scalability, false, []), 'No hidden records');
+    assert.equal(resolve(scalability, false, []), null);
 });
 test('temporal-only clipping does not affect the aggregate view', () => {
     assert.equal(resolve({ temporal_view: clipping, aggregate_view: { strategy: 'zoom_in' } }, false), null);
@@ -33,8 +34,13 @@ test('time clipping reports hidden interactions, not elapsed seconds', () => {
         trigger: { type: 'time', threshold: 10 },
     } } }, false), '6 records hidden');
 });
-test('badge color stays yellow across all widget colors', () => {
-    assert.equal(getClippingBadgeColor('#ffffff'), '#FFD600');
-    assert.equal(getClippingBadgeColor('#2c3e50'), '#FFD600');
-    assert.equal(getClippingBadgeColor(null), '#FFD600');
+test('badge color stays white across all widget colors', () => {
+    assert.equal(getClippingBadgeColor('#ffffff'), '#ffffff');
+    assert.equal(getClippingBadgeColor('#2c3e50'), '#ffffff');
+    assert.equal(getClippingBadgeColor(null), '#ffffff');
+});
+
+test('clipping badge background is distinct from widget category colors', () => {
+    assert.ok(!schemeCategory10.map(color => color.toLowerCase()).includes(CLIPPING_BADGE_BACKGROUND.toLowerCase()));
+    assert.equal(getClippingBadgeColor(), '#ffffff');
 });

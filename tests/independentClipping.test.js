@@ -21,3 +21,18 @@ test('obsolete timeline option cannot enable the legacy axis during clipping', (
     assert.equal(resolveSelectionTemporalView({ scalability: { temporal_view } }).showTemporalAxis, false);
     assert.equal(resolveSelectionTemporalView({ scalability: { temporal_view: { strategy: 'zoom_in' } } }).showTemporalAxis, true);
 });
+
+test('categorical smoothing leaves full source history intact and disables clipping and zoom axes', () => {
+    const provenance = { detailedData: new Map(), aggregateData: new Map() };
+    const result = resolveSelectionTemporalView({
+        provenance,
+        scalability: {
+            temporal_view: { strategy: 'smoothing', clipping_options: { trigger: { threshold: 1 } } },
+            aggregate_view: { strategy: 'zoom_in' },
+        },
+    });
+    assert.equal(result.clippingEnabled, false);
+    assert.equal(result.showTemporalAxis, false);
+    assert.equal(result.temporalProvenance, provenance);
+    assert.equal(result.aggregateProvenance, provenance);
+});

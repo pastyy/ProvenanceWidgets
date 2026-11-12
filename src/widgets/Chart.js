@@ -1,3 +1,4 @@
+import TimelineVis from "./TimelineVis.js";
 import { rectangleZoomStyle, styleZoomBrush } from "../shared/components/brushAppearance.js";
 import {
     useCallback,
@@ -1112,10 +1113,12 @@ const Chart = ({
             });
         const showInteractionAxis =
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
-            normalizeTemporalBrush(temporalBrush);
+            normalizeTemporalBrush(temporalBrush) && temporalZoom.enabled &&
+            temporalZoom.modes.includes("interactions");
         const showValueAxis =
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
-            normalizeTemporalBrush(temporalBrush);
+            normalizeTemporalBrush(temporalBrush) && temporalZoom.enabled &&
+            temporalZoom.modes.includes("values");
         const reserveValueZoomAxisSpace =
             showValueAxis &&
             temporalZoom.enabled &&
@@ -1180,8 +1183,8 @@ const Chart = ({
         
         const domainMax = indexDomain ? indexDomain[1] : 0;
         const domainMin = indexDomain ? indexDomain[0] : 0;
-        const valueDomainMin = valueBrushRange?.[0] ?? domainMin;
-        const valueDomainMax = valueBrushRange?.[1] ?? domainMax;
+        const valueDomainMin = (valueBrushEnabled ? valueBrushRange?.[0] : null) ?? domainMin;
+        const valueDomainMax = (valueBrushEnabled ? valueBrushRange?.[1] : null) ?? domainMax;
         const interactionZoomRange = (
             Array.isArray(brushRange) &&
             brushRange.length === 2 &&
@@ -1233,9 +1236,6 @@ const Chart = ({
             domainMax: valueDomainMax,
             range: chartData.isRangeSlider,
         });
-        const indexOffset = usesContinuousDomain ? 0 : 1;
-        const displayMaxIndex = Math.max(maxIndex - indexOffset, 1);
-        const displaySpan = Math.max(valueDomainMax - valueDomainMin, 1e-9);
 
         const rectanglePointData = [];
         if (chartData.isRangeSlider || chartData.isSingleSlider) {
@@ -1292,7 +1292,6 @@ const Chart = ({
         const textColor = isLight ? "#000" : "#eee"; // Or white
         const axisColor = isLight ? "#ccc" : "#555";
         const labelColor = isLight ? "#333" : "#ccc"; // For n=0, now labels
-        const rowBg = isLight ? "#f5f5f5" : "#444"; // Background for timeline track
 
         const renderHeader = () => {
             if (chartData.isInputText) return null;
@@ -1349,7 +1348,7 @@ const Chart = ({
                     overflow: "visible",
                 }}
             >
-                <TemporalBrush
+                {inputTextBrushEnabled && <TemporalBrush
                     interactive={inputTextBrushEnabled}
                     interactionLabels={allInputTextEntries.map(
                         ([, records], index) =>
@@ -1365,7 +1364,7 @@ const Chart = ({
                     target={target}
                     tooltipId={tooltipId}
                     widgetType="input-text"
-                />
+                />}
                 <div
                     style={{
                         position: "relative",
@@ -1613,7 +1612,7 @@ const Chart = ({
                            width: '100%',
                            height: `${temporalPlotHeight}px`,
                            minHeight: `${temporalPlotHeight}px`,
-                           overflow: valueBrushRange ? 'hidden' : 'visible',
+                           overflow: valueBrushEnabled && valueBrushRange ? 'hidden' : 'visible',
                            order: 1,
                            cursor: rectangleToolEnabled
                                ? rectangleDragMode === 'move' ? 'move' : 'crosshair'
@@ -1889,109 +1888,20 @@ const Chart = ({
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto', flexGrow: 1 }}>
                          {sortedEntries.map(([label, records]) => (
                               <div key={label} style={{ display: 'flex', alignItems: 'center', height: '24px', position: 'relative' }}>
-                                  <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: rowBg, borderRadius: '3px', zIndex: 0 }}>
-                                      {records.map((record, i) => {
-                                           if (!record.select) return null;
-                                           const startRaw = record.select.index;
-                                           const endRaw = record.unselect ? record.unselect.index : maxIndex;
-                                           const start = (startRaw ?? 0) - indexOffset;
-                                           const end = (endRaw ?? maxIndex) - indexOffset;
-                                           
-                                           const left = ((start - valueDomainMin) / (displaySpan || 1)) * 100;
-                                           const width = Math.max(0, ((end - start) / (displaySpan || 1)) * 100);
-                                           
-                                           const relativeTime = (start - valueDomainMin) / (displaySpan || 1);
-                                           const color = d3.interpolateOranges(0.3 + (relativeTime * 0.7));
-                                           const tooltipProps = getTooltipAnchorProps(
-                                               tooltipId,
-                                               () => formatTemporalTooltip({
-                                                   label: chartData.tooltipLabel,
-                                                   value: label,
-                                                   record,
-                                                   kind: chartData.tooltipKind,
-                                               })
-                                           );
-                                           
-                                            return (
-                                               <div
-                                                  key={i}
-                                                  {...tooltipProps}
-                                                  role={
-                                                      chartData.isInputText
-                                                          ? "button"
-                                                          : undefined
-                                                  }
-                                                  tabIndex={
-                                                      chartData.isInputText
-                                                          ? 0
-                                                          : undefined
-                                                  }
-                                                  data-provenance-temporal-value={
-                                                      chartData.isInputText
-                                                          ? record.value
-                                                          : undefined
-                                                  }
-                                                  aria-label={
-                                                      chartData.isInputText
-                                                          ? (
-                                                              `Restore ${chartData.tooltipLabel} ` +
-                                                              `to ${record.value === ""
-                                                                  ? "<empty>"
-                                                                  : record.value}`
-                                                          )
-                                                          : undefined
-                                                  }
-                                                  onClick={
-                                                      chartData.isInputText
-                                                          ? () =>
-                                                              restoreInputTextTemporalValue({
-                                                                  restoreWidgetValue,
-                                                                  target,
-                                                                  value:
-                                                                      record.value,
-                                                              })
-                                                          : undefined
-                                                  }
-                                                  onKeyDown={
-                                                      chartData.isInputText
-                                                          ? event => {
-                                                              if (
-                                                                  event.key === "Enter" ||
-                                                                  event.key === " "
-                                                              ) {
-                                                                  event.preventDefault();
-                                                                  restoreInputTextTemporalValue({
-                                                                      restoreWidgetValue,
-                                                                      target,
-                                                                      value:
-                                                                          record.value,
-                                                                  });
-                                                              }
-                                                          }
-                                                          : undefined
-                                                  }
-                                                  style={{
-                                                    ...tooltipProps.style,
-                                                    position: 'absolute',
-                                                   left: `${left}%`,
-                                                   width: `${width}%`,
-                                                   minWidth: '8px',
-                                                    height: '100%',
-                                                    backgroundColor: color,
-                                                    border: `1px solid ${d3.color(color).darker()}`,
-                                                    cursor:
-                                                        chartData.isInputText
-                                                            ? 'pointer'
-                                                            : 'default',
-                                                    opacity:
-                                                        record.kind === "sample"
-                                                            ? 0.7
-                                                            : 1,
-                                                }} />
-                                           );
-                                      })}
+                                  <div style={{ position: 'absolute', inset: 0 }}>
+                                      <TimelineVis
+                                          records={records}
+                                          maxIndex={maxIndex}
+                                          smoothing={scalability?.temporal_view?.strategy === "smoothing"}
+                                          smoothingWholeBar
+                                          smoothingBlurRadius={scalability?.temporal_view?.smoothing_options?.blur_radius}
+                                          tooltipId={tooltipId}
+                                          widgetId={chartData.tooltipLabel}
+                                          value={label}
+                                          kind={chartData.tooltipKind}
+                                      />
                                   </div>
-                                  
+
                                   <div style={{ position: 'relative', zIndex: 1, padding: '0 8px', width: '100%', fontSize: '12px', fontWeight: 'bold', color: textColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', pointerEvents: 'none' }} title={label}>
                                       {label}
                                   </div>
