@@ -290,6 +290,9 @@ export interface SuperProvenanceWidgetProps {
   id: string;
   components?: string[];
   default?: boolean;
+  temporalBrush?: boolean;
+  enableTemporalBrush?: boolean;
+  scalability?: ScalabilityOptions;
   children?: ReactNode;
 }
 

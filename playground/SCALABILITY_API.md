@@ -60,6 +60,41 @@ without threshold-sized compressed history blocks. `temporalBrush={false}` disab
 the corresponding tools; `visibility: "off"` shows full history.
 See [Temporal zoom](../src/shared/logic/scalability/strategies/zoomin/README.md) for behavior and integration points.
 
+### SuperProvenanceWidget
+
+`SuperProvenanceWidget` accepts the same `scalability`, `temporalBrush`, and
+`enableTemporalBrush` (legacy alias) props. Only temporal `zoom_in` is implemented,
+with `modes: ["interactions"]`. It uses the shared visibility, threshold, and
+`auto_zoom` defaults above. Time triggers measure elapsed seconds across the
+combined interaction history; the displayed axis remains the global interaction
+sequence, not any individual widget's local index.
+
+The blue horizontal brush replaces the old black arrow. Drag to select a range,
+drag the selection to move it, or drag its edges to resize it. Click outside the
+selection to restore the full history. Both the combined sequence and every
+widget's temporal row show the same selected range. Clicking an interaction still
+restores registered widgets at that interaction's original time. Aggregate counts
+and source provenance are unchanged. Unsupported strategies or value-only modes,
+`temporalBrush={false}`, and `visibility: "off"` show full history without a brush.
+
+```jsx
+<SuperProvenanceWidget
+  id="combined-history"
+  components={["slider", "checkbox-group"]}
+  default
+  scalability={{
+    temporal_view: {
+      strategy: "zoom_in",
+      zoom_in_options: {
+        modes: ["interactions"],
+        visibility: "all-active",
+        trigger: { type: "interaction", threshold: 50, auto_zoom: false },
+      },
+    },
+  }}
+/>
+```
+
 ## Clipping
 
 Both views accept the same `clipping_options`, configured independently:

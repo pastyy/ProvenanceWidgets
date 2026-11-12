@@ -1,6 +1,11 @@
 export { resolveTemporalZoomIn } from "./config.js";
 export { isTemporalZoomToolVisible } from "./visibility.js";
 export {
+    buildSuperTemporalBars,
+    getSuperTemporalAutoZoomRange,
+    resolveSuperTemporalZoom,
+} from "./superProvenance.js";
+export {
     hasTemporalZoomTriggerCrossed,
     getTemporalAutoZoomRange,
     temporalTriggerMetric,
