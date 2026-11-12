@@ -1,4 +1,5 @@
 import {
+    DEFAULT_TEMPORAL_STRATEGY,
     DEFAULT_TEMPORAL_INTERACTION_THRESHOLD,
     DEFAULT_TEMPORAL_TIME_THRESHOLD,
     DEFAULT_TEMPORAL_ZOOM_MODES,
@@ -22,7 +23,7 @@ const normalizeThreshold = (value, fallback) => {
 
 export const resolveTemporalZoomIn = scalability => {
     const temporalView = scalability?.temporal_view;
-    const strategy = temporalView?.strategy ?? "zoom_in";
+    const strategy = temporalView?.strategy ?? DEFAULT_TEMPORAL_STRATEGY;
     const options = temporalView?.zoom_in_options ?? {};
     const configuredModes = Array.isArray(options.modes)
         ? unique(options.modes)

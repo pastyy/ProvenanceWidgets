@@ -1,9 +1,15 @@
+import {
+    DEFAULT_AGGREGATE_STRATEGY,
+    DEFAULT_TEMPORAL_STRATEGY,
+} from "../../shared/defaults.js";
+
 /** CSS pixels per record (or second for time) in the default threshold. */
 export const CLIPPING_PIXELS_PER_RECORD = 10;
 
 export function resolveClippingConfig(scalability, { view = "temporal_view", width = 0 } = {}) {
     const options = scalability?.[view];
-    const strategy = options?.strategy ?? "zoom_in";
+    const strategy = options?.strategy ?? (view === "aggregate_view"
+        ? DEFAULT_AGGREGATE_STRATEGY : DEFAULT_TEMPORAL_STRATEGY);
     const enabled = strategy === "clipping";
     const trigger = enabled ? options?.clipping_options?.trigger ?? {} : {};
     const configuredThreshold = Number(trigger.threshold);

@@ -95,7 +95,7 @@ test("continuous scrolling and fractional offsets resolve to integer window star
 
 test("window normalization is independent of strategy and does not mutate configuration", () => {
     const windowOptions = Object.freeze({ window_size: 20, window_start: 30 });
-    for (const strategy of [undefined, "smoothing", "clipping", "zoom_in"]) {
+    for (const strategy of [undefined, "none", "smoothing", "clipping", "zoom_in"]) {
         const aggregate_view = Object.freeze({ strategy, window_options: windowOptions });
         const config = resolveSliderAggregateWindowConfig({
             min: 0, max: 100, scalability: Object.freeze({ aggregate_view }),

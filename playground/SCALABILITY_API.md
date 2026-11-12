@@ -2,7 +2,7 @@
 
 [Playground](./README.md) · [Project README](../README.md)
 
-This guide describes the current implementation, reviewed on 2026-10-29. Complete
+This guide describes the current implementation, reviewed on 2026-11-12. Complete
 types live in [src/types/scalability.ts](../src/types/scalability.ts).
 [scalability_api.json](./scalability_api.json) is a historical design draft containing
 comments, pseudo-types, and unimplemented proposals. It is neither valid JSON
@@ -36,8 +36,12 @@ Pass this object as the widget's `scalability` prop. `SingleSliderScalability`,
 
 - Views resolve strategies, thresholds, and state independently. An omitted view
   keeps its default behavior and never inherits the other view's configuration.
-- Strategies are `zoom_in`, `clipping`, and `smoothing`. An omitted strategy resolves
-  to `zoom_in`; actual tools depend on widget support and props such as `temporalBrush`.
+- Strategies are `none`, `zoom_in`, `clipping`, and `smoothing`. An omitted strategy
+  resolves to `none` for aggregate views and `zoom_in` for temporal views. Aggregate
+  zoom is not implemented; an explicit aggregate `zoom_in` remains a no-op for compatibility.
+- `none` disables zoom, clipping, and smoothing for that view without hiding its data.
+  Both Playground strategy selectors expose a real `none` option. Actual zoom tools
+  depend on widget support and props such as `temporalBrush`.
 - Only the active strategy's options apply. Slider `window_options` are independent.
 - Each normalizer defines its defaults; there is no universal numeric default of 10.
 

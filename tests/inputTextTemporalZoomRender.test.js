@@ -87,6 +87,17 @@ test("InputText enables the brush at the committed-interaction threshold", () =>
     assert.doesNotMatch(markup, /data-provenance-zoom-axis=/);
 });
 
+test("InputText none keeps full history and its static axis without zoom or clipping", () => {
+    const markup = render({ scalability: { temporal_view: {
+        strategy: "none",
+        zoom_in_options: { trigger: { threshold: 1, auto_zoom: true } },
+        clipping_options: { trigger: { threshold: 1 } },
+    } } }, [2, 4]);
+    assert.match(markup, /aria-label="Complete input-text interaction range"/);
+    assert.doesNotMatch(markup, /Drag vertically to zoom|data-provenance-zoom-axis=/);
+    assert.equal(valueCount(markup), records.length);
+});
+
 test("InputText selected ranges filter rows and preserve zoom-axis layout when cleared", () => {
     for (const mode of ["interaction", "time"]) {
         const initial = render({ mode });

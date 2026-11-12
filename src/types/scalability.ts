@@ -1,4 +1,5 @@
 export type ScalabilityStrategy =
+  | "none"
   | "zoom_in"
   | "clipping"
   | "smoothing";
@@ -158,6 +159,7 @@ export interface ScalabilityWindowOptions {
 }
 
 export interface TemporalViewScalability {
+  /** Defaults to zoom_in; none disables zoom, clipping, and smoothing. */
   strategy?: ScalabilityStrategy;
   zoom_in_options?: TemporalZoomInOptions;
   clipping_options?: TemporalScalabilityClippingOptions;
@@ -165,6 +167,7 @@ export interface TemporalViewScalability {
 }
 
 export interface AggregateViewScalability {
+  /** Defaults to none; aggregate zoom_in is not implemented. */
   strategy?: ScalabilityStrategy;
   zoom_in_options?: AggregateScalabilityZoomInOptions;
   clipping_options?: AggregateScalabilityClippingOptions;

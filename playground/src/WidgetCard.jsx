@@ -27,7 +27,8 @@ export default function WidgetCard({ id, title, children, strategies, defaultStr
                 aria-label={`${label} strategy. ${description}`}
                 value={strategies?.[view] ?? defaultStrategies[view]}
                 onChange={event => onStrategyChange(view, event.target.value)}>
-                <option value="zoom_in">{view === "aggregate_view" ? "None" : "Zoom in"}</option>
+                <option value="none">None</option>
+                {view === "temporal_view" && <option value="zoom_in">Zoom in</option>}
                 <option value="clipping">Clipping</option>
                 {(supportsSmoothing === true || (Array.isArray(supportsSmoothing) && supportsSmoothing.includes(view))) && <option value="smoothing">Smoothing</option>}
               </select>

@@ -30,7 +30,7 @@ for (const [label, supportsSmoothing, expected] of [
     test(`Playground card renders safely with smoothing ${label}`, () => {
         const html = renderToStaticMarkup(createElement(WidgetCard, {
             id: 'test-card', title: 'Test', supportsSmoothing,
-            defaultStrategies: { temporal_view: 'zoom_in', aggregate_view: 'zoom_in' },
+            defaultStrategies: { temporal_view: 'zoom_in', aggregate_view: 'none' },
             onStrategyChange: () => {},
         }, 'Widget content'));
         assert.match(html, /Widget content/);
@@ -42,8 +42,24 @@ for (const [label, supportsSmoothing, expected] of [
         assert.match(html, /<h2[^>]*>Test<\/h2><div class="widget-card__strategies">/);
         const aggregateSelect = html.match(/<select id="test-card-aggregate_view-strategy"[\s\S]*?<\/select>/)[0];
         assert.doesNotMatch(aggregateSelect, />Zoom in</);
-        assert.match(aggregateSelect, />None<\/option>/);
+        assert.match(aggregateSelect, /value="none" selected="">None<\/option>/);
+        const temporalSelect = html.match(/<select id="test-card-temporal_view-strategy"[\s\S]*?<\/select>/)[0];
+        assert.match(temporalSelect, /value="none">None<\/option>/);
+        assert.match(temporalSelect, /value="zoom_in" selected="">Zoom in<\/option>/);
         assert.equal((html.match(/<select /g) ?? []).length, 2);
         assert.equal((html.match(/value="smoothing"/g) ?? []).length, expected);
     });
 }
+
+test('Playground card selects temporal none independently of aggregate clipping', () => {
+    const html = renderToStaticMarkup(createElement(WidgetCard, {
+        id: 'test-card', title: 'Test',
+        defaultStrategies: { temporal_view: 'zoom_in', aggregate_view: 'none' },
+        strategies: { temporal_view: 'none', aggregate_view: 'clipping' },
+        onStrategyChange: () => {},
+    }));
+    const aggregateSelect = html.match(/<select id="test-card-aggregate_view-strategy"[\s\S]*?<\/select>/)[0];
+    const temporalSelect = html.match(/<select id="test-card-temporal_view-strategy"[\s\S]*?<\/select>/)[0];
+    assert.match(aggregateSelect, /value="clipping" selected="">Clipping<\/option>/);
+    assert.match(temporalSelect, /value="none" selected="">None<\/option>/);
+});

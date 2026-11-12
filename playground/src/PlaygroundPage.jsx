@@ -56,7 +56,7 @@ const checkboxScalability = {
     },
   },
   aggregate_view: {
-    strategy: "zoom_in",
+    strategy: "none",
     clipping_options: {
       trigger: { type: "interaction", threshold: 10 },
     },
@@ -80,7 +80,7 @@ const radioScalability = {
     },
   },
   aggregate_view: {
-    strategy: "zoom_in",
+    strategy: "none",
     clipping_options: {
       trigger: { type: "interaction", threshold: 10 },
     },
@@ -128,7 +128,7 @@ const multiSelectScalability = {
     },
   },
   aggregate_view: {
-    strategy: "zoom_in",
+    strategy: "none",
     clipping_options: {
       trigger: { type: "interaction", threshold: 10 },
     },
@@ -361,7 +361,7 @@ export default function PlaygroundPage() {
             default
           >
             <div className="playground-grid">
-            <WidgetCard {...controls("checkbox-group")} defaultStrategies={{ temporal_view: "smoothing", aggregate_view: "zoom_in" }} supportsSmoothing={["temporal_view"]} id="checkbox-group" title="Checkbox Group">
+            <WidgetCard {...controls("checkbox-group")} defaultStrategies={{ temporal_view: "smoothing", aggregate_view: "none" }} supportsSmoothing={["temporal_view"]} id="checkbox-group" title="Checkbox Group">
               <CheckboxGroup
                 id="checkbox-group"
                 data={meatOptions}
@@ -409,7 +409,7 @@ export default function PlaygroundPage() {
               />
             </WidgetCard>
 
-            <WidgetCard {...controls("radiobutton-group")} defaultStrategies={{ temporal_view: "zoom_in", aggregate_view: "zoom_in" }} supportsSmoothing={["temporal_view"]} id="radiobutton-group" title="Radiobutton Group">
+            <WidgetCard {...controls("radiobutton-group")} defaultStrategies={{ temporal_view: "zoom_in", aggregate_view: "none" }} supportsSmoothing={["temporal_view"]} id="radiobutton-group" title="Radiobutton Group">
               <RadioGroup
                 id="radiobutton-group"
                 data={toppingOptions}
@@ -486,7 +486,7 @@ export default function PlaygroundPage() {
               />
             </WidgetCard>
 
-            <WidgetCard {...controls("multi-select-dropdown")} defaultStrategies={{ temporal_view: "zoom_in", aggregate_view: "zoom_in" }} supportsSmoothing={["temporal_view"]} id="multi-select-dropdown" title="Multi Select Dropdown">
+            <WidgetCard {...controls("multi-select-dropdown")} defaultStrategies={{ temporal_view: "zoom_in", aggregate_view: "none" }} supportsSmoothing={["temporal_view"]} id="multi-select-dropdown" title="Multi Select Dropdown">
               <MultiSelectDropdown
                 id="multi-select-dropdown"
                 options={cityOptions}

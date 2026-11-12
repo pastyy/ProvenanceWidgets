@@ -1,3 +1,6 @@
+export const DEFAULT_AGGREGATE_STRATEGY = "none";
+export const DEFAULT_TEMPORAL_STRATEGY = "zoom_in";
+
 /** Public defaults shared by temporal zoom-in resolvers. */
 export const DEFAULT_TEMPORAL_ZOOM_MODES = [
     "interactions",

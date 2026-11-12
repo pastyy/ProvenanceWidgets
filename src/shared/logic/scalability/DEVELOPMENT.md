@@ -40,12 +40,14 @@ scalability/
 
 | Directory | Public configuration value | Behavior |
 | --- | --- | --- |
+| No strategy module | `none` | Keep the unmodified view without zoom, clipping, or smoothing |
 | [clipping](strategies/clipping/README.md) | `clipping` | Limit displayed history while preserving source records |
 | [smoothing](strategies/smoothing/README.md) | `smoothing` | Replace dense slider marks with display-only curves |
 | [zoomin](strategies/zoomin/README.md) | `zoom_in` | Select an interaction, value, or two-dimensional region |
 
 The directory name `zoomin` does not change the existing `strategy: "zoom_in"`
-API. [Windowing](windowing/README.md) is not a fourth strategy: it controls a
+API. Aggregate views default to `none`; temporal views default to `zoom_in`.
+[Windowing](windowing/README.md) is independent of strategy: it controls a
 Slider's aggregate viewport independently of the selected strategy.
 
 ## Implementation rules

@@ -39,6 +39,7 @@ test("SuperProvenance renders the shared draggable brush, aligned rows and no le
 test("SuperProvenance hides disabled and threshold-gated brushes without hiding history", () => {
     for (const overrides of [
         { temporalBrush: false },
+        { scalability: { temporal_view: { strategy: "none" } } },
         { scalability: { temporal_view: { strategy: "clipping" } } },
         { scalability: { temporal_view: { zoom_in_options: { visibility: "off" } } } },
         { scalability: { temporal_view: { zoom_in_options: { modes: ["values"] } } } },
