@@ -37,8 +37,7 @@ export function resolveActiveClippingBadge(options) {
     const period = resolveClippingNoticePeriods(options).find(period =>
         period.config.view === (options.showTimeline ? "temporal_view" : "aggregate_view"));
     return {
-        message: getClippingBadgeMessage([period])
-            ?? (period.config.enabled ? NO_HIDDEN_RECORDS : null),
+        message: getClippingBadgeMessage([period]),
         revision: period.resetKey,
     };
 }

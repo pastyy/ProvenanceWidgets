@@ -247,6 +247,9 @@ const Radiobutton = ({
                                 timeDomain={radioGroup?.timeDomain}
                                 brushRange={radioGroup?.brushRange}
                                 clipping={radioGroup?.clipping}
+                                smoothing={radioGroup?.smoothing}
+                                smoothingWholeBar
+                                smoothingBlurRadius={radioGroup?.smoothingBlurRadius}
                                 tooltipId={tooltip}
                                 widgetId={
                                     radioGroup?.tooltipLabel ??

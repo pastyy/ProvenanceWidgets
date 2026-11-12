@@ -21,7 +21,7 @@ export function findClippedSelectionBar(bars, clientX, bounds) {
     if (x < 0 || x > bounds.width) return null;
     return [...bars].reverse().find(bar => {
         const left = bounds.width * bar.left / 100;
-        const right = Math.min(bounds.width, left + Math.max(8, bounds.width * bar.width / 100));
+        const right = Math.min(bounds.width, left + Math.max(bar.width === 0 ? 1 : 0, bounds.width * bar.width / 100));
         return x >= left && x <= right;
     }) ?? null;
 }

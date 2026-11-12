@@ -83,7 +83,21 @@ notifications, time modes, and boundary rules.
 
 ## Smoothing
 
-Only the two Sliders currently implement `smoothing_options` in both views:
+CheckboxGroup, RadioGroup, SingleSelectDropdown, and MultiSelectDropdown support
+`temporal_view.strategy: "smoothing"` with horizontal
+Gaussian blur across the whole history track. Previous selection intervals are gray. Only the latest interval is orange,
+using its start relative to the global domain, so its color fades as other
+interactions accumulate. This preserves the original recency rule. Set
+`smoothing_options: { blur_radius: 1.2 }` in Playground: the radius is the Gaussian
+standard deviation as a percentage of the track width; zero disables blur.
+It is not capped by individual interval widths. White inactivity gaps can soften
+as part of the whole-track blur.
+
+All four selection widgets use the same recency colors and whole-track blur.
+Source history and restore targets stay unchanged. Aggregate smoothing for these
+selection widgets is not supported; slider algorithm options do not apply.
+
+Only the two Sliders implement `smoothing_options` in both views:
 
 ```js
 {
@@ -132,14 +146,14 @@ See [Aggregate windows](../src/shared/logic/scalability/windowing/README.md).
 “Integrated” means a widget has an implementation path, not that all browser
 interactions and responsive layouts have passed acceptance review.
 
-| Component | Temporal clipping | Aggregate clipping | Temporal zoom | Smoothing in both views | Aggregate window |
+| Component | Temporal clipping | Aggregate clipping | Temporal zoom | Smoothing | Aggregate window |
 | --- | --- | --- | --- | --- | --- |
 | SingleSlider (export: `Singleslider`) | Integrated | Integrated | All three dimensions | Integrated | Integrated |
 | RangeSlider (export: `Rangeslider`) | Integrated | Integrated | All three dimensions | Integrated | Integrated |
-| CheckboxGroup | Integrated | Integrated | interactions | Pending | Pending |
-| RadioGroup | Integrated | Integrated | interactions | Pending | Pending |
-| SingleSelectDropdown | Integrated | Integrated | interactions | Pending | Pending |
-| MultiSelectDropdown | Integrated | Integrated | interactions | Pending | Pending |
+| CheckboxGroup | Integrated | Integrated | interactions | Temporal whole-track blur | Pending |
+| RadioGroup | Integrated | Integrated | interactions | Temporal whole-track blur | Pending |
+| SingleSelectDropdown | Integrated | Integrated | interactions | Temporal whole-track blur | Pending |
+| MultiSelectDropdown | Integrated | Integrated | interactions | Temporal whole-track blur | Pending |
 | InputText | Integrated | Integrated | interactions | Pending | Pending |
 | SuperProvenanceWidget | Pending | Pending | Pending | Pending | Pending |
 
@@ -149,8 +163,18 @@ Aggregate zoom-in is unimplemented for every component. Types reserve
 The draft's `range` means maximum minus minimum aggregate counts, not the
 slider value domain. Its provisional threshold of 10, initially visible tools, and
 non-automatic zoom are proposals, not implemented behavior.
-Categorical/text smoothing, non-Slider paging, and cross-widget scalability still
+Categorical aggregate smoothing, text smoothing, non-Slider paging, and cross-widget scalability still
 require their own data adapters.
+
+## Remaining work
+
+- Aggregate zoom, categorical aggregate smoothing, InputText smoothing, and
+  non-Slider aggregate paging remain unimplemented (see the support table).
+- Cross-widget scalability still needs integration. The Superwidget zoom-only
+  policy is explicitly deferred by the user.
+- The audit of default-off scalability and backward compatibility is explicitly
+  deferred by the user; passing current tests is not a substitute for that audit.
+- Complete per-widget browser acceptance across mechanisms and responsive sizes.
 
 ## Maintenance and validation
 

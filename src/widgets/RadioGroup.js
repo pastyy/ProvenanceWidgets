@@ -525,6 +525,8 @@ const RadioGroup = (props) => {
             timeDomain: clipping.timeDomain ?? timeDomain,
             brushRange: clipping.brushRange,
             clipping: clipping.enabled,
+            smoothing: props.scalability?.temporal_view?.strategy === "smoothing",
+            smoothingBlurRadius: props.scalability?.temporal_view?.smoothing_options?.blur_radius,
             tooltipLabel,
             restoreTemporalValue,
         }),
@@ -543,6 +545,7 @@ const RadioGroup = (props) => {
             timeDomain,
             clipping.brushRange,
             clipping.enabled,
+            props.scalability?.temporal_view?.strategy,
             tooltipLabel,
             restoreTemporalValue,
         ]

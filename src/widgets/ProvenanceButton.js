@@ -1,4 +1,5 @@
-import { getClippingBadgeColor } from "../shared/logic/clippingBadgeColor.js";
+import { TEMPORAL_B64, AGGREGATE_B64, DISABLED_B64 } from "../shared/logic/footprintIcons.js";
+import { getClippingBadgeColor, CLIPPING_BADGE_BACKGROUND } from "../shared/logic/clippingBadgeColor.js";
 import { NO_HIDDEN_RECORDS } from "../shared/logic/scalability/strategies/clipping/clippingNotice.js";
 import { Button } from 'primereact/button/button.esm.js';
 import { useState, useRef, useEffect } from 'react';
@@ -32,6 +33,7 @@ const footprintTooltipStyle = {
 
 const ProvenanceButton = ({ target }) => {
     const [open, setOpen] = useState()
+    const [panelOpen, setPanelOpen] = useState(false);
     const [registeredComponents] = useProvenance()
     const [widgetColors] = useWidgetColors()
     const { registrations } = useWidgetRegistry();
@@ -59,9 +61,9 @@ const ProvenanceButton = ({ target }) => {
         };
     }, [target]);
 
-    const TEMPORAL_B64 = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+DQo8c3ZnIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmlld0JveD0iLTMgLTMgNjcuNDg3IDEwNiIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQogIDxnPg0KICA8cGF0aCBzdHJva2U9IiMyYzNlNTAiIHN0cm9rZS13aWR0aD0iNXB4IiBmaWxsPSIjMmMzZTUwIiBkPSJNMzcuMjY3LDgzLjY4MWMtMi4zNDYsNS45MzItNC4xMzMsMTQuMTgzLDIuNjU1LDE1Ljk5YzEwLjQyNywyLjc3MiwxMS45MDctMTIuODk2LDExLjkwNy0xMi44OTYNCglMMzcuMjY3LDgzLjY4MXoiLz4NCiAgPHBhdGggc3Ryb2tlPSIjMmMzZTUwIiBzdHJva2Utd2lkdGg9IjVweCIgZmlsbD0iIzJjM2U1MCIgZD0iTTYwLjc0Miw2My4zODZjMS41NTgtOC4xMTQsMS40NjctMjEuOTU3LTguMjcxLTI1LjM5NGMtMi40LTAuODQ4LTExLjQ2Ny0zLjAwNi0xNS4xMjYsMTIuOTU2DQoJYy0yLjY1MSwxMS42MTIsMS40ODgsMjUuNTM5LDEuNDg4LDI1LjUzOWwxNC43MjUsMy4xMzJDNTMuNTYsNzkuNjE4LDU5LjY5OCw2OC44MTQsNjAuNzQyLDYzLjM4NnoiLz4NCiAgPHBhdGggc3Ryb2tlPSIjMmMzZTUwIiBzdHJva2Utd2lkdGg9IjVweCIgZmlsbD0iIzJjM2U1MCIgZD0iTTIxLjM2Niw0Ny4zMTljMS43MTYsNi4xNDIsMi42MzMsMTQuNTM0LTQuMzExLDE1LjYyM0M2LjQsNjQuNjExLDYuNTY1LDQ4Ljg3NSw2LjU2NSw0OC44NzVMMjEuMzY2LDQ3LjMxOXoNCgkiLz4NCiAgPHBhdGggc3Ryb2tlPSIjMmMzZTUwIiBzdHJva2Utd2lkdGg9IjVweCIgZmlsbD0iIzJjM2U1MCIgZD0iTTAuMTQ2LDI0LjY3OUMtMC41NTUsMTYuNDQ3LDAuOTgsMi42OSwxMS4wMjgsMC4yODdDMTMuNS0wLjMwNiwyMi43NDEtMS41MDEsMjQuNzExLDE0Ljc1NQ0KCWMxLjQzMSwxMS44MjctNC4xNTEsMjUuMjQzLTQuMTUxLDI1LjI0M2wtMTQuOTcsMS41NzVDNS41ODksNDEuNTczLDAuNjEyLDMwLjE5LDAuMTQ2LDI0LjY3OXoiLz4NCiAgICA8L2c+DQo8L3N2Zz4="
-    const AGGREGATE_B64 = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+DQo8c3ZnIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmlld0JveD0iLTMgLTMgNjcuNDg3IDEwNiIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQogIDxnPg0KICA8cGF0aCBzdHJva2U9IiMyYzNlNTAiIHN0cm9rZS13aWR0aD0iNXB4IiBmaWxsPSJub25lIiBkPSJNMzcuMjY3LDgzLjY4MWMtMi4zNDYsNS45MzItNC4xMzMsMTQuMTgzLDIuNjU1LDE1Ljk5YzEwLjQyNywyLjc3MiwxMS45MDctMTIuODk2LDExLjkwNy0xMi44OTYNCglMMzcuMjY3LDgzLjY4MXoiLz4NCiAgPHBhdGggc3Ryb2tlPSIjMmMzZTUwIiBzdHJva2Utd2lkdGg9IjVweCIgZmlsbD0ibm9uZSIgZD0iTTYwLjc0Miw2My4zODZjMS41NTgtOC4xMTQsMS40NjctMjEuOTU3LTguMjcxLTI1LjM5NGMtMi40LTAuODQ4LTExLjQ2Ny0zLjAwNi0xNS4xMjYsMTIuOTU2DQoJYy0yLjY1MSwxMS42MTIsMS40ODgsMjUuNTM5LDEuNDg4LDI1LjUzOWwxNC43MjUsMy4xMzJDNTMuNTYsNzkuNjE4LDU5LjY5OCw2OC44MTQsNjAuNzQyLDYzLjM4NnoiLz4NCiAgPHBhdGggc3Ryb2tlPSIjMmMzZTUwIiBzdHJva2Utd2lkdGg9IjVweCIgZmlsbD0ibm9uZSIgZD0iTTIxLjM2Niw0Ny4zMTljMS43MTYsNi4xNDIsMi42MzMsMTQuNTM0LTQuMzExLDE1LjYyM0M2LjQsNjQuNjExLDYuNTY1LDQ4Ljg3NSw2LjU2NSw0OC44NzVMMjEuMzY2LDQ3LjMxOXoNCgkiLz4NCiAgPHBhdGggc3Ryb2tlPSIjMmMzZTUwIiBzdHJva2Utd2lkdGg9IjVweCIgZmlsbD0ibm9uZSIgZD0iTTAuMTQ2LDI0LjY3OUMtMC41NTUsMTYuNDQ3LDAuOTgsMi42OSwxMS4wMjgsMC4yODdDMTMuNS0wLjMwNiwyMi43NDEtMS41MDEsMjQuNzExLDE0Ljc1NQ0KCWMxLjQzMSwxMS44MjctNC4xNTEsMjUuMjQzLTQuMTUxLDI1LjI0M2wtMTQuOTcsMS41NzVDNS41ODksNDEuNTczLDAuNjEyLDMwLjE5LDAuMTQ2LDI0LjY3OXoiLz4NCiAgICA8L2c+DQo8L3N2Zz4="
-    const DISABLED_B64 = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+DQo8c3ZnIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmlld0JveD0iLTMgLTMgNjcuNDg3IDEwNiIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQogIDxnPg0KICAgIDxwYXRoIHN0cm9rZT0iIzdmOGM4ZCIgc3Ryb2tlLXdpZHRoPSI1cHgiIGZpbGw9Im5vbmUiIGQ9Ik0zNy4yNjcsODMuNjgxYy0yLjM0Niw1LjkzMi00LjEzMywxNC4xODMsMi42NTUsMTUuOTljMTAuNDI3LDIuNzcyLDExLjkwNy0xMi44OTYsMTEuOTA3LTEyLjg5NiBMMzcuMjY3LDgzLjY4MXoiLz4NCiAgICA8cGF0aCBzdHJva2U9IiM3ZjhjOGQiIHN0cm9rZS13aWR0aD0iNXB4IiBmaWxsPSJub25lIiBkPSJNNjAuNzQyLDYzLjM4NmMxLjU1OC04LjExNCwxLjQ2Ny0yMS45NTctOC4yNzEtMjUuMzk0Yy0yLjQtMC44NDgtMTEuNDY3LTMuMDA2LTE1LjEyNiwxMi45NTYgYy0yLjY1MSwxMS42MTIsMS40ODgsMjUuNTM5LDEuNDg4LDI1LjUzOWwxNC43MjUsMy4xMzJDNTMuNTYsNzkuNjE4LDU5LjY5OCw2OC44MTQsNjAuNzQyLDYzLjM4NnoiLz4NCiAgICA8cGF0aCBzdHJva2U9IiM3ZjhjOGQiIHN0cm9rZS13aWR0aD0iNXB4IiBmaWxsPSJub25lIiBkPSJNMjEuMzY2LDQ3LjMxOWMxLjcxNiw2LjE0MiwyLjYzMywxNC41MzQtNC4zMTEsMTUuNjIzQzYuNCw2NC42MTEsNi41NjUsNDguODc1LDYuNTY1LDQ4Ljg3NUwyMS4zNjYsNDcuMzE5eiIvPg0KICAgIDxwYXRoIHN0cm9rZT0iIzdmOGM4ZCIgc3Ryb2tlLXdpZHRoPSI1cHgiIGZpbGw9Im5vbmUiIGQ9Ik0wLjE0NiwyNC42NzlDLTAuNTU1LDE2LjQ0NywwLjk4LDIuNjksMTEuMDI4LDAuMjg3QzEzLjUtMC4zMDYsMjIuNzQxLTEuNTAxLDI0LjcxMSwxNC43NTUgYzEuNDMxLDExLjgyNy00LjE1MSwyNS4yNDMtNC4xNTEsMjUuMjQzbC0xNC45NywxLjU3NUM1LjU4OSw0MS41NzMsMC42MTIsMzAuMTkwLDAuMTQ2LDI0LjY3OXoiLz4NCiAgICA8bGluZSB4MT0iMCIgeTE9IjAiIHgyPSI2MCIgeTI9IjEwMCIgc3Ryb2tlPSIjN2Y4YzhkIiBzdHJva2Utd2lkdGg9IjUiLz4NCiAgPC9nPg0KPC9zdmc+"
+
+
+
 
     const provenance = registeredComponents.get(target);
     const registration = registrations.get(target);
@@ -75,7 +77,7 @@ const ProvenanceButton = ({ target }) => {
     const safeTarget = String(target ?? "widget")
         .replace(/[^a-zA-Z0-9_-]/g, "-");
     const clippingMessage = registration?.clippingMessage ?? null;
-    const showClippingBadge = Boolean(clippingMessage);
+    const showClippingBadge = Boolean(clippingMessage) && clippingMessage !== NO_HIDDEN_RECORDS;
     const hasClippedHistory = showClippingBadge && clippingMessage !== NO_HIDDEN_RECORDS;
     useEffect(() => {
         setOverClippingBadge(false);
@@ -149,6 +151,16 @@ const ProvenanceButton = ({ target }) => {
         }
     }, [open, target, isDropdown]);
 
+    // Panel visibility is separate from the aggregate/temporal view selection.
+    useEffect(() => {
+        setPanelOpen(false);
+        const handlePanelVisibility = event => {
+            if (event.detail?.target === target) setPanelOpen(Boolean(event.detail.open));
+        };
+        window.addEventListener("provenance-panel-visibility", handlePanelVisibility);
+        return () => window.removeEventListener("provenance-panel-visibility", handlePanelVisibility);
+    }, [target]);
+
     useEffect(() => {
         const handleVisibility = event => {
             if (event.detail?.target !== target) return;
@@ -199,7 +211,7 @@ const ProvenanceButton = ({ target }) => {
             borderRadius: "4px",
             padding: "0px"
         } : {}),
-        ...(open ? {
+        ...((open || panelOpen) && !isDisabled ? {
             boxShadow: `0 0 0 2px #fff, 0 0 0 4px ${haloColor}`
         } : {})
     };
@@ -267,8 +279,8 @@ const ProvenanceButton = ({ target }) => {
                             style={{
                                 position: 'absolute', right: -5, bottom: -5,
                                 width: 16, height: 16, padding: 0, borderRadius: '50%',
-                                display: 'grid', placeItems: 'center', color: '#0029FF',
-                                background: getClippingBadgeColor(),
+                                display: 'grid', placeItems: 'center', color: getClippingBadgeColor(),
+                                background: CLIPPING_BADGE_BACKGROUND,
                                 border: '2px solid #fff',
                                 boxSizing: 'border-box', cursor: 'pointer', zIndex: 2,
                                 pointerEvents: 'auto',

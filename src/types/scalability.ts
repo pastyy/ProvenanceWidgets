@@ -127,6 +127,13 @@ export type ScalabilitySmoothingMethod =
  * units; temporal time mode uses elapsed seconds.
  */
 export interface ScalabilitySmoothingOptions {
+  /** Selection widgets: horizontal whole-track Gaussian standard deviation, in percent
+   * of track width. Default 1.2; 0 disables blur. */
+  blur_radius?: number;
+  /** Selection timelines: blur radius on each side of a color boundary, as a
+   * percentage of track width. Default 1.2; 0 disables blur. Capped at one
+   * quarter of each adjacent segment to preserve solid colors and gaps. */
+  boundary_radius?: number;
   /** Defaults to { type: "savgol", options: { window_size: 5, degree: 3 } }. */
   method?: ScalabilitySmoothingMethod;
   /** Defaults to interaction; threshold defaults to 50 interactions or 3600 seconds.

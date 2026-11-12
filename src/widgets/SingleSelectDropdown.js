@@ -58,6 +58,8 @@ const SingleSelectItem = ({
     timeDomain,
     brushRange,
     clipping,
+    smoothing,
+    smoothingBlurRadius,
     target,
     tooltipLabel,
     visualize,
@@ -137,11 +139,13 @@ const SingleSelectItem = ({
             style={{
                 ...aggregateTooltipProps.style,
                 position: "relative",
-                height: "32px",
+                height: "24px",
                 display: "flex",
                 alignItems: "center",
                 padding: "0 8px",
+                boxSizing: "border-box",
                 width: "100%",
+                minWidth: 0,
                 flex: 1,
             }}
         >
@@ -170,7 +174,7 @@ const SingleSelectItem = ({
                                         : "selectionIndex",
                             }}
                             width={containerWidth}
-                            height={32}
+                            height={24}
                             layout="checkbox"
                             style={{
                                 width: "100%",
@@ -186,7 +190,10 @@ const SingleSelectItem = ({
                     <div data-provenance-selection-track={"dropdown"}
                         style={{
                             position: "absolute",
-                            inset: 0,
+                            top: 0,
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
                             zIndex: 0,
                             display: "flex",
                             alignItems: "center",
@@ -199,6 +206,9 @@ const SingleSelectItem = ({
                             timeDomain={timeDomain}
                             brushRange={brushRange}
                             clipping={clipping}
+                            smoothing={smoothing}
+                            smoothingWholeBar
+                            smoothingBlurRadius={smoothingBlurRadius}
                             tooltipId={tooltip}
                             widgetId={tooltipLabel}
                             value={optionKey}
@@ -672,8 +682,12 @@ const SingleSelectDropdown = (props) => {
             }}
         >
             <style>{`
+                .${safePanelClass} .p-dropdown-items {
+                    padding: 8px 24px !important;
+                }
                 .${safePanelClass} .p-dropdown-item {
                     padding: 0 !important;
+                    gap: 5px;
                 }
                 .${safePanelClass} .p-dropdown-item > span {
                     flex-grow: 1;
@@ -701,10 +715,16 @@ const SingleSelectDropdown = (props) => {
                 }}
                 panelClassName={panelClassName}
                 onShow={event => {
+                    window.dispatchEvent(new CustomEvent("provenance-panel-visibility", {
+                        detail: { target: id, open: true },
+                    }));
                     primeProps.onShow?.(event);
                     dropdownProps.onShow?.(event);
                 }}
                 onHide={event => {
+                    window.dispatchEvent(new CustomEvent("provenance-panel-visibility", {
+                        detail: { target: id, open: false },
+                    }));
                     primeProps.onHide?.(event);
                     dropdownProps.onHide?.(event);
                     if (showTimeline) {
@@ -746,6 +766,8 @@ const SingleSelectDropdown = (props) => {
                             timeDomain={clipping.timeDomain ?? timeDomain}
                             brushRange={clipping.brushRange}
                             clipping={clipping.enabled}
+                            smoothing={scalabilityProp?.temporal_view?.strategy === "smoothing"}
+                            smoothingBlurRadius={scalabilityProp?.temporal_view?.smoothing_options?.blur_radius}
                             target={id}
                             tooltipLabel={tooltipLabel}
                             visualize={visualize}
@@ -761,6 +783,17 @@ const SingleSelectDropdown = (props) => {
                 panelFooterTemplate={templateOptions => (
                     <>
                         {originalFooterTemplate?.(templateOptions)}
+                        {showTimeline && temporalBrush && clipping.showTemporalAxis && clipping.zoomedDomain && (
+                            <div style={{ padding: "0 8px 12px", boxSizing: "border-box" }}>
+                                <CheckboxZoomAxis
+                                    id={id}
+                                    elementRef={elementRef}
+                                    domain={clipping.zoomedDomain}
+                                    mode={provenanceMode}
+                                    panel
+                                />
+                            </div>
+                        )}
                         {showTimeline && temporalBrush && clipping.showTemporalAxis && (
                             <div
                                 data-provenance-temporal-footer={id}
@@ -768,7 +801,8 @@ const SingleSelectDropdown = (props) => {
                                     display: "flex",
                                     flexDirection: "column",
                                     width: "100%",
-                                    padding: "8px 20px 12px",
+                                    padding: "8px 24px 12px",
+                                    boxSizing: "border-box",
                                     gap: "6px",
                                     borderTop: "1px solid #ced4da",
                                     backgroundColor: "#fff",
@@ -790,17 +824,9 @@ const SingleSelectDropdown = (props) => {
                                         {...clipping.sliderProps}
                                     />
                                 )}
-                                {clipping.zoomedDomain && (
-                                    <CheckboxZoomAxis
-                                        id={id}
-                                        elementRef={elementRef}
-                                        domain={clipping.zoomedDomain}
-                                        mode={provenanceMode}
-                                        panel
-                                    />
-                                )}
                             </div>
                         )}
+
                     </>
                 )}
             />
