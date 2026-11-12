@@ -68,7 +68,5 @@ After updates, recheck source revisions, relative imports, parameter constraints
 and boundaries, then run:
 
 ```sh
-node --test tests/sliderAggregateSmoothing.test.js tests/sliderAggregateSmoothingRender.test.js tests/sliderTemporalSmoothing.test.js tests/sliderTemporalSmoothingRender.test.js
 npm run verify
-npm run playground:build
 ```

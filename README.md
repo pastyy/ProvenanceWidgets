@@ -12,21 +12,12 @@ npm install provenance-widgets
 ## Documentation
 
 - [Upstream documentation and demos](https://provenancewidgets.github.io/)
-- Local scalability API: [Scalability API](./playground/SCALABILITY_API.md)
 - [Source layout](./src/README.md) and [public types](./src/types/README.md)
 - [Web Components](./src/web-components/README.md)
-- [Playground](./playground/README.md)
 
-The local API guides describe this checkout's supported features and remaining
-work. Detailed behavior is documented once per topic:
-
-| Topic | Scope |
-| --- | --- |
-| [Clipping](./src/shared/logic/scalability/strategies/clipping/README.md) | Independent temporal and aggregate windows for all seven widgets |
-| [Temporal zoom](./src/shared/logic/scalability/strategies/zoomin/README.md) | Slider dimensions and categorical drag-selection brushes |
-| [Smoothing](./src/shared/logic/scalability/strategies/smoothing/README.md) | Slider temporal and aggregate curves |
-| [Aggregate windows](./src/shared/logic/scalability/windowing/README.md) | Scrollable slider value domains |
-| [Development guide](./src/shared/logic/scalability/DEVELOPMENT.md) | Internal structure and extension rules |
+Scalability options help keep longer histories readable through zooming, clipping,
+smoothing, and scrollable views, with support varying by widget. See the
+[scalability guide](./src/shared/logic/scalability/DEVELOPMENT.md) for details.
 
 ## Development
 
@@ -34,26 +25,20 @@ Run commands from the repository root:
 
 ```bash
 npm install
-npm run playground
 ```
 
 | Command | Purpose |
 | --- | --- |
-| `node --test tests/*.test.js` | Logic and SVG rendering regressions |
 | `npm run typecheck` | TypeScript checking |
 | `npm run build` | React library and Web Components bundles |
 | `npm run verify` | TypeScript checking followed by both builds |
-| `npm run playground:build` | Playground production bundle |
 
-The playground imports source directly and is not a library runtime dependency.
 Automated checks do not replace browser interaction and responsive-layout review.
 
 ## Publishing
 
 ```bash
-node --test tests/*.test.js
 npm run verify
-npm run playground:build
 npm pack --dry-run
 npm login --auth-type=web
 npm whoami

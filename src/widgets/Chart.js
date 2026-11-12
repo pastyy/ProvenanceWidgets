@@ -442,7 +442,6 @@ const Chart = ({
         domainMin: 0,
         domainMax: 1,
     });
-    const rectangleLogTargetRef = useRef(null);
     const temporalZoom = useMemo(
         () => resolveTemporalZoomIn(scalability),
         [scalability]
@@ -943,20 +942,6 @@ const Chart = ({
         clearRectangleSelection();
         setBrushSyncRevision(revision => revision + 1);
     }, [clipping.resetKey, clearRectangleSelection]);
-
-    useEffect(() => {
-        const isTemporalSlider = chartData?.isSingleSlider || chartData?.isRangeSlider;
-        if (
-            !rectangleConfigured ||
-            !isTemporalSlider ||
-            part === "header" ||
-            rectangleLogTargetRef.current === target
-        ) {
-            return;
-        }
-        rectangleLogTargetRef.current = target;
-        console.log("interactions-values enabled");
-    }, [chartData, part, rectangleConfigured, target]);
 
     useEffect(() => {
         const isTemporalSlider = chartData?.isCheckboxGroup && (

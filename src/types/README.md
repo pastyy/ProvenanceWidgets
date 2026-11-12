@@ -8,5 +8,5 @@
   trigger/strategy types.
 
 The contracts are re-exported from [src/index.ts](../index.ts). A declared option
-does not imply that every widget implements it; see the [capability table](../../playground/SCALABILITY_API.md#current-support).
+does not imply that every widget implements it.
 Runtime defaults are resolved in each [strategy](../shared/logic/scalability/strategies) configuration module.

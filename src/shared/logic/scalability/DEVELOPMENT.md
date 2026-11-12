@@ -1,6 +1,6 @@
 # Scalability Development Guide
 
-[Scalability API](../../../../playground/SCALABILITY_API.md) · [Source layout](../../../README.md)
+[Source layout](../../../README.md)
 
 Scalability code is organized by strategy. Each strategy owns its configuration,
 trigger decisions, algorithms, and view-specific adaptation. Modules remain
@@ -72,9 +72,8 @@ strategies or contain rendering decisions.
 
 ## Maintenance and validation
 
-When changing a strategy, update its README and the
-[API guide](../../../../playground/SCALABILITY_API.md). Confirm widget integration
+When changing a strategy, update its README. Confirm widget integration
 separately from the presence of shared algorithms or types.
 
-Run `node --test tests/*.test.js`, `npm run verify`, and `npm run playground:build` from the repository
+Run `npm run verify` from the repository
 root. See [project commands](../../../../README.md#development) for their scope.

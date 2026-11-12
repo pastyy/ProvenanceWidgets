@@ -1,6 +1,6 @@
 # Slider Smoothing
 
-[Scalability API](../../../../../../playground/SCALABILITY_API.md) · [Source layout](../../../../../README.md)
+[Source layout](../../../../../README.md)
 
 SingleSlider and RangeSlider support Savitzky-Golay, Gaussian, and B-spline
 smoothing independently in their temporal and aggregate views. Smoothing is
@@ -145,12 +145,3 @@ bound. Negative estimates are clamped at display adaptation, just as for Savgol.
   when the metric is greater than or equal to the threshold.
 - All three methods are implemented independently for temporal and aggregate
   Slider views. Unknown methods never fall back silently to Savitzky-Golay.
-
-Focused numerical and SVG-rendering verification covers aggregate pre-trigger
-bars, post-trigger bar/hitbox replacement, temporal single/range paths, bounded
-sampling, ordered RangeSlider endpoints, and recency gradients for every method:
-
-```bash
-node --test tests/sliderAggregateSmoothing.test.js tests/sliderAggregateSmoothingRender.test.js \
-  tests/sliderTemporalSmoothing.test.js tests/sliderTemporalSmoothingRender.test.js
-```

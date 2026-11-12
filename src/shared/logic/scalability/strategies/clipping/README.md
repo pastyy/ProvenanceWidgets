@@ -1,6 +1,6 @@
 # Display clipping for widgets
 
-[Scalability API](../../../../../../playground/SCALABILITY_API.md) · [Source layout](../../../../../README.md)
+[Source layout](../../../../../README.md)
 
 All seven widgets share temporal and aggregate clipping: `CheckboxGroup`, `RadioGroup`,
 `SingleSelectDropdown`, `MultiSelectDropdown`, `InputText`, `Singleslider`, and
@@ -98,5 +98,4 @@ export and restoration. Checkbox zoom uses a linear drag-selection brush;
 threshold-based history compression has been removed.
 
 Clipping is implemented entirely in the library's `src/` directory. Callers
-choose the view configuration through `scalability`; the library does not depend
-on playground configuration or demo data.
+choose the view configuration through `scalability`.

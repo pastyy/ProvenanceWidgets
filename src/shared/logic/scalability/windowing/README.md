@@ -1,6 +1,6 @@
 # Aggregate Slider windows
 
-[Scalability API](../../../../../playground/SCALABILITY_API.md) · [Source layout](../../../../README.md)
+[Source layout](../../../../README.md)
 
 `Singleslider` and `Rangeslider` support `aggregate_view.window_options`
 independently of the selected strategy:
@@ -53,5 +53,4 @@ default threshold. Smoothing is computed over the complete value domain. Bar
 heights and colors retain their full aggregate scales while browsing. The
 temporal dropdown stays outside the scroll container and uses the widget width.
 
-The Playground includes shared integer-only size/start controls and an enable switch. Each
-slider maintains its own user scroll position after configuration is applied.
+Each slider maintains its own user scroll position after configuration is applied.

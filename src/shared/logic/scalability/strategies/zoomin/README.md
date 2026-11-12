@@ -1,10 +1,9 @@
 # Temporal zoom
 
-[Scalability API](../../../../../../playground/SCALABILITY_API.md) · [Source layout](../../../../../README.md)
+[Source layout](../../../../../README.md)
 
 Sliders support `interactions`, `values`, and `interactions-values` dimensions
-through [Chart.js](../../../../../widgets/Chart.js) and its brush helpers. The shared
-configuration is described in the [API guide](../../../../../../playground/SCALABILITY_API.md#temporal-zoom).
+through [Chart.js](../../../../../widgets/Chart.js) and its brush helpers.
 
 ## Categorical selection widgets
 
