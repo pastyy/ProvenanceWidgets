@@ -47,4 +47,8 @@ export interface WidgetRegistration<V>
   extends CoreWidgetRegistration<V> {
   visualize?: boolean;
   mode?: ProvenanceMode;
+  /** Active-view notice shown on the provenance footprint badge. */
+  clippingMessage?: string | null;
+  /** Changes whenever the active clipping window changes. */
+  clippingRevision?: string;
 }

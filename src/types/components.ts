@@ -28,7 +28,7 @@ import type {
   CommonProvenanceWidgetProps,
   WidgetRegistration,
 } from "./provenance";
-import type { ScalabilityOptions } from "./scalability";
+import type { CheckboxScalability, ScalabilityOptions } from "./scalability";
 
 export type ProvenanceComponent<P> = (
   props: P
@@ -88,6 +88,8 @@ export interface CheckboxGroupProps<
   TValue = unknown,
   TOption extends ProvenanceOption<TValue> = ProvenanceOption<TValue>,
 > extends CommonProvenanceWidgetProps<TValue[]>, WidgetLayoutProps {
+  /** Per-view scalability; checkbox supports the shared interactions zoom options. */
+  scalability?: CheckboxScalability;
   data?: Array<TOption | TValue>;
   options?: Array<TOption | TValue>;
   children?: ReactNode;
@@ -288,6 +290,9 @@ export interface SuperProvenanceWidgetProps {
   id: string;
   components?: string[];
   default?: boolean;
+  temporalBrush?: boolean;
+  enableTemporalBrush?: boolean;
+  scalability?: ScalabilityOptions;
   children?: ReactNode;
 }
 

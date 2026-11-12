@@ -60,6 +60,7 @@ export type {
 } from "./types/provenance";
 
 export type * from "./types/scalability";
+export { DEFAULT_CHECKBOX_SCALABILITY } from "./types/scalability";
 export type * from "./types/components";
 
 export const AggregateView =
