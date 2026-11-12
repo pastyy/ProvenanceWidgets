@@ -34,8 +34,7 @@ Drag directly on the horizontal interaction/time axis to draw a selection.
 The temporal bars show that range. Drag the selection to move it, drag its
 edges to resize it, or click outside it to clear the selection and restore the
 full history. Ticks show interaction positions, or elapsed seconds in time mode.
-The brush uses the same colors, opacity, move cursor, and direction-appropriate
-resize cursors as the slider brushes.
+The brush uses the same colors, opacity, and cursors as the slider brushes.
 
 Manual zoom is available immediately by default. There are no threshold-sized
 compressed blocks and no automatic reset when another block is reached.
@@ -57,9 +56,10 @@ rows in CheckboxGroup, RadioGroup, SingleSelectDropdown, and MultiSelectDropdown
 so interaction counts line up with the blocks. Slider and InputText axes do not
 extend guides into their plots. It does not affect clipping or aggregate views.
 
-Moving an existing brush selection uses the four-way move cursor. Only its
-resize handles use directional resize arrows; drawing a new selection uses a
-crosshair.
+Hovering over the unselected brush area, drawing a selection, moving an existing
+selection, and resizing its handles use two-way arrows along the axis: left/right
+for horizontal axes and up/down for vertical axes. Hovering over an existing
+selection uses the four-way move cursor. Two-dimensional selections are unchanged.
 
 ## Implementation
 

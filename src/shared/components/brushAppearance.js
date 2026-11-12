@@ -9,17 +9,15 @@ export const rectangleZoomStyle = {
 
 /** Shared D3 brush colors and direction-aware cursors. */
 export function styleZoomBrush(group, direction) {
-    // D3 changes the overlay's cursor attribute during a gesture. An inline
-    // cursor style would override it and show resize even when moving.
+    const axisCursor = direction === "x" ? "ew-resize" : "ns-resize";
     group.selectAll(".overlay")
         .attr("fill", "rgba(113, 231, 251, 0.06)")
-        .style("cursor", null)
-        .attr("cursor", "crosshair");
+        .style("cursor", axisCursor);
     group.selectAll(".selection")
         .attr("fill", "#71e7fb").attr("fill-opacity", 0.24)
         .attr("stroke", ZOOM_BRUSH_ACCENT).attr("stroke-width", 1.5)
         .style("cursor", "move");
     group.selectAll(".handle")
         .attr("fill", ZOOM_BRUSH_ACCENT).attr("fill-opacity", 0.8)
-        .style("cursor", direction === "x" ? "ew-resize" : "ns-resize");
+        .style("cursor", axisCursor);
 }
