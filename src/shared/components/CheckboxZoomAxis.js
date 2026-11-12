@@ -41,7 +41,7 @@ export default function CheckboxZoomAxis({ id, elementRef, domain, mode, panel =
     return (
         <div ref={footerRef} data-provenance-zoom-footer={id}
             style={{ position: "relative", height: 36, marginTop: 6 }}>
-            {layout.width > 0 && (
+            {domain && layout.width > 0 && (
                 <div style={{ position: "absolute", left: layout.left, width: layout.width }}>
                     <ZoomedRangeAxis
                         domain={domain}

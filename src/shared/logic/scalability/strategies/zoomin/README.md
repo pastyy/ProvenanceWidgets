@@ -55,6 +55,9 @@ selection hides this secondary axis. Tick guides extend through the history
 rows in CheckboxGroup, RadioGroup, SingleSelectDropdown, and MultiSelectDropdown
 so interaction counts line up with the blocks. Slider and InputText axes do not
 extend guides into their plots. It does not affect clipping or aggregate views.
+Dropdown panels and SuperProvenance reserve the selected-range axis space whenever
+their zoom brush is visible, so selecting or clearing a range does not shift the
+brush or resize the panel. The reserved area stays blank until a range is selected.
 
 Hovering over the unselected brush area, drawing a selection, moving an existing
 selection, and resizing its handles use two-way arrows along the axis: left/right

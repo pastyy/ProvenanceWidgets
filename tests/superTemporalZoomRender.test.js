@@ -28,6 +28,8 @@ test("SuperProvenance renders the shared draggable brush, aligned rows and no le
     const html = render();
     assert.match(html, /data-provenance-temporal-brush="super-test"/);
     assert.match(html, /Drag horizontally to zoom SuperProvenance history/);
+    assert.match(html, /data-provenance-zoom-footer="super-test"[^>]*style="position:relative;height:36px;margin-top:6px"/);
+    assert.doesNotMatch(html, /data-provenance-zoom-axis=/);
     assert.equal((html.match(/data-provenance-super-interaction=/g) ?? []).length, 4);
     assert.equal((html.match(/data-provenance-super-track=/g) ?? []).length, 2);
     assert.match(html, /left:25%;width:25%/);
@@ -44,6 +46,7 @@ test("SuperProvenance hides disabled and threshold-gated brushes without hiding 
     ]) {
         const html = render(overrides);
         assert.doesNotMatch(html, /data-provenance-temporal-brush/);
+        assert.doesNotMatch(html, /data-provenance-zoom-footer/);
         assert.equal((html.match(/data-provenance-super-interaction=/g) ?? []).length, 4);
     }
 });
@@ -52,6 +55,7 @@ test("SuperProvenance renders empty and single-interaction histories without a b
     for (const interactions of [[], props.interactions.slice(0, 1)]) {
         const html = render({ interactions });
         assert.doesNotMatch(html, /data-provenance-temporal-brush|NaN|Infinity/);
+        assert.doesNotMatch(html, /data-provenance-zoom-footer/);
         assert.equal((html.match(/data-provenance-super-track=/g) ?? []).length, 2);
     }
 });

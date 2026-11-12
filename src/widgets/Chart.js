@@ -76,7 +76,6 @@ const TemporalBrush = ({
     range,
     syncRevision = 0,
     target,
-    tooltipId,
     widgetType,
 }) => {
     const brushRef = useRef(null);
@@ -184,18 +183,9 @@ const TemporalBrush = ({
                     index === entryCount - 1
                 )
         ));
-    const tooltipProps = getTooltipAnchorProps(
-        tooltipId,
-        interactive
-            ? "Drag vertically to zoom the history range. Click outside the selection to show all history."
-            : "Complete interaction range"
-    );
-
     return (
         <div
-            {...tooltipProps}
             style={{
-                ...tooltipProps.style,
                 flex: "0 0 64px",
                 width: "64px",
                 marginTop: `${offsetTop}px`,
@@ -278,7 +268,6 @@ const TemporalValueBrush = ({
     onInteractionStart,
     onRangeChange,
     target,
-    tooltipId,
     width,
     widgetType,
 }) => {
@@ -358,20 +347,11 @@ const TemporalValueBrush = ({
         width,
     ]);
 
-    const tooltipProps = getTooltipAnchorProps(
-        tooltipId,
-        interactive
-            ? "Drag horizontally to zoom the slider value range. Click outside the selection to show all values."
-            : "Complete slider value range"
-    );
-
     return (
         <div
-            {...tooltipProps}
             data-provenance-values-brush={target}
             data-provenance-temporal-values-brush={target}
             style={{
-                ...tooltipProps.style,
                 width: "100%",
                 height: `${height}px`,
             }}
@@ -1145,6 +1125,7 @@ const Chart = ({
         const inputTextBrushEnabled =
             !clipping.enabled &&
             inputTextZoom.visible;
+        const reserveInputTextZoomAxisSpace = inputTextZoom.enabled;
         const inputTextEntries = inputTextBrushEnabled
             ? filterTemporalEntries(allInputTextEntries, brushRange)
             : allInputTextEntries;
@@ -1346,7 +1327,7 @@ const Chart = ({
                     overflow: "visible",
                 }}
             >
-                {inputTextBrushEnabled && <TemporalBrush
+                <TemporalBrush
                     interactive={inputTextBrushEnabled}
                     interactionLabels={allInputTextEntries.map(
                         ([, records], index) =>
@@ -1360,16 +1341,15 @@ const Chart = ({
                     onRangeChange={handleBrushRangeChange}
                     positions={inputTextBrushYPositions}
                     target={target}
-                    tooltipId={tooltipId}
                     widgetType="input-text"
-                />}
+                />
                 <div
                     style={{
                         position: "relative",
                         flex: 1,
                         minWidth: 0,
                         height: `${inputTextPlotHeight}px`,
-                        paddingRight: inputTextZoomDomain
+                        paddingRight: reserveInputTextZoomAxisSpace
                             ? `${ZOOM_AXIS_RIGHT_SPACE}px`
                             : undefined,
                         boxSizing: "border-box",
@@ -1386,7 +1366,7 @@ const Chart = ({
                             positionedTicks={mode !== "time"
                                 ? inputTextEntries.map(([, records], index) => ({
                                     value: records[0].sequenceIndex,
-                                    position: inputTextYPositions[index] + 4,
+                                    position: inputTextYPositions[index],
                                 }))
                                 : undefined}
                             step={mode === "time" ? undefined : 1}
@@ -1425,11 +1405,11 @@ const Chart = ({
                                 style={{
                                     position: "absolute",
                                     top:
-                                        `${inputTextYPositions[index] - 8}px`,
-                                     left: 0,
-                                     right: inputTextZoomDomain
-                                         ? `${ZOOM_AXIS_RIGHT_SPACE}px`
-                                         : 0,
+                                        `${inputTextYPositions[index] - 12}px`,
+                                    left: 0,
+                                    right: reserveInputTextZoomAxisSpace
+                                        ? `${ZOOM_AXIS_RIGHT_SPACE}px`
+                                        : 0,
                                     height: "24px",
                                     display: "flex",
                                     alignItems: "center",
@@ -1518,7 +1498,6 @@ const Chart = ({
                          range={brushRange}
                          syncRevision={brushSyncRevision}
                          target={target}
-                         tooltipId={tooltipId}
                          widgetType={
                              chartData.isRangeSlider
                                  ? "range-slider"
@@ -1592,7 +1571,6 @@ const Chart = ({
                               onInteractionStart={clearRectangleSelection}
                              onRangeChange={handleValueBrushRangeChange}
                              target={target}
-                             tooltipId={tooltipId}
                              width={valueBrushWidth}
                              widgetType={
                                  chartData.isRangeSlider

@@ -95,14 +95,15 @@ export default function SuperTemporalView({
                     </div>
                 </div>
             ))}
-            {zoomed && (
-                <div style={{ position: "relative", height: 36, marginTop: 6 }}>
-                    <ZoomedRangeAxis
+            {visible && (
+                <div data-provenance-zoom-footer={id}
+                    style={{ position: "relative", height: 36, marginTop: 6 }}>
+                    {zoomed && <ZoomedRangeAxis
                         domain={range.map(percent => interactions.length * percent / 100)}
                         pixelLength={width} integerTicks axisKind="interactions"
                         horizontalInset={0} rightInset={0} theme="light"
                         label="Selected interaction range"
-                    />
+                    />}
                 </div>
             )}
             {visible && (

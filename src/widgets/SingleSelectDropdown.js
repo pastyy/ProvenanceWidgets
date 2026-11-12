@@ -783,7 +783,7 @@ const SingleSelectDropdown = (props) => {
                 panelFooterTemplate={templateOptions => (
                     <>
                         {originalFooterTemplate?.(templateOptions)}
-                        {showTimeline && temporalBrush && clipping.showTemporalAxis && clipping.zoomedDomain && (
+                        {showTimeline && temporalBrush && clipping.showTemporalAxis && (
                             <div style={{ padding: "0 8px 12px", boxSizing: "border-box" }}>
                                 <CheckboxZoomAxis
                                     id={id}
