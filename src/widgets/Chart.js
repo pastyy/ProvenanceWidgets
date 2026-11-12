@@ -1113,12 +1113,10 @@ const Chart = ({
             });
         const showInteractionAxis =
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
-            normalizeTemporalBrush(temporalBrush) && temporalZoom.enabled &&
-            temporalZoom.modes.includes("interactions");
+            normalizeTemporalBrush(temporalBrush);
         const showValueAxis =
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
-            normalizeTemporalBrush(temporalBrush) && temporalZoom.enabled &&
-            temporalZoom.modes.includes("values");
+            normalizeTemporalBrush(temporalBrush);
         const reserveValueZoomAxisSpace =
             showValueAxis &&
             temporalZoom.enabled &&
@@ -1183,8 +1181,8 @@ const Chart = ({
         
         const domainMax = indexDomain ? indexDomain[1] : 0;
         const domainMin = indexDomain ? indexDomain[0] : 0;
-        const valueDomainMin = (valueBrushEnabled ? valueBrushRange?.[0] : null) ?? domainMin;
-        const valueDomainMax = (valueBrushEnabled ? valueBrushRange?.[1] : null) ?? domainMax;
+        const valueDomainMin = valueBrushRange?.[0] ?? domainMin;
+        const valueDomainMax = valueBrushRange?.[1] ?? domainMax;
         const interactionZoomRange = (
             Array.isArray(brushRange) &&
             brushRange.length === 2 &&
@@ -1612,7 +1610,7 @@ const Chart = ({
                            width: '100%',
                            height: `${temporalPlotHeight}px`,
                            minHeight: `${temporalPlotHeight}px`,
-                           overflow: valueBrushEnabled && valueBrushRange ? 'hidden' : 'visible',
+                           overflow: valueBrushRange ? 'hidden' : 'visible',
                            order: 1,
                            cursor: rectangleToolEnabled
                                ? rectangleDragMode === 'move' ? 'move' : 'crosshair'

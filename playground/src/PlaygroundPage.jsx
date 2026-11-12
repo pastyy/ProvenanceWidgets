@@ -319,6 +319,14 @@ export default function PlaygroundPage() {
   const [strategyOverrides, setStrategyOverrides] = useState({});
   const configure = (id, defaults) =>
     configurePlaygroundScalability(defaults, strategyOverrides[id]);
+  // Slider controls change only the strategy; preserve all existing options.
+  const configureSlider = (id, defaults) => ({
+    ...defaults,
+    ...Object.fromEntries(["aggregate_view", "temporal_view"].map(view => [view, {
+      ...defaults[view],
+      strategy: strategyOverrides[id]?.[view] ?? defaults[view]?.strategy,
+    }])),
+  });
   const controls = id => ({
     strategies: strategyOverrides[id],
     onStrategyChange: (view, strategy) => setStrategyOverrides(previous => ({
@@ -423,7 +431,7 @@ export default function PlaygroundPage() {
                 options={singleSliderOptions}
                 provenance={playgroundSingleSliderProvenance}
                 dataLabel="Single value"
-                scalability={configure("single-slider", {
+                scalability={configureSlider("single-slider", {
                   "temporal_view": {
                     "strategy": "smoothing", // "clipping" or "zoom_in" or "smoothing"
                     "clipping_options": sliderClipping.temporal_view.clipping_options,
@@ -501,7 +509,7 @@ export default function PlaygroundPage() {
                 onChange={setRangeSliderValue}
                 options={rangeSliderOptions}
                 provenance={playgroundRangeSliderProvenance}
-                scalability={configure("range-slider", sliderClipping)}
+                scalability={configureSlider("range-slider", sliderClipping)}
                 dataLabel="Range"
               />
             </WidgetCard>
