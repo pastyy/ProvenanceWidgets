@@ -72,3 +72,44 @@ export const hasTemporalZoomTriggerCrossed = ({
     const currentMetric = temporalTriggerMetric(entries, trigger.type);
     return priorMetric < threshold && currentMetric >= threshold;
 };
+
+const isInteractionEntry = entry => {
+    const record = entry?.[1]?.[0];
+    if (record?.kind !== undefined) {
+        return record.kind === "interaction";
+    }
+
+    // Legacy record histories identify the baseline with sequence 0.
+    return Number(record?.sequenceIndex) > 0;
+};
+
+/** Records used by text and slider trigger policies (distinct from displayed rows). */
+export const getRecordZoomTriggerEntries = (
+    entries = [],
+    triggerType = "interaction"
+) => triggerType === "time"
+    ? entries
+    : entries.filter(isInteractionEntry);
+
+/** Map the shared trigger window back onto the complete record row list. */
+export const getRecordAutoZoomRange = (
+    entries = [],
+    trigger = {}
+) => {
+    const triggerEntries = getRecordZoomTriggerEntries(
+        entries,
+        trigger.type
+    );
+    const triggerRange = getTemporalAutoZoomRange(triggerEntries, trigger);
+    if (!triggerRange) return null;
+
+    const firstEntry = triggerEntries[triggerRange[0]];
+    const lastEntry = triggerEntries[triggerRange[1]];
+    const start = entries.indexOf(firstEntry);
+    const triggerEnd = entries.indexOf(lastEntry);
+    if (start < 0 || triggerEnd < 0) return null;
+
+    // Include later sampling rows so an interaction-triggered selection stays
+    // anchored at the current end of a time-mode history.
+    return [start, Math.max(triggerEnd, entries.length - 1)];
+};

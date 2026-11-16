@@ -8,6 +8,8 @@ export {
 export {
     hasTemporalZoomTriggerCrossed,
     getTemporalAutoZoomRange,
+    getRecordZoomTriggerEntries,
+    getRecordAutoZoomRange,
     temporalTriggerMetric,
     resolveTemporalZoomActions,
 } from "./autoZoom.js";

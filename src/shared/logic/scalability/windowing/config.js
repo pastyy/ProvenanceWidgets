@@ -1,11 +1,12 @@
 /** Slider windows use absolute values and domain spans, never item indices. */
 export function resolveSliderAggregateWindowConfig({ scalability, min, max }) {
     const options = scalability?.aggregate_view?.window_options;
-    const domainValid = Number.isInteger(min) && Number.isInteger(max) &&
+    const domainValid = Number.isFinite(min) && Number.isFinite(max) &&
         max > min && Number.isFinite(max - min);
+    const windowable = domainValid && Number.isInteger(min) && Number.isInteger(max);
     const floor = Number.isFinite(min) ? min : 0;
     const span = domainValid ? max - min : 0;
-    const size = Number.isInteger(options?.window_size) && options.window_size > 0
+    const size = windowable && Number.isInteger(options?.window_size) && options.window_size > 0
         ? Math.min(span, options.window_size)
         : span;
     const requestedStart = Number.isInteger(options?.window_start)
@@ -20,6 +21,6 @@ export function resolveSliderAggregateWindowConfig({ scalability, min, max }) {
         requestedStart,
         start: Math.min(maxStart, Math.max(floor, requestedStart)),
         maxStart,
-        enabled: domainValid && size > 0 && size < span,
+        enabled: windowable && size > 0 && size < span,
     };
 }

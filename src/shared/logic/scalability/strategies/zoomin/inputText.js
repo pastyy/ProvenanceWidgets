@@ -1,4 +1,10 @@
-import { getTemporalAutoZoomRange } from "./autoZoom.js";
+import {
+    getRecordZoomTriggerEntries as getInputTextZoomTriggerEntries,
+} from "./autoZoom.js";
+export {
+    getRecordZoomTriggerEntries as getInputTextZoomTriggerEntries,
+    getRecordAutoZoomRange as getInputTextAutoZoomRange,
+} from "./autoZoom.js";
 import { resolveTemporalZoomIn } from "./config.js";
 import { isTemporalZoomToolVisible } from "./visibility.js";
 
@@ -11,25 +17,6 @@ const getEntryTime = entry => {
         : new Date(value).getTime();
     return Number.isFinite(timestamp) ? timestamp : null;
 };
-
-const isInteractionEntry = entry => {
-    const record = getEntryRecord(entry);
-    if (record?.kind !== undefined) {
-        return record.kind === "interaction";
-    }
-
-    // Legacy text histories do not include record kinds. Their first entry is
-    // the baseline and buildInputTextTemporalEntries assigns it sequence 0.
-    return Number(record?.sequenceIndex) > 0;
-};
-
-/** Records used by InputText's trigger policy (distinct from displayed rows). */
-export const getInputTextZoomTriggerEntries = (
-    entries = [],
-    triggerType = "interaction"
-) => triggerType === "time"
-    ? entries
-    : entries.filter(isInteractionEntry);
 
 /**
  * Resolve the interaction-only zoom contract supported by InputText.
@@ -65,29 +52,6 @@ export const resolveInputTextTemporalZoom = ({
         visible,
         triggerEntries,
     };
-};
-
-/** Map the shared trigger window back onto InputText's complete row list. */
-export const getInputTextAutoZoomRange = (
-    entries = [],
-    trigger = {}
-) => {
-    const triggerEntries = getInputTextZoomTriggerEntries(
-        entries,
-        trigger.type
-    );
-    const triggerRange = getTemporalAutoZoomRange(triggerEntries, trigger);
-    if (!triggerRange) return null;
-
-    const firstEntry = triggerEntries[triggerRange[0]];
-    const lastEntry = triggerEntries[triggerRange[1]];
-    const start = entries.indexOf(firstEntry);
-    const triggerEnd = entries.indexOf(lastEntry);
-    if (start < 0 || triggerEnd < 0) return null;
-
-    // Include later sampling rows so an interaction-triggered selection stays
-    // anchored at the current end of a time-mode history.
-    return [start, Math.max(triggerEnd, entries.length - 1)];
 };
 
 /** Domain displayed by the blue axis opposite InputText's full-history axis. */

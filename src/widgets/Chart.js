@@ -27,11 +27,11 @@ import {
 } from '../shared/logic/sliderTemporal.js';
 import {
     brushSelectionToValueRange,
-    getTemporalAutoZoomRange,
+    getRecordZoomTriggerEntries,
+    getRecordAutoZoomRange,
     resolveTemporalZoomActions,
     isTemporalZoomToolVisible,
     resolveTemporalZoomIn,
-    getInputTextAutoZoomRange,
     getInputTextZoomDomain,
     resolveInputTextTemporalZoom,
     temporalTriggerMetric,
@@ -959,7 +959,7 @@ const Chart = ({
                 : [];
         const triggerEntries = isTemporalInputText
             ? inputTextZoom.triggerEntries
-            : entries;
+            : getRecordZoomTriggerEntries(entries, temporalZoom.trigger.type);
         const entryCount = isTemporalRecordChart ? entries.length : 0;
         const previousEntryCount = previousTemporalEntryCountRef.current;
         const historyReset = entryCount < previousEntryCount;
@@ -976,7 +976,8 @@ const Chart = ({
             enabled: isTemporalInputText
                 ? inputTextZoom.enabled && temporalZoom.visibility !== "off"
                 : isTemporalSlider && normalizeTemporalBrush(temporalBrush) &&
-                    temporalZoom.enabled && temporalZoom.modes.includes("interactions"),
+                    temporalZoom.enabled && temporalZoom.visibility !== "off" &&
+                    temporalZoom.modes.includes("interactions"),
             alreadyAutoZoomed: historyReset
                 ? false
                 : autoZoomTriggeredRef.current,
@@ -991,9 +992,7 @@ const Chart = ({
 
         if (shouldAutoZoom) {
             autoZoomTriggeredRef.current = true;
-            setBrushRange(isTemporalInputText
-                ? getInputTextAutoZoomRange(entries, temporalZoom.trigger)
-                : getTemporalAutoZoomRange(entries, temporalZoom.trigger));
+            setBrushRange(getRecordAutoZoomRange(entries, temporalZoom.trigger));
             setBrushSyncRevision(revision => revision + 1);
         } else if (historyReset) {
             setBrushSyncRevision(revision => revision + 1);
@@ -1046,6 +1045,9 @@ const Chart = ({
         const allSortedEntries = chartData.isRangeSlider || chartData.isSingleSlider
             ? [...detailedDataEntries]
             : [...detailedDataEntries].sort((a, b) => a[0].localeCompare(b[0]));
+        const zoomTriggerEntries = getRecordZoomTriggerEntries(
+            allSortedEntries, temporalZoom.trigger.type
+        );
         const brushEnabled =
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
             normalizeTemporalBrush(temporalBrush) &&
@@ -1053,7 +1055,7 @@ const Chart = ({
             temporalZoom.enabled &&
             temporalZoom.modes.includes("interactions") &&
             isTemporalZoomToolVisible({
-                entries: allSortedEntries,
+                entries: zoomTriggerEntries,
                 visibility: temporalZoom.visibility,
                 trigger: temporalZoom.trigger,
             });
@@ -1063,7 +1065,7 @@ const Chart = ({
             temporalZoom.enabled &&
             temporalZoom.modes.includes("values") &&
             isTemporalZoomToolVisible({
-                entries: allSortedEntries,
+                entries: zoomTriggerEntries,
                 visibility: temporalZoom.visibility,
                 trigger: temporalZoom.trigger,
             });
@@ -1072,7 +1074,7 @@ const Chart = ({
             normalizeTemporalBrush(temporalBrush) &&
             (chartData.isSingleSlider || chartData.isRangeSlider) &&
             isTemporalZoomToolVisible({
-                entries: allSortedEntries,
+                entries: zoomTriggerEntries,
                 visibility: temporalZoom.visibility,
                 trigger: temporalZoom.trigger,
             });
@@ -1272,7 +1274,6 @@ const Chart = ({
             const totalRightInset = plotInset;
             const innerWidthCalc = `calc(100% - ${totalLeftGutter + totalRightInset}px)`;
             const innerMarginLeft = `${totalLeftGutter}px`;
-            return (<div></div>)
             return (
                 <div
                     data-provenance-chart-target={target}
@@ -1281,15 +1282,9 @@ const Chart = ({
                     <div data-timeline-axis={target} style={{ width: innerWidthCalc, marginLeft: innerMarginLeft, height: '4px', background: axisColor, borderRadius: '2px', position: 'relative' }}></div>
                     <div style={{ width: innerWidthCalc, marginLeft: innerMarginLeft, display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                         <span style={{ fontSize: '12px', color: labelColor, fontWeight: 'bold', transform: hasLeftAxisLabel ? 'translateX(-50%)' : undefined }}>
-                           {chartData.isInputText &&
-                           (chartData.mode ?? mode) === "time"
-                               ? "t=0"
-                               : (
-                                   chartData.isRangeSlider ||
-                                   chartData.isSingleSlider
-                               )
-                                   ? valueDomainMin
-                                   : "n=0"}
+                           {chartData.isRangeSlider || chartData.isSingleSlider
+                               ? valueDomainMin
+                               : "n=0"}
                         </span>
                         <span style={{ fontSize: '12px', color: labelColor, fontWeight: 'bold', transform: hasLeftAxisLabel ? 'translateX(50%)' : undefined }}>
                            {chartData.isRangeSlider ||
