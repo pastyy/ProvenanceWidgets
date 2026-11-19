@@ -250,13 +250,15 @@ class ProvenanceHTMLElement extends HTMLElementBase {
                     className="provenance-web-component"
                     data-provenance-web-component={config.kind}
                 >
-                    <div
-                        className={
-                            "provenance-web-component__footprint"
-                        }
-                    >
-                        <ProvenanceButton target={this.id} />
-                    </div>
+                    {props.visualize !== false && (
+                        <div
+                            className={
+                                "provenance-web-component__footprint"
+                            }
+                        >
+                            <ProvenanceButton target={this.id} />
+                        </div>
+                    )}
                     <div
                         className="provenance-web-component__widget"
                     >
